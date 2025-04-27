@@ -508,7 +508,7 @@ const UserStation = () => {
                       <div className="text-center mb-3">
                         <img 
                           src={station.imageUrl || (station.content && station.content.startsWith('/api/') 
-                            ? `${process.env.REACT_APP_API_URL || 'http://192.168.1.8:5000'}${station.content}`
+                            ? `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${station.content}`
                             : station.content)
                           }
                           alt="Mật thư" 

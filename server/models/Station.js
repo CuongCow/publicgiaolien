@@ -87,7 +87,7 @@ const StationSchema = new mongoose.Schema({
 StationSchema.pre('save', async function(next) {
   if (this.isNew || this.isModified('_id')) {
     try {
-      const url = `${process.env.CLIENT_URL || 'http://192.168.1.8:3000'}/station/${this._id}`;
+      const url = `${process.env.CLIENT_URL || 'http://localhost:3000'}/station/${this._id}`;
       this.qrCode = await require('qrcode').toDataURL(url);
     } catch (error) {
       console.error('QR Code generation error:', error);

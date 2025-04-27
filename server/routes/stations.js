@@ -253,7 +253,7 @@ router.get('/:id/qrcode', auth, async (req, res) => {
     if (!station) return res.status(404).json({ message: 'Không tìm thấy trạm' });
 
     // Tạo URL cho trạm
-    const url = `${process.env.CLIENT_URL || 'http://192.168.1.8:3000'}/station/${station._id}`;
+    const url = `${process.env.CLIENT_URL || 'http://localhost:3000'}/station/${station._id}`;
     
     // Tạo QR code
     const qrCodeDataUrl = await qrcode.toDataURL(url);
