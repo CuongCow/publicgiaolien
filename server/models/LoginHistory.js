@@ -4,7 +4,7 @@ const LoginHistorySchema = new mongoose.Schema({
   adminId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'admin',
-    required: true
+    required: false
   },
   username: {
     type: String,
