@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
-import { Container, Card, Form, Button, Alert, InputGroup } from 'react-bootstrap';
+import React, { useState, useRef, useEffect } from 'react';
+import { Container, Card, Form, Button, Alert, InputGroup, Spinner } from 'react-bootstrap';
 import { useNavigate, Link } from 'react-router-dom';
-import { authApi } from '../../services/api';
+import { authApi, invitationApi } from '../../services/api';
+import { handleApiError } from '../../utils/helpers';
+import ErrorHandler from '../../components/ErrorHandler';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -9,7 +11,8 @@ const Register = () => {
     password: '',
     confirmPassword: '',
     name: '',
-    email: ''
+    email: '',
+    invitationCode: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -18,13 +21,68 @@ const Register = () => {
   const [verificationCode, setVerificationCode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [invitationValid, setInvitationValid] = useState(null);
+  const [checkingInvitation, setCheckingInvitation] = useState(false);
   const navigate = useNavigate();
+  
+  // Sử dụng useRef để debounce việc kiểm tra mã mời
+  const invitationCodeTimeout = useRef(null);
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
+
+    // Kiểm tra mã mời khi người dùng nhập
+    if (e.target.name === 'invitationCode') {
+      // Nếu trường mã mời được thay đổi
+      const code = e.target.value.trim();
+      
+      // Xóa bỏ timeout trước đó để tránh gọi API nhiều lần
+      if (invitationCodeTimeout.current) {
+        clearTimeout(invitationCodeTimeout.current);
+      }
+      
+      // Nếu mã quá ngắn, đặt trạng thái về null
+      if (code.length < 5) {
+        setInvitationValid(null);
+        return;
+      }
+      
+      // Đặt timeout để chỉ kiểm tra sau khi người dùng ngừng gõ 500ms
+      invitationCodeTimeout.current = setTimeout(() => {
+        checkInvitationCode(code);
+      }, 500);
+    }
+  };
+
+  // Clear timeout khi component unmount
+  useEffect(() => {
+    return () => {
+      if (invitationCodeTimeout.current) {
+        clearTimeout(invitationCodeTimeout.current);
+      }
+    };
+  }, []);
+
+  const checkInvitationCode = async (code) => {
+    // Không kiểm tra nếu mã rỗng
+    if (!code) {
+      setInvitationValid(null);
+      return;
+    }
+    
+    try {
+      setCheckingInvitation(true);
+      const response = await invitationApi.verify(code);
+      setInvitationValid(response.data.valid);
+    } catch (err) {
+      console.log('Mã mời không hợp lệ:', err);
+      setInvitationValid(false);
+    } finally {
+      setCheckingInvitation(false);
+    }
   };
 
   const checkEmailExists = async () => {
@@ -45,10 +103,25 @@ const Register = () => {
       setError('Mật khẩu xác nhận không khớp');
       return;
     }
-    
+
+    // Kiểm tra mã mời
+    if (!formData.invitationCode) {
+      setError('Mã mời là bắt buộc');
+      return;
+    }
+
+    // Kiểm tra lại mã mời
     try {
       setLoading(true);
       setError(null);
+      
+      // Xác thực mã mời
+      const inviteResponse = await invitationApi.verify(formData.invitationCode);
+      if (!inviteResponse.data.valid) {
+        setError('Mã mời không hợp lệ hoặc đã hết hạn');
+        setLoading(false);
+        return;
+      }
       
       // Kiểm tra email đã tồn tại chưa
       const emailExists = await checkEmailExists();
@@ -64,10 +137,7 @@ const Register = () => {
       setSuccess('Mã xác thực đã được gửi đến email của bạn.');
       setStep(2);
     } catch (err) {
-      setError(
-        err.response?.data?.message || 
-        'Không thể gửi mã xác thực. Vui lòng thử lại sau.'
-      );
+      setError(handleApiError(err, 'Không thể gửi mã xác thực. Vui lòng thử lại sau.'));
       console.error('Verification error:', err);
     } finally {
       setLoading(false);
@@ -100,10 +170,7 @@ const Register = () => {
         navigate('/login');
       }, 2000);
     } catch (err) {
-      setError(
-        err.response?.data?.message || 
-        'Mã xác thực không đúng hoặc đã hết hạn. Vui lòng thử lại.'
-      );
+      setError(handleApiError(err, 'Mã xác thực không đúng hoặc đã hết hạn. Vui lòng thử lại.'));
       console.error('Verification error:', err);
     } finally {
       setLoading(false);
@@ -119,10 +186,7 @@ const Register = () => {
       
       setSuccess('Mã xác thực mới đã được gửi đến email của bạn.');
     } catch (err) {
-      setError(
-        err.response?.data?.message || 
-        'Không thể gửi lại mã xác thực. Vui lòng thử lại sau.'
-      );
+      setError(handleApiError(err, 'Không thể gửi lại mã xác thực. Vui lòng thử lại sau.'));
       console.error('Resend verification error:', err);
     } finally {
       setLoading(false);
@@ -143,8 +207,8 @@ const Register = () => {
         <Card.Body className="p-4">
           <h2 className="text-center mb-4">Đăng ký Admin</h2>
           
-          {error && <Alert variant="danger">{error}</Alert>}
-          {success && <Alert variant="success">{success}</Alert>}
+          {error && <ErrorHandler error={error} onClose={() => setError(null)} />}
+          {success && <Alert variant="success" onClose={() => setSuccess(null)} dismissible>{success}</Alert>}
           
           {step === 1 && (
             <Form onSubmit={handleSubmitInfo}>
@@ -184,6 +248,37 @@ const Register = () => {
                 />
                 <Form.Text className="text-muted">
                   Chúng tôi sẽ gửi mã xác thực đến email này.
+                </Form.Text>
+              </Form.Group>
+
+              <Form.Group className="mb-3">
+                <Form.Label className="d-flex justify-content-between align-items-center">
+                  Mã mời
+                  {checkingInvitation && <Spinner animation="border" size="sm" />}
+                </Form.Label>
+                <Form.Control
+                  type="text"
+                  name="invitationCode"
+                  value={formData.invitationCode}
+                  onChange={handleChange}
+                  required
+                  placeholder="Nhập mã mời"
+                  isValid={invitationValid === true}
+                  isInvalid={invitationValid === false}
+                />
+                {invitationValid === true && (
+                  <Form.Control.Feedback type="valid">
+                    <i className="bi bi-check-circle-fill me-1"></i> Mã mời hợp lệ
+                  </Form.Control.Feedback>
+                )}
+                {invitationValid === false && (
+                  <Form.Control.Feedback type="invalid">
+                    <i className="bi bi-x-circle-fill me-1"></i> Mã mời không hợp lệ hoặc đã hết hạn
+                  </Form.Control.Feedback>
+                )}
+                <Form.Text className="text-muted">
+                  Liên hệ với chủ sở hữu hệ thống để nhận mã mời. 
+                  <br/>
                 </Form.Text>
               </Form.Group>
               
@@ -235,10 +330,14 @@ const Register = () => {
                 <Button 
                   variant="primary" 
                   type="submit" 
-                  disabled={loading}
+                  disabled={loading || invitationValid === false}
                 >
                   {loading ? 'Đang xử lý...' : 'Tiếp tục'}
                 </Button>
+              </div>
+
+              <div className="text-center mt-3">
+                <p>Đã có tài khoản? <Link to="/login">Đăng nhập</Link></p>
               </div>
             </Form>
           )}
@@ -252,42 +351,34 @@ const Register = () => {
               
               <Form.Group className="mb-4">
                 <Form.Label>Mã xác thực</Form.Label>
-                <InputGroup>
-                  <Form.Control
-                    type="text"
-                    value={verificationCode}
-                    onChange={(e) => setVerificationCode(e.target.value)}
-                    required
-                    placeholder="Nhập mã xác thực"
-                  />
-                </InputGroup>
+                <Form.Control
+                  type="text"
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value)}
+                  required
+                  placeholder="Nhập mã xác thực 6 số"
+                  className="text-center"
+                  style={{ letterSpacing: '8px', fontSize: '1.2rem' }}
+                  maxLength="6"
+                />
               </Form.Group>
               
               <div className="d-grid gap-2">
                 <Button 
                   variant="primary" 
                   type="submit" 
-                  disabled={loading}
+                  disabled={loading || verificationCode.length !== 6}
                 >
-                  {loading ? 'Đang xử lý...' : 'Xác thực và Đăng ký'}
-                </Button>
-                
-                <Button 
-                  variant="outline-secondary" 
-                  type="button" 
-                  disabled={loading}
-                  onClick={resendVerificationCode}
-                >
-                  Gửi lại mã xác thực
+                  {loading ? 'Đang xử lý...' : 'Xác thực & Hoàn tất đăng ký'}
                 </Button>
                 
                 <Button 
                   variant="link" 
                   type="button" 
+                  onClick={resendVerificationCode}
                   disabled={loading}
-                  onClick={() => setStep(1)}
                 >
-                  Quay lại
+                  Gửi lại mã xác thực
                 </Button>
               </div>
             </Form>
@@ -295,16 +386,11 @@ const Register = () => {
           
           {step === 3 && (
             <div className="text-center">
-              <i className="bi bi-check-circle-fill text-success" style={{ fontSize: '3rem' }}></i>
-              <p className="mt-3">Đăng ký thành công! Đang chuyển hướng đến trang đăng nhập...</p>
+              <i className="bi bi-check-circle-fill text-success" style={{ fontSize: '4rem' }}></i>
+              <h4 className="mt-3">Đăng ký thành công!</h4>
+              <p>Tài khoản của bạn đã được tạo. Bạn sẽ được chuyển đến trang đăng nhập.</p>
             </div>
           )}
-          
-          <div className="text-center mt-3">
-            <p className="mb-0">
-              Đã có tài khoản? <Link to="/login">Đăng nhập</Link>
-            </p>
-          </div>
         </Card.Body>
       </Card>
     </Container>

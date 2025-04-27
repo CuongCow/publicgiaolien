@@ -25,9 +25,21 @@ const transporter = nodemailer.createTransport({
 // @desc    Đăng ký tài khoản admin
 // @access  Public
 exports.register = async (req, res) => {
-  const { username, password, name, email } = req.body;
+  const { username, password, name, email, invitationCode } = req.body;
 
   try {
+    // Kiểm tra mã mời
+    if (!invitationCode) {
+      return res.status(400).json({ message: 'Mã mời là bắt buộc' });
+    }
+
+    const InvitationCode = require('../models/InvitationCode');
+    const invitation = await InvitationCode.findOne({ code: invitationCode, isUsed: false });
+    
+    if (!invitation || new Date(invitation.expiresAt) < new Date()) {
+      return res.status(400).json({ message: 'Mã mời không hợp lệ hoặc đã hết hạn' });
+    }
+
     // Kiểm tra xem username đã tồn tại chưa
     let admin = await Admin.findOne({ username });
     if (admin) {
@@ -55,13 +67,19 @@ exports.register = async (req, res) => {
     // Lưu admin
     await admin.save();
 
+    // Đánh dấu mã mời đã được sử dụng
+    invitation.isUsed = true;
+    invitation.usedBy = admin._id;
+    await invitation.save();
+
     // Gửi email chào mừng
     await sendWelcomeEmail(email, name);
 
     // Tạo token
     const payload = {
       admin: {
-        id: admin.id
+        id: admin.id,
+        role: admin.role
       }
     };
 
@@ -176,7 +194,8 @@ exports.login = async (req, res) => {
     // Tạo token
     const payload = {
       admin: {
-        id: admin.id
+        id: admin.id,
+        role: admin.role
       }
     };
 
@@ -192,7 +211,8 @@ exports.login = async (req, res) => {
             id: admin.id,
             username: admin.username,
             name: admin.name,
-            email: admin.email
+            email: admin.email,
+            role: admin.role
           }
         });
       }
@@ -579,6 +599,24 @@ exports.getLoginHistoryDetail = async (req, res) => {
     res.json(history);
   } catch (err) {
     console.error('Get login history detail error:', err.message);
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+};
+
+// @route   GET api/auth/admins
+// @desc    Lấy danh sách admin
+// @access  Private (SuperAdmin)
+exports.getAllAdmins = async (req, res) => {
+  try {
+    // Kiểm tra quyền SuperAdmin
+    if (req.admin.role !== 'superadmin') {
+      return res.status(403).json({ message: 'Không có quyền truy cập' });
+    }
+
+    const admins = await Admin.find().select('-password').sort({ createdAt: -1 });
+    res.json(admins);
+  } catch (err) {
+    console.error('Get all admins error:', err.message);
     res.status(500).json({ message: 'Lỗi server' });
   }
 }; 

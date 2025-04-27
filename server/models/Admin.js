@@ -22,6 +22,11 @@ const AdminSchema = new mongoose.Schema({
     unique: true,
     trim: true
   },
+  role: {
+    type: String,
+    enum: ['admin', 'superadmin'],
+    default: 'admin'
+  },
   createdAt: {
     type: Date,
     default: Date.now

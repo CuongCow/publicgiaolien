@@ -36,6 +36,8 @@ const AdminNavbar = () => {
   const isActive = (path) => {
     return location.pathname.startsWith(path) ? 'active' : '';
   };
+
+  const isSuperAdmin = admin?.role === 'superadmin';
   
   if (loading) {
     return null;
@@ -47,19 +49,31 @@ const AdminNavbar = () => {
         <Navbar.Brand as={Link} to="/" className="d-flex align-items-center">
           <img src="/logo192.png" alt="Logo" style={{ height: '2rem', marginRight: '0.5rem' }} />
           <span className="fw-bold">Giao Liên</span>
-          <span className="ms-1 badge bg-primary">Admin</span>
+          <span className="ms-1 badge bg-primary">
+            {isSuperAdmin ? 'Super Admin' : 'Admin'}
+          </span>
         </Navbar.Brand>
         
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
-            <Nav.Link as={Link} to="/admin/dashboard" className={isActive('/admin/dashboard')}>
-              <i className="bi bi-speedometer2 me-1"></i> Tổng quan
-            </Nav.Link>
-            <Nav.Link as={Link} to="/admin/stations" className={isActive('/admin/stations')}>
-              <i className="bi bi-geo-alt me-1"></i> <TermReplacer>Trạm</TermReplacer>
-            </Nav.Link>
+            {isSuperAdmin ? (
+              // Menu cho Super Admin
+              <Nav.Link as={Link} to="/superadmin" className={isActive('/superadmin')}>
+                <i className="bi bi-shield me-1"></i> Quản lý hệ thống
+              </Nav.Link>
+            ) : (
+              // Menu cho Admin thường
+              <>
+                <Nav.Link as={Link} to="/admin/dashboard" className={isActive('/admin/dashboard')}>
+                  <i className="bi bi-speedometer2 me-1"></i> Tổng quan
+                </Nav.Link>
+                <Nav.Link as={Link} to="/admin/stations" className={isActive('/admin/stations')}>
+                  <i className="bi bi-geo-alt me-1"></i> <TermReplacer>Trạm</TermReplacer>
+                </Nav.Link>
+              </>
+            )}
             <Nav.Link as={Link} to="/admin/teams" className={isActive('/admin/teams')}>
               <i className="bi bi-people-fill me-2"></i>
               Đội chơi

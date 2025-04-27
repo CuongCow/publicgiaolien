@@ -7,6 +7,9 @@ import { formatDateTime, replaceStationTerm } from '../../utils/helpers';
 import TermReplacer from '../../utils/TermReplacer';
 import * as ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
+import ErrorHandler from '../../components/ErrorHandler';
+import LoadingSpinner from '../../components/LoadingSpinner';
+import { handleApiError } from '../../utils/helpers';
 
 // Khóa cho localStorage, đặt ở mức global để tránh xung đột
 const LOGS_STORAGE_KEY = 'tcl_team_status_logs_v1';
@@ -137,7 +140,7 @@ const TeamList = () => {
       setTeams(response.data);
       setError(null);
     } catch (err) {
-      setError('Không thể tải danh sách đội. Vui lòng thử lại sau.');
+      setError(handleApiError(err, 'Không thể tải danh sách đội. Vui lòng thử lại sau.'));
       console.error('Error fetching teams:', err);
     } finally {
       setLoading(false);
@@ -580,12 +583,7 @@ LƯU Ý:
           </Col>
         </Row>
 
-        {error && (
-          <Alert variant="danger" className="mb-4">
-            <i className="bi bi-exclamation-triangle me-2"></i>
-            {error}
-          </Alert>
-        )}
+        {error && <ErrorHandler error={error} onClose={() => setError(null)} className="mb-4" />}
 
         {success && (
           <Alert variant="success" className="mb-4">
@@ -617,10 +615,7 @@ LƯU Ý:
             </div>
 
             {loading ? (
-              <div className="text-center py-5">
-                <Spinner animation="border" variant="primary" />
-                <p className="mt-2">Đang tải dữ liệu...</p>
-              </div>
+              <LoadingSpinner text="Đang tải danh sách đội..." />
             ) : filteredTeams.length === 0 ? (
               <div className="text-center py-5">
                 <i className="bi bi-people text-muted" style={{ fontSize: '3rem' }}></i>

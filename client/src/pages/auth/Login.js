@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Container, Card, Form, Button, Alert, InputGroup } from 'react-bootstrap';
 import { useNavigate, Link } from 'react-router-dom';
 import { authApi } from '../../services/api';
+import { handleApiError } from '../../utils/helpers';
+import ErrorHandler from '../../components/ErrorHandler';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -33,13 +35,14 @@ const Login = () => {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('admin', JSON.stringify(response.data.admin));
       
-      // Chuyển hướng đến trang admin
-      navigate('/admin');
+      // Chuyển hướng dựa trên vai trò
+      if (response.data.admin.role === 'superadmin') {
+        navigate('/superadmin');
+      } else {
+        navigate('/admin');
+      }
     } catch (err) {
-      setError(
-        err.response?.data?.message || 
-        'Không thể đăng nhập. Vui lòng thử lại sau.'
-      );
+      setError(handleApiError(err, 'Không thể đăng nhập. Vui lòng thử lại sau.'));
       console.error('Login error:', err);
     } finally {
       setLoading(false);
@@ -56,7 +59,7 @@ const Login = () => {
         <Card.Body className="p-4">
           <h2 className="text-center mb-4">Đăng nhập Admin</h2>
           
-          {error && <Alert variant="danger">{error}</Alert>}
+          {error && <ErrorHandler error={error} />}
           
           <Form onSubmit={handleSubmit}>
             <Form.Group className="mb-3">

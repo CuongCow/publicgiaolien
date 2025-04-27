@@ -8,6 +8,7 @@ import { SystemSettingsProvider } from './context/SystemSettingsContext';
 import HomePage from './pages/HomePage';
 import AboutPage from './pages/AboutPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import SuperAdminDashboard from './pages/admin/SuperAdminDashboard';
 import StationForm from './pages/admin/StationForm';
 import StationList from './pages/admin/StationList';
 import TeamRanking from './pages/admin/TeamRanking';
@@ -25,6 +26,7 @@ import { authApi } from './services/api';
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState(null);
 
   useEffect(() => {
     // Kiểm tra trạng thái xác thực khi component được load
@@ -32,13 +34,15 @@ function App() {
       try {
         const token = localStorage.getItem('token');
         if (token) {
-          await authApi.getMe();
+          const res = await authApi.getMe();
           setIsAuthenticated(true);
+          setUserRole(res.data.role || 'admin');
         }
       } catch (error) {
         localStorage.removeItem('token');
         localStorage.removeItem('admin');
         setIsAuthenticated(false);
+        setUserRole(null);
       } finally {
         setLoading(false);
       }
@@ -58,12 +62,22 @@ function App() {
   }, []);
 
   // Route bảo vệ cho admin
-  const ProtectedRoute = ({ children }) => {
+  const ProtectedRoute = ({ children, requiredRole = null }) => {
     if (loading) {
       return <div className="loading">Đang tải...</div>;
     }
     
-    return isAuthenticated ? children : <Navigate to="/login" />;
+    if (!isAuthenticated) {
+      return <Navigate to="/login" />;
+    }
+    
+    // Kiểm tra quyền truy cập nếu có yêu cầu
+    if (requiredRole && userRole !== requiredRole) {
+      // Chuyển hướng đến trang phù hợp với vai trò
+      return <Navigate to={userRole === 'superadmin' ? '/superadmin' : '/admin'} />;
+    }
+    
+    return children;
   };
 
   return (
@@ -80,15 +94,22 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             
+            {/* SuperAdmin routes */}
+            <Route path="/superadmin" element={
+              <ProtectedRoute requiredRole="superadmin">
+                <SuperAdminDashboard />
+              </ProtectedRoute>
+            } />
+            
             {/* Admin routes */}
             <Route path="/admin" element={
               <ProtectedRoute>
-                <AdminDashboard />
+                {userRole === 'superadmin' ? <Navigate to="/superadmin" /> : <AdminDashboard />}
               </ProtectedRoute>
             } />
             <Route path="/admin/dashboard" element={
               <ProtectedRoute>
-                <AdminDashboard />
+                {userRole === 'superadmin' ? <Navigate to="/superadmin" /> : <AdminDashboard />}
               </ProtectedRoute>
             } />
             <Route path="/admin/stations" element={

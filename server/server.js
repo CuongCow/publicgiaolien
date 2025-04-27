@@ -20,8 +20,12 @@ app.use(express.json());
 app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // MongoDB Connection
-const MONGODB_URI = process.env.MONGODB_URI || config.MONGODB_URI;
-mongoose.connect(MONGODB_URI)
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://cuongdn:v446gy9nDmuyKsqg@cluster0.frhl2tm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+mongoose.connect(MONGODB_URI, {
+  serverSelectionTimeoutMS: 5000, // Timeout for server selection
+  socketTimeoutMS: 45000,       // Close sockets after 45 seconds of inactivity
+  family: 4                    // Use IPv4, skip trying IPv6
+})
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.log('MongoDB connection error:', err));
 
@@ -31,6 +35,7 @@ const stationRoutes = require('./routes/stations');
 const teamRoutes = require('./routes/teams');
 const submissionRoutes = require('./routes/submissions');
 const settingsRoutes = require('./routes/settings');
+// const invitationRoutes = require('./routes/invitations');
 
 // Use Routes
 app.use('/api/auth', authRoutes);
@@ -38,6 +43,7 @@ app.use('/api/stations', stationRoutes);
 app.use('/api/teams', teamRoutes);
 app.use('/api/submissions', submissionRoutes);
 app.use('/api/settings', settingsRoutes);
+// app.use('/api/invitations', invitationRoutes);
 
 // API kiểm tra trạng thái
 app.get('/api/status', (req, res) => {
@@ -58,6 +64,66 @@ app.get('/', (req, res) => {
       '/api/status'
     ]
   });
+});
+
+// Chức năng mã mời tạm thời bị tắt
+app.post('/api/invitations/verify', (req, res) => {
+  const { code } = req.body;
+  
+  
+  // Kiểm tra xem mã mời có hợp lệ không
+  const isValid = validCodes.includes(code);
+  
+  res.json({ 
+    valid: isValid, 
+    message: isValid ? "Mã mời hợp lệ" : "Mã mời không hợp lệ hoặc đã hết hạn" 
+  });
+});
+
+// Tạm thời hỗ trợ API invitations
+app.get('/api/invitations', (req, res) => {
+  res.json([]); // Trả về mảng rỗng
+});
+
+app.post('/api/invitations', (req, res) => {
+  // Tạo mã ngẫu nhiên
+  const code = Math.random().toString(36).substring(2, 10).toUpperCase();
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 7);
+  
+  res.status(201).json({
+    _id: Date.now().toString(),
+    code,
+    isUsed: false,
+    createdAt: new Date(),
+    expiresAt
+  });
+});
+
+app.delete('/api/invitations/:id', (req, res) => {
+  res.json({ message: 'Đã xóa mã mời' });
+});
+
+// Middleware xử lý lỗi chung
+app.use((err, req, res, next) => {
+  console.error('Server error:', err.stack);
+  
+  // Kiểm tra lỗi kết nối MongoDB
+  if (err.name === 'MongoNetworkError' || err.name === 'MongoTimeoutError') {
+    return res.status(503).json({
+      message: 'Không thể kết nối đến cơ sở dữ liệu. Vui lòng thử lại sau.'
+    });
+  }
+  
+  // Trả về lỗi chung
+  res.status(err.status || 500).json({
+    message: err.message || 'Có lỗi xảy ra ở máy chủ, vui lòng thử lại sau.'
+  });
+});
+
+// Xử lý route không tồn tại
+app.use((req, res) => {
+  res.status(404).json({ message: 'Không tìm thấy endpoint' });
 });
 
 // Start server - lắng nghe trên tất cả các địa chỉ IP
