@@ -1,8 +1,13 @@
 import axios from 'axios';
 
 // Setup axios instance
-// Sử dụng địa chỉ IP mạng LAN thay vì localhost để hỗ trợ truy cập từ thiết bị di động
-const API_URL = process.env.REACT_APP_API_URL || 'http://192.168.1.8:5000/api';
+// Xác định API URL dựa trên môi trường
+let API_URL;
+if (process.env.NODE_ENV === 'production') {
+  API_URL = process.env.REACT_APP_API_URL || 'https://giaolien-backend.herokuapp.com/api';
+} else {
+  API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+}
 
 const axiosInstance = axios.create({
   baseURL: API_URL,

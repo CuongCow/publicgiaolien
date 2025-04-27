@@ -1,10 +1,33 @@
 {
+  "name": "giaolien",
+  "version": "1.0.0",
+  "description": "Ứng dụng quản lý trò chơi giải mật thư",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "server": "cd server && npm run dev",
+    "client": "cd client && npm start",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "heroku-postbuild": "cd server && npm install",
+    "vercel-build": "cd client && npm install && npm run build"
+  },
+  "keywords": [
+    "game",
+    "puzzle",
+    "mern"
+  ],
+  "author": "CuongCow",
+  "license": "MIT",
   "dependencies": {
     "aos": "^2.3.4",
     "bootstrap-icons": "^1.11.3",
     "jsqr": "^1.4.0",
     "nodemailer": "^6.10.1",
     "react-qr-reader": "^3.0.0-beta-1",
-    "react-toastify": "^11.0.5"
+    "react-toastify": "^11.0.5",
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   }
 }

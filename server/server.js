@@ -6,7 +6,7 @@ const config = require('./config');
 const path = require('path');
 
 const app = express();
-const PORT = config.PORT;
+const PORT = process.env.PORT || config.PORT || 5000;
 
 // Middleware
 app.use(cors({
@@ -20,7 +20,8 @@ app.use(express.json());
 app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // MongoDB Connection
-mongoose.connect(config.MONGODB_URI)
+const MONGODB_URI = process.env.MONGODB_URI || config.MONGODB_URI;
+mongoose.connect(MONGODB_URI)
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.log('MongoDB connection error:', err));
 
@@ -43,9 +44,23 @@ app.get('/api/status', (req, res) => {
   res.json({ status: 'Server đang hoạt động' });
 });
 
+// Đối với production, trả về trang chủ API
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Giao Lien API',
+    status: 'running',
+    endpoints: [
+      '/api/auth',
+      '/api/stations',
+      '/api/teams',
+      '/api/submissions',
+      '/api/settings',
+      '/api/status'
+    ]
+  });
+});
+
 // Start server - lắng nghe trên tất cả các địa chỉ IP
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, () => {
   console.log(`Server đang chạy trên cổng ${PORT}`);
-  console.log(`Local: http://localhost:${PORT}`);
-  console.log(`Network: http://192.168.1.8:${PORT}`);
 }); 
