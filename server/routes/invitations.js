@@ -1,8 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const invitationController = require('../controllers/invitationController');
-const auth = require('../middleware/auth');
-const { checkSuperAdmin } = require('../middleware/auth');
+const { auth, checkSuperAdmin } = require('../middleware/auth');
 
 // @route   POST api/invitations
 // @desc    Tạo mã mời mới

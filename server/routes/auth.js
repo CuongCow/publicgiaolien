@@ -3,7 +3,7 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const Admin = require('../models/Admin');
 const config = require('../config');
-const auth = require('../middleware/auth');
+const { auth } = require('../middleware/auth');
 const authController = require('../controllers/authController');
 
 // Đăng ký admin mới

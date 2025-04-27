@@ -1,7 +1,8 @@
 const jwt = require('jsonwebtoken');
 const config = require('../config');
 
-module.exports = function(req, res, next) {
+// Middleware xác thực token
+exports.auth = function(req, res, next) {
   // Lấy token từ header
   const token = req.header('x-auth-token');
 

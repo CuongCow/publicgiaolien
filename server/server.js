@@ -35,7 +35,7 @@ const stationRoutes = require('./routes/stations');
 const teamRoutes = require('./routes/teams');
 const submissionRoutes = require('./routes/submissions');
 const settingsRoutes = require('./routes/settings');
-// const invitationRoutes = require('./routes/invitations');
+const invitationRoutes = require('./routes/invitations');
 
 // Use Routes
 app.use('/api/auth', authRoutes);
@@ -43,7 +43,7 @@ app.use('/api/stations', stationRoutes);
 app.use('/api/teams', teamRoutes);
 app.use('/api/submissions', submissionRoutes);
 app.use('/api/settings', settingsRoutes);
-// app.use('/api/invitations', invitationRoutes);
+app.use('/api/invitations', invitationRoutes);
 
 // API kiểm tra trạng thái
 app.get('/api/status', (req, res) => {
@@ -64,44 +64,6 @@ app.get('/', (req, res) => {
       '/api/status'
     ]
   });
-});
-
-// Chức năng mã mời tạm thời bị tắt
-app.post('/api/invitations/verify', (req, res) => {
-  const { code } = req.body;
-  
-  
-  // Kiểm tra xem mã mời có hợp lệ không
-  const isValid = validCodes.includes(code);
-  
-  res.json({ 
-    valid: isValid, 
-    message: isValid ? "Mã mời hợp lệ" : "Mã mời không hợp lệ hoặc đã hết hạn" 
-  });
-});
-
-// Tạm thời hỗ trợ API invitations
-app.get('/api/invitations', (req, res) => {
-  res.json([]); // Trả về mảng rỗng
-});
-
-app.post('/api/invitations', (req, res) => {
-  // Tạo mã ngẫu nhiên
-  const code = Math.random().toString(36).substring(2, 10).toUpperCase();
-  const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + 7);
-  
-  res.status(201).json({
-    _id: Date.now().toString(),
-    code,
-    isUsed: false,
-    createdAt: new Date(),
-    expiresAt
-  });
-});
-
-app.delete('/api/invitations/:id', (req, res) => {
-  res.json({ message: 'Đã xóa mã mời' });
 });
 
 // Middleware xử lý lỗi chung

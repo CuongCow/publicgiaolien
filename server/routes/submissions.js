@@ -3,7 +3,7 @@ const router = express.Router();
 const Submission = require('../models/Submission');
 const Station = require('../models/Station');
 const Team = require('../models/Team');
-const auth = require('../middleware/auth');
+const { auth } = require('../middleware/auth');
 
 // Lấy tất cả các lần nộp (admin only)
 router.get('/', auth, async (req, res) => {
