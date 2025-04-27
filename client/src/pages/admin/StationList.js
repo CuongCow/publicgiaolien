@@ -1,0 +1,499 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Container, Table, Button, Card, Modal, Spinner, Row, Col, Badge, InputGroup, Form, Alert, OverlayTrigger, Tooltip } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
+import { QRCodeSVG } from 'qrcode.react';
+import html2canvas from 'html2canvas';
+import AdminNavbar from '../../components/Navbar';
+import { stationApi } from '../../services/api';
+import { formatDateTime, replaceStationTerm } from '../../utils/helpers';
+import TermReplacer from '../../utils/TermReplacer';
+
+const StationList = () => {
+  const [stations, setStations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [showQRModal, setShowQRModal] = useState(false);
+  const [selectedStation, setSelectedStation] = useState(null);
+  const qrCodeRef = useRef(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [filterText, setFilterText] = useState('');
+
+  useEffect(() => {
+    fetchStations();
+  }, []);
+
+  const fetchStations = async () => {
+    try {
+      setLoading(true);
+      const response = await stationApi.getAll();
+      setStations(response.data);
+      setError(null);
+    } catch (err) {
+      setError('Không thể tải danh sách. Vui lòng thử lại sau.');
+      console.error('Error fetching stations:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Bạn có chắc chắn muốn xóa danh mục này?')) {
+      try {
+        await stationApi.delete(id);
+        fetchStations();
+      } catch (err) {
+        setError('Không thể xóa danh mục. Vui lòng thử lại sau.');
+        console.error('Error deleting station:', err);
+      }
+    }
+  };
+
+  const showQRCode = (station) => {
+    setSelectedStation(station);
+    setShowQRModal(true);
+  };
+
+  // Hàm in mã QR
+  const handlePrintQR = async () => {
+    if (!qrCodeRef.current) return;
+    
+    try {
+      // Tạo canvas từ phần tử DOM chứa mã QR và thông tin
+      const canvas = await html2canvas(qrCodeRef.current);
+      const imageDataUrl = canvas.toDataURL('image/png');
+      
+      const printWindow = window.open('', '_blank');
+      const stationName = selectedStation?.name || <TermReplacer>Trạm</TermReplacer>;
+      const maxAttempts = selectedStation?.maxAttempts || '';
+      
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>In Mã QR - ${stationName}</title>
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+            <style>
+              body { 
+                font-family: 'Inter', 'Roboto', sans-serif;
+                text-align: center;
+                padding: 20px;
+              }
+              .container {
+                max-width: 500px;
+                margin: 0 auto;
+                border: 1px solid #ddd;
+                padding: 20px;
+                border-radius: 12px;
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+              }
+              h1 {
+                margin-bottom: 5px;
+                font-size: 24px;
+                color: #3498db;
+              }
+              .info {
+                margin-bottom: 20px;
+                font-size: 16px;
+              }
+              .qr-image {
+                margin: 20px auto;
+                max-width: 100%;
+                height: auto;
+                border-radius: 8px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+              }
+              .station-name {
+                font-size: 24px;
+                font-weight: 600;
+                color: #2c3e50;
+                margin-bottom: 10px;
+              }
+              .station-info {
+                color: #7f8c8d;
+                font-size: 14px;
+                margin-bottom: 20px;
+              }
+              @media print {
+                .container {
+                  border: none;
+                  box-shadow: none;
+                }
+                .no-print {
+                  display: none;
+                }
+              }
+              .btn {
+                padding: 10px 16px;
+                border-radius: 8px;
+                border: none;
+                cursor: pointer;
+                font-weight: 500;
+                transition: all 0.3s ease;
+                margin: 0 5px;
+              }
+              .btn-primary {
+                background: linear-gradient(135deg, #3498db, #2980b9);
+                color: white;
+              }
+              .btn-secondary {
+                background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+                color: white;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="station-name">${stationName}</div>
+              <div class="station-info">
+                <span>Số lần thử tối đa: ${maxAttempts}</span>
+              </div>
+              <img class="qr-image" src="${imageDataUrl}" />
+            </div>
+            <div class="no-print mt-4">
+              <button onclick="window.print();" class="btn btn-primary">
+                <i class="bi bi-printer"></i> In Mã QR
+              </button>
+              <button onclick="window.close();" class="btn btn-secondary">
+                <i class="bi bi-x"></i> Đóng
+              </button>
+            </div>
+          </body>
+        </html>
+      `);
+      
+      printWindow.document.close();
+      printWindow.focus();
+    } catch (err) {
+      console.error('Error preparing print:', err);
+      alert('Không thể chuẩn bị trang in. Vui lòng thử lại sau.');
+    }
+  };
+
+  // Hàm lưu mã QR thành hình ảnh
+  const handleSaveQRImage = async () => {
+    if (!qrCodeRef.current) return;
+    
+    try {
+      setIsDownloading(true);
+      // Tạo canvas từ phần tử DOM chứa mã QR và thông tin
+      const canvas = await html2canvas(qrCodeRef.current);
+      
+      // Chuyển canvas thành blob
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          throw new Error('Không thể tạo blob từ canvas');
+        }
+        
+        // Tạo URL từ blob
+        const url = URL.createObjectURL(blob);
+        
+        // Tạo thẻ a để tải xuống
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `QR_${selectedStation?.name || 'Tram'}.png`;
+        
+        // Kích hoạt sự kiện click để tải xuống
+        document.body.appendChild(link);
+        link.click();
+        
+        // Dọn dẹp
+        setTimeout(() => {
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+          setIsDownloading(false);
+        }, 100);
+      }, 'image/png', 1.0);
+    } catch (err) {
+      console.error('Error saving image:', err);
+      alert('Không thể lưu hình ảnh. Vui lòng thử lại sau.');
+      setIsDownloading(false);
+    }
+  };
+  
+  // Lọc trạm theo từ khóa
+  const filteredStations = stations.filter(station => 
+    station.name.toLowerCase().includes(filterText.toLowerCase()) ||
+    station.teams.some(team => team.toLowerCase().includes(filterText.toLowerCase()))
+  );
+
+  return (
+    <>
+      <AdminNavbar />
+      <Container className="py-4 animate__animated animate__fadeIn">
+        <Row className="mb-4 align-items-center">
+          <Col>
+            <h1 className="mb-0 d-flex align-items-center">
+              <i className="bi bi-geo-alt-fill me-3 text-primary" style={{ fontSize: '2rem' }}></i>
+              <TermReplacer>Quản lý trạm</TermReplacer>
+            </h1>
+            <p className="text-muted mb-0 mt-2">
+              <TermReplacer>Quản lý tất cả các trạm trong hệ thống</TermReplacer>
+            </p>
+          </Col>
+          <Col xs="auto">
+            <Button as={Link} to="/admin/stations/new" variant="primary" className="d-flex align-items-center">
+              <i className="bi bi-plus-circle me-2"></i>
+              <TermReplacer>Tạo trạm mới</TermReplacer>
+            </Button>
+          </Col>
+        </Row>
+
+        {error && (
+          <Alert variant="danger" className="mb-4">
+            <i className="bi bi-exclamation-triangle me-2"></i>
+            {error}
+          </Alert>
+        )}
+        
+        <Card className="shadow-sm mb-4">
+          <Card.Body>
+            <Row className="mb-4 align-items-center">
+              <Col md={6} className="mb-3 mb-md-0">
+                <div className="d-flex align-items-center">
+                  <i className="bi bi-clipboard-data me-2 text-primary" style={{ fontSize: '1.2rem' }}></i>
+                  <h5 className="mb-0">
+                    <TermReplacer>Tổng số trạm:</TermReplacer> <Badge bg="primary">{stations.length}</Badge>
+                  </h5>
+                </div>
+              </Col>
+              <Col md={6}>
+                <InputGroup>
+                  <InputGroup.Text className="bg-white">
+                    <i className="bi bi-search text-primary"></i>
+                  </InputGroup.Text>
+                  <Form.Control
+                    type="text"
+                    placeholder={replaceStationTerm("Tìm kiếm theo tên trạm hoặc đội...")}
+                    value={filterText}
+                    onChange={(e) => setFilterText(e.target.value)}
+                  />
+                  {filterText && (
+                    <Button variant="outline-secondary" onClick={() => setFilterText('')}>
+                      <i className="bi bi-x"></i>
+                    </Button>
+                  )}
+                </InputGroup>
+              </Col>
+            </Row>
+
+            {loading ? (
+              <div className="text-center my-5 py-5">
+                <Spinner animation="border" variant="primary" />
+                <p className="mt-3 text-muted">Đang tải dữ liệu...</p>
+              </div>
+            ) : filteredStations.length === 0 ? (
+              <Card className="text-center p-5 bg-light border-0">
+                <Card.Body>
+                  <div className="mb-3">
+                    <i className="bi bi-geo-alt text-muted" style={{ fontSize: '3rem' }}></i>
+                  </div>
+                  <h3>{filterText ? <TermReplacer>Không tìm thấy trạm phù hợp</TermReplacer> : <TermReplacer>Chưa có trạm nào</TermReplacer>}</h3>
+                  <p className="text-muted mb-4">
+                    {filterText 
+                      ? <TermReplacer>Thử tìm kiếm với từ khóa khác hoặc tạo trạm mới</TermReplacer>
+                      : <TermReplacer>Hãy tạo trạm đầu tiên để bắt đầu</TermReplacer>
+                    }
+                  </p>
+                  <Button as={Link} to="/admin/stations/new" variant="primary">
+                    <i className="bi bi-plus-circle me-2"></i>
+                    <TermReplacer>Tạo trạm mới</TermReplacer>
+                  </Button>
+                </Card.Body>
+              </Card>
+            ) : (
+              <div className="table-responsive">
+                <Table hover className="align-middle mb-0">
+                  <thead>
+                    <tr>
+                      <th width="60" className="text-center">#</th>
+                      <th>
+                        <TermReplacer>Trạm</TermReplacer>
+                      </th>
+                      <th>Đội chơi</th>
+                      <th>Loại nội dung</th>
+                      <th width="200" className="text-center">Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredStations.map((station, index) => (
+                      <tr key={station._id}>
+                        <td className="text-center">{index + 1}</td>
+                        <td>
+                          <div className="d-flex align-items-center">
+                            <div>
+                              <h6 className="mb-0">{station.name}</h6>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <div className="d-flex flex-wrap" style={{ gap: '4px' }}>
+                            {station.teams.length === 0 ? (
+                              <span className="text-muted">Chưa có đội</span>
+                            ) : station.teams.length <= 3 ? (
+                              station.teams.map((team, idx) => (
+                                <Badge key={idx} bg="light" text="dark" className="me-1">
+                                  {team}
+                                </Badge>
+                              ))
+                            ) : (
+                              <>
+                                <Badge bg="light" text="dark" className="me-1">
+                                  {station.teams[0]}
+                                </Badge>
+                                <Badge bg="light" text="dark" className="me-1">
+                                  {station.teams[1]}
+                                </Badge>
+                                <OverlayTrigger
+                                  placement="right"
+                                  overlay={
+                                    <Tooltip>
+                                      <div className="text-start">
+                                        {station.teams.slice(2).map((team, idx) => (
+                                          <div key={idx}>{team}</div>
+                                        ))}
+                                      </div>
+                                    </Tooltip>
+                                  }
+                                >
+                                  <Badge bg="primary" className="me-1" style={{ cursor: 'pointer' }}>
+                                    +{station.teams.length - 2}
+                                  </Badge>
+                                </OverlayTrigger>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                        <td>
+                          {station.contentType === 'text' && (
+                            <Badge bg="info" className="me-1">Văn bản</Badge>
+                          )}
+                          {station.contentType === 'image' && (
+                            <Badge bg="success" className="me-1">Hình ảnh</Badge>
+                          )}
+                          {station.contentType === 'both' && (
+                            <>
+                              <Badge bg="info" className="me-1">Văn bản</Badge>
+                              <Badge bg="success" className="me-1">Hình ảnh</Badge>
+                            </>
+                          )}
+                          <div className="mt-1">
+                            <small className="text-muted">
+                              <i className="bi bi-repeat me-1"></i>
+                              {station.maxAttempts} lần thử
+                            </small>
+                          </div>
+                        </td>
+                        <td>
+                          <div className="d-flex justify-content-center" style={{ gap: '8px' }}>
+                            <Button 
+                              variant="info" 
+                              size="sm" 
+                              onClick={() => showQRCode(station)}
+                              title="Xem mã QR"
+                            >
+                              <i className="bi bi-qr-code"></i>
+                            </Button>
+                            <Button 
+                              as={Link} 
+                              to={`/admin/stations/edit/${station._id}`} 
+                              variant="warning" 
+                              size="sm"
+                              title="Chỉnh sửa danh mục"
+                            >
+                              <i className="bi bi-pencil"></i>
+                            </Button>
+                            <Button 
+                              variant="danger" 
+                              size="sm"
+                              onClick={() => handleDelete(station._id)}
+                              title="Xóa danh mục"
+                            >
+                              <i className="bi bi-trash"></i>
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              </div>
+            )}
+          </Card.Body>
+        </Card>
+      </Container>
+
+      {/* QR Code Modal */}
+      <Modal 
+        show={showQRModal} 
+        onHide={() => setShowQRModal(false)}
+        centered
+        size="md"
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>
+            <i className="bi bi-qr-code me-2 text-primary"></i>
+            <TermReplacer>Mã QR Trạm</TermReplacer>: {selectedStation?.name}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="text-center">
+          {selectedStation && (
+            <>
+              <div ref={qrCodeRef} className="qr-code-container">
+                <h5 className="mb-3 fw-bold">{selectedStation.name}</h5>
+                <p className="mb-2">
+                  <Badge bg="light" text="dark">
+                    <i className="bi bi-repeat me-1"></i>
+                    Số lần thử tối đa: {selectedStation.maxAttempts}
+                  </Badge>
+                </p>
+                <div className="d-flex justify-content-center mb-3">
+                  <QRCodeSVG 
+                    value={`${window.location.origin}/station/${selectedStation._id}`}
+                    size={250}
+                    includeMargin
+                    id="qr-code-svg"
+                    level="H"
+                    bgColor="#FFFFFF"
+                    fgColor="#000000"
+                  />
+                </div>
+                <div className="mb-0 small text-muted bg-light py-2 px-3 rounded">
+                  <i className="bi bi-link-45deg me-1"></i>
+                  {`${window.location.origin}/station/${selectedStation._id}`}
+                </div>
+              </div>
+              <p className="mt-4 text-muted">
+                <i className="bi bi-info-circle me-1"></i>
+                <TermReplacer>In mã QR này và đặt tại các trạm để đội chơi quét mã truy cập</TermReplacer>
+              </p>
+            </>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="outline-secondary" onClick={() => setShowQRModal(false)}>
+            <i className="bi bi-x me-1"></i>
+            Đóng
+          </Button>
+          <Button variant="primary" onClick={handlePrintQR}>
+            <i className="bi bi-printer me-1"></i>
+            In
+          </Button>
+          <Button variant="success" onClick={handleSaveQRImage} disabled={isDownloading}>
+            {isDownloading ? (
+              <>
+                <Spinner animation="border" size="sm" className="me-1" />
+                Đang tải...
+              </>
+            ) : (
+              <>
+                <i className="bi bi-download me-1"></i>
+                Tải ảnh
+              </>
+            )}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </>
+  );
+};
+
+export default StationList; 
