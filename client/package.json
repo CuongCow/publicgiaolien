@@ -9,6 +9,7 @@
     "@testing-library/user-event": "^13.5.0",
     "@zxing/browser": "^0.1.5",
     "@zxing/library": "^0.21.3",
+    "aos": "^2.3.4",
     "axios": "^1.8.4",
     "bootstrap": "^5.3.5",
     "exceljs": "^4.4.0",
