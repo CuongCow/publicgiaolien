@@ -6,6 +6,7 @@ const LoginHistory = require('../models/LoginHistory');
 const nodemailer = require('nodemailer');
 const geoip = require('geoip-lite');
 const UAParser = require('ua-parser-js');
+const config = require('../config');
 
 // Hàm tạo mã xác thực ngẫu nhiên
 const generateVerificationCode = () => {
@@ -79,17 +80,36 @@ exports.register = async (req, res) => {
     const payload = {
       admin: {
         id: admin.id,
+        username: admin.username,
+        name: admin.name,
+        email: admin.email,
         role: admin.role
       }
     };
 
+    console.log('Tạo token với payload:', payload);
+
     jwt.sign(
       payload,
-      process.env.JWT_SECRET,
+      process.env.JWT_SECRET || config.JWT_SECRET,
       { expiresIn: '7d' },
       (err, token) => {
         if (err) throw err;
-        res.json({ token });
+        
+        // Ghi log để debug
+        console.log(`Đăng nhập thành công cho ${admin.username}, role: ${admin.role}`);
+        
+        // Trả về token và thông tin cơ bản của admin
+        res.json({ 
+          token,
+          admin: {
+            id: admin.id,
+            username: admin.username,
+            name: admin.name,
+            email: admin.email,
+            role: admin.role
+          }
+        });
       }
     );
   } catch (err) {
@@ -195,16 +215,26 @@ exports.login = async (req, res) => {
     const payload = {
       admin: {
         id: admin.id,
+        username: admin.username,
+        name: admin.name,
+        email: admin.email,
         role: admin.role
       }
     };
 
+    console.log('Tạo token với payload:', payload);
+
     jwt.sign(
       payload,
-      process.env.JWT_SECRET,
+      process.env.JWT_SECRET || config.JWT_SECRET,
       { expiresIn: '7d' },
       (err, token) => {
         if (err) throw err;
+        
+        // Ghi log để debug
+        console.log(`Đăng nhập thành công cho ${admin.username}, role: ${admin.role}`);
+        
+        // Trả về token và thông tin cơ bản của admin
         res.json({ 
           token,
           admin: {

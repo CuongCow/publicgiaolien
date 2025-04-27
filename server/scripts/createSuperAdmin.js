@@ -19,15 +19,15 @@ async function createSuperAdmin() {
 
     // Tạo mật khẩu mã hóa
     const salt = await bcrypt.genSalt(10);
-    const password = await bcrypt.hash('admin123', salt);
+    const password = await bcrypt.hash('CuongPTD_0369225402@PctU', salt);
 
     // Xóa tài khoản Super Admin cũ nếu có
-    await Admin.deleteOne({ username: 'superadmin' });
+    await Admin.deleteOne({ username: 'ADmin' });
     console.log('Đã xóa tài khoản Super Admin cũ nếu có');
 
     // Tạo Super Admin mới
     const admin = new Admin({
-      username: 'superadmin',
+      username: 'ADmin',
       password,
       name: 'Super Admin',
       email: 'c.dao1255@gmail.com',
@@ -37,8 +37,8 @@ async function createSuperAdmin() {
     // Lưu vào cơ sở dữ liệu
     await admin.save();
     console.log('Super Admin đã được tạo thành công!');
-    console.log('- Username: superadmin');
-    console.log('- Password: admin123');
+    console.log('- Username: ADmin');
+    console.log('- Password: CuongPTD_0369225402@PctU');
     console.log('Vui lòng đổi mật khẩu sau khi đăng nhập lần đầu tiên.');
 
   } catch (error) {
