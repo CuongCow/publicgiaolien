@@ -59,7 +59,7 @@ Tạo file `.env` trong thư mục `/server` với nội dung:
 ```
 PORT=5000
 MONGODB_URI=mongodb://localhost:27017/giaolien
-JWT_SECRET=your_jwt_secret
+JWT_SECRET=tcl_secret_key_2025
 ```
 
 ## Tác giả

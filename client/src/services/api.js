@@ -33,33 +33,33 @@ axiosInstance.interceptors.request.use(
 
 // API xác thực
 export const authApi = {
-  register: (data) => axiosInstance.post('/auth/register', data),
-  login: (data) => axiosInstance.post('/auth/login', data),
-  getMe: () => axiosInstance.get('/auth/me'),
-  updateProfile: (data) => axiosInstance.patch('/auth/profile', data),
-  checkEmail: (email) => axiosInstance.post('/auth/check-email', { email }),
-  sendVerificationCode: (email) => axiosInstance.post('/auth/send-verification', { email }),
-  verifyCode: (email, code) => axiosInstance.post('/auth/verify-code', { email, code }),
+  register: (data) => axiosInstance.post('/api/auth/register', data),
+  login: (data) => axiosInstance.post('/api/auth/login', data),
+  getMe: () => axiosInstance.get('/api/auth/me'),
+  updateProfile: (data) => axiosInstance.patch('/api/auth/profile', data),
+  checkEmail: (email) => axiosInstance.post('/api/auth/check-email', { email }),
+  sendVerificationCode: (email) => axiosInstance.post('/api/auth/send-verification', { email }),
+  verifyCode: (email, code) => axiosInstance.post('/api/auth/verify-code', { email, code }),
   resetPassword: (email, code, newPassword) => 
-    axiosInstance.post('/auth/reset-password', { email, code, password: newPassword }),
-  requestPasswordReset: (email) => axiosInstance.post('/auth/request-reset', { email })
+    axiosInstance.post('/api/auth/reset-password', { email, code, password: newPassword }),
+  requestPasswordReset: (email) => axiosInstance.post('/api/auth/request-reset', { email })
 };
 
 // API trạm
 export const stationApi = {
-  getAll: () => axiosInstance.get('/stations'),
-  getById: (id) => axiosInstance.get(`/stations/${id}`),
-  getByIdForAdmin: (id) => axiosInstance.get(`/stations/admin/${id}`),
-  create: (data) => axiosInstance.post('/stations', data),
-  createMultiple: (stationsArray) => axiosInstance.post('/stations', stationsArray),
-  update: (id, data) => axiosInstance.patch(`/stations/${id}`, data),
-  delete: (id) => axiosInstance.delete(`/stations/${id}`),
-  getQRCode: (id) => axiosInstance.get(`/stations/${id}/qrcode`),
+  getAll: () => axiosInstance.get('/api/stations'),
+  getById: (id) => axiosInstance.get(`/api/stations/${id}`),
+  getByIdForAdmin: (id) => axiosInstance.get(`/api/stations/admin/${id}`),
+  create: (data) => axiosInstance.post('/api/stations', data),
+  createMultiple: (stationsArray) => axiosInstance.post('/api/stations', stationsArray),
+  update: (id, data) => axiosInstance.patch(`/api/stations/${id}`, data),
+  delete: (id) => axiosInstance.delete(`/api/stations/${id}`),
+  getQRCode: (id) => axiosInstance.get(`/api/stations/${id}/qrcode`),
   uploadImage: (imageFile) => {
     const formData = new FormData();
     formData.append('image', imageFile);
     
-    return axiosInstance.post('/stations/upload-image', formData, {
+    return axiosInstance.post('/api/stations/upload-image', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
@@ -69,36 +69,36 @@ export const stationApi = {
 
 // API đội chơi
 export const teamApi = {
-  getAll: () => axiosInstance.get('/teams'),
-  getById: (id) => axiosInstance.get(`/teams/${id}`),
-  create: (data) => axiosInstance.post('/teams', data),
-  update: (id, data) => axiosInstance.patch(`/teams/${id}`, data),
-  updateScore: (id, data) => axiosInstance.post(`/teams/${id}/score`, data),
-  updateStatus: (id, data) => axiosInstance.patch(`/teams/${id}/status`, data),
-  verifyPassword: (data) => axiosInstance.post('/teams/verify', data),
-  getRanking: () => axiosInstance.get('/teams'),
-  delete: (id) => axiosInstance.delete(`/teams/${id}`),
-  logout: (data) => axiosInstance.post('/teams/logout', data)
+  getAll: () => axiosInstance.get('/api/teams'),
+  getById: (id) => axiosInstance.get(`/api/teams/${id}`),
+  create: (data) => axiosInstance.post('/api/teams', data),
+  update: (id, data) => axiosInstance.patch(`/api/teams/${id}`, data),
+  updateScore: (id, data) => axiosInstance.post(`/api/teams/${id}/score`, data),
+  updateStatus: (id, data) => axiosInstance.patch(`/api/teams/${id}/status`, data),
+  verifyPassword: (data) => axiosInstance.post('/api/teams/verify', data),
+  getRanking: () => axiosInstance.get('/api/teams'),
+  delete: (id) => axiosInstance.delete(`/api/teams/${id}`),
+  logout: (data) => axiosInstance.post('/api/teams/logout', data)
 };
 
 // API submission
 export const submissionApi = {
-  getAll: () => axiosInstance.get('/submissions'),
-  getByStation: (stationId) => axiosInstance.get(`/submissions/station/${stationId}`),
-  getByTeam: (teamName) => axiosInstance.get(`/submissions/team/${teamName}`),
-  create: (data) => axiosInstance.post('/submissions', data),
-  getRanking: () => axiosInstance.get('/submissions/stats/ranking'),
-  exportRanking: () => axiosInstance.get('/submissions/stats/ranking/export'),
-  resetRanking: () => axiosInstance.delete('/submissions/stats/ranking/reset'),
-  resetScores: () => axiosInstance.delete('/submissions/stats/ranking/reset-scores'),
-  deleteAllSubmissions: () => axiosInstance.delete('/submissions/delete-all')
+  getAll: () => axiosInstance.get('/api/submissions'),
+  getByStation: (stationId) => axiosInstance.get(`/api/submissions/station/${stationId}`),
+  getByTeam: (teamName) => axiosInstance.get(`/api/submissions/team/${teamName}`),
+  create: (data) => axiosInstance.post('/api/submissions', data),
+  getRanking: () => axiosInstance.get('/api/submissions/stats/ranking'),
+  exportRanking: () => axiosInstance.get('/api/submissions/stats/ranking/export'),
+  resetRanking: () => axiosInstance.delete('/api/submissions/stats/ranking/reset'),
+  resetScores: () => axiosInstance.delete('/api/submissions/stats/ranking/reset-scores'),
+  deleteAllSubmissions: () => axiosInstance.delete('/api/submissions/delete-all')
 };
 
 // API cài đặt hệ thống
 export const settingsApi = {
-  getSettings: () => axiosInstance.get('/settings'),
-  updateSettings: (data) => axiosInstance.put('/settings', data),
-  getPublicSettings: (adminId) => axiosInstance.get(`/settings/public/${adminId}`)
+  getSettings: () => axiosInstance.get('/api/settings'),
+  updateSettings: (data) => axiosInstance.put('/api/settings', data),
+  getPublicSettings: (adminId) => axiosInstance.get(`/api/settings/public/${adminId}`)
 };
 
 export default axiosInstance; 
