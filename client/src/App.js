@@ -68,11 +68,17 @@ function App() {
     }
     
     if (!isAuthenticated) {
+      console.log('Chuyển hướng: Chưa xác thực');
       return <Navigate to="/login" />;
     }
     
+    // In giá trị role cho mục đích debug
+    console.log('ProtectedRoute - userRole:', userRole, 'requiredRole:', requiredRole);
+    
     // Kiểm tra quyền truy cập nếu có yêu cầu
     if (requiredRole && userRole !== requiredRole) {
+      console.log(`Chuyển hướng: Yêu cầu role ${requiredRole}, hiện tại có role ${userRole}`);
+      
       // Chuyển hướng đến trang phù hợp với vai trò
       return <Navigate to={userRole === 'superadmin' ? '/superadmin' : '/admin'} />;
     }

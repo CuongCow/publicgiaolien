@@ -31,12 +31,25 @@ const Login = () => {
       
       const response = await authApi.login(formData);
       
+      // Ghi log để debug
+      console.log('Đăng nhập thành công, dữ liệu nhận được:', response.data);
+      
       // Lưu token vào localStorage
       localStorage.setItem('token', response.data.token);
-      localStorage.setItem('admin', JSON.stringify(response.data.admin));
+      
+      // Đảm bảo response.data.admin có đầy đủ thông tin
+      if (response.data.admin) {
+        console.log('Thông tin admin đầy đủ:', response.data.admin);
+        localStorage.setItem('admin', JSON.stringify(response.data.admin));
+      } else {
+        console.error('Dữ liệu admin không đầy đủ:', response.data);
+      }
       
       // Chuyển hướng dựa trên vai trò
-      if (response.data.admin.role === 'superadmin') {
+      const adminRole = response.data.admin?.role || 'admin';
+      console.log('Vai trò từ response:', adminRole);
+      
+      if (adminRole === 'superadmin') {
         navigate('/superadmin');
       } else {
         navigate('/admin');

@@ -144,4 +144,22 @@ export const handleApiError = (error, defaultMessage = 'Có lỗi xảy ra. Vui 
   }
   
   return defaultMessage;
+};
+
+/**
+ * Lấy thông tin role của admin từ localStorage
+ * @returns {string|null} Role của admin hoặc null nếu không có
+ */
+export const getCurrentAdminRole = () => {
+  try {
+    const adminData = localStorage.getItem('admin');
+    if (!adminData) return null;
+    
+    const admin = JSON.parse(adminData);
+    console.log('Debug - Admin data:', admin);
+    return admin?.role || null;
+  } catch (err) {
+    console.error('Lỗi khi đọc thông tin admin:', err);
+    return null;
+  }
 }; 
