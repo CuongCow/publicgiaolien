@@ -48,12 +48,12 @@ const Login = () => {
         localStorage.setItem('admin', JSON.stringify(response.data.admin));
       }
       
-      // Tải lại trang để cập nhật trạng thái xác thực
-      window.location.href = '/admin/dashboard';
+      // Chuyển hướng đến dashboard
+      navigate('/admin/dashboard');
     } catch (err) {
       console.error('Login error:', err);
-      if (err.code === 'ERR_NETWORK') {
-        setError('Không thể kết nối đến máy chủ. Vui lòng thử lại sau.');
+      if (err.message) {
+        setError(err.message);
       } else if (err.response?.status === 401) {
         setError('Tên đăng nhập hoặc mật khẩu không đúng.');
       } else {

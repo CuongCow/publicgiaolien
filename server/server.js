@@ -9,20 +9,30 @@ const { processNotificationEmails } = require('./jobs/notificationEmailJob');
 const app = express();
 const PORT = process.env.PORT || config.PORT || 5000;
 
-// Middleware
-app.use(cors({
-  origin: ['https://www.giaolien.com', 'http://localhost:3000'],
+// Cấu hình CORS
+const corsOptions = {
+  origin: function (origin, callback) {
+    const allowedOrigins = ['https://www.giaolien.com', 'http://localhost:3000'];
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token', 'Access-Control-Allow-Origin'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token', 'Access-Control-Allow-Origin', 'Access-Control-Allow-Headers', 'Access-Control-Allow-Methods'],
   exposedHeaders: ['x-auth-token'],
   credentials: true,
   preflightContinue: false,
   optionsSuccessStatus: 204,
   maxAge: 86400 // 24 giờ
-}));
+};
+
+// Áp dụng CORS middleware
+app.use(cors(corsOptions));
 
 // Xử lý preflight requests
-app.options('*', cors());
+app.options('*', cors(corsOptions));
 
 app.use(express.json());
 
