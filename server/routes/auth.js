@@ -28,9 +28,6 @@ router.get('/login-history', auth, authController.getLoginHistory);
 // Lấy chi tiết lịch sử đăng nhập
 router.get('/login-history/:id', auth, authController.getLoginHistoryDetail);
 
-// Lấy danh sách admin
-router.get('/admins', auth, authController.getAllAdmins);
-
 // Cập nhật thông tin admin
 router.patch('/profile', auth, authController.updateProfile);
 
