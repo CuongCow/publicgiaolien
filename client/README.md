@@ -68,3 +68,81 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `npm run build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+
+# Giao Liên - Hệ thống quản lý trạm
+
+## Tính năng mới: Super Admin
+
+Hệ thống hiện hỗ trợ phân quyền Super Admin với các tính năng:
+
+1. **Quản lý Admin**: Xem danh sách tất cả các admin trong hệ thống
+2. **Quản lý mã mời**: Tạo và quản lý mã mời để đăng ký tài khoản admin mới
+3. **Quản lý đội**: Xem và quản lý tất cả các đội trong hệ thống
+
+### Cách sử dụng
+
+1. **Đăng nhập Super Admin**: 
+   - Tài khoản mặc định: `superadmin` / `admin123`
+   - Sau khi đăng nhập lần đầu, vui lòng đổi mật khẩu
+
+2. **Tạo mã mời**:
+   - Vào trang quản lý hệ thống
+   - Nhấn nút "Tạo mã mời"
+   - Mã mời có hiệu lực trong 7 ngày và chỉ sử dụng được một lần
+
+3. **Đăng ký tài khoản Admin mới**:
+   - Đăng ký với mã mời hợp lệ từ Super Admin
+   - Tài khoản mới sẽ có vai trò Admin thông thường
+
+## Hướng dẫn cài đặt
+
+### 1. Yêu cầu hệ thống
+
+- Node.js >= 14.x
+- MongoDB >= 4.4
+- NPM >= 6.x
+
+### 2. Cài đặt
+
+```bash
+# Clone repository
+git clone <repository-url>
+cd giao-lien
+
+# Cài đặt dependencies cho server
+cd server
+npm install
+
+# Cài đặt dependencies cho client
+cd ../client
+npm install
+```
+
+### 3. Cấu hình
+
+Tạo file `.env` trong thư mục `server` với các biến môi trường sau:
+
+```
+PORT=5000
+MONGODB_URI=mongodb://localhost:27017/giaolien
+JWT_SECRET=tcl_secret_key_2025
+```
+
+### 4. Khởi tạo Super Admin (nếu chưa có)
+
+```bash
+cd server
+node scripts/createSuperAdmin.js
+```
+
+### 5. Chạy ứng dụng
+
+```bash
+# Chạy server (từ thư mục server)
+npm start
+
+# Chạy client (từ thư mục client)
+npm start
+```
+
+Server sẽ chạy tại http://localhost:5000 và client sẽ chạy tại http://localhost:3000.

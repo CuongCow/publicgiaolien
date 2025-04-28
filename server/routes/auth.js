@@ -3,7 +3,7 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const Admin = require('../models/Admin');
 const config = require('../config');
-const auth = require('../middleware/auth');
+const { auth } = require('../middleware/auth');
 const authController = require('../controllers/authController');
 const InviteCode = require('../models/InviteCode');
 
@@ -21,6 +21,9 @@ router.get('/login-history', auth, authController.getLoginHistory);
 
 // Lấy chi tiết lịch sử đăng nhập
 router.get('/login-history/:id', auth, authController.getLoginHistoryDetail);
+
+// Lấy danh sách admin
+router.get('/admins', auth, authController.getAllAdmins);
 
 // Cập nhật thông tin admin
 router.patch('/profile', auth, authController.updateProfile);

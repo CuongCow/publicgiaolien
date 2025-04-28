@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Team = require('../models/Team');
-const auth = require('../middleware/auth');
+const { auth } = require('../middleware/auth');
 const { v4: uuidv4 } = require('uuid');
 const UAParser = require('ua-parser-js');
 

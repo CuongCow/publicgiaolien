@@ -105,4 +105,43 @@ export const replaceStationTerm = (text) => {
   });
   
   return result;
+};
+
+// Hàm định dạng ngày tháng
+export const formatDate = (dateString) => {
+  if (!dateString) return '-';
+  
+  const date = new Date(dateString);
+  return date.toLocaleDateString('vi-VN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
+
+/**
+ * Xử lý lỗi từ API và trả về message
+ * @param {Error} error - Lỗi từ Axios
+ * @param {string} defaultMessage - Thông báo mặc định nếu không lấy được lỗi từ server
+ * @returns {string} Thông báo lỗi
+ */
+export const handleApiError = (error, defaultMessage = 'Có lỗi xảy ra. Vui lòng thử lại sau.') => {
+  // Kiểm tra lỗi từ server
+  if (error.response && error.response.data && error.response.data.message) {
+    return error.response.data.message;
+  }
+  
+  // Kiểm tra lỗi kết nối
+  if (error.message === 'Network Error') {
+    return 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.';
+  }
+
+  // Kiểm tra timeout
+  if (error.code === 'ECONNABORTED') {
+    return 'Kết nối đến máy chủ quá lâu. Vui lòng thử lại sau.';
+  }
+  
+  return defaultMessage;
 }; 
