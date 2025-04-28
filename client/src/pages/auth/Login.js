@@ -51,11 +51,17 @@ const Login = () => {
       // Tải lại trang để cập nhật trạng thái xác thực
       window.location.href = '/admin/dashboard';
     } catch (err) {
-      console.error(err);
-      setError(
-        err.response?.data?.message || 
-        'Đăng nhập thất bại. Vui lòng kiểm tra thông tin đăng nhập.'
-      );
+      console.error('Login error:', err);
+      if (err.code === 'ERR_NETWORK') {
+        setError('Không thể kết nối đến máy chủ. Vui lòng thử lại sau.');
+      } else if (err.response?.status === 401) {
+        setError('Tên đăng nhập hoặc mật khẩu không đúng.');
+      } else {
+        setError(
+          err.response?.data?.message || 
+          'Đăng nhập thất bại. Vui lòng kiểm tra thông tin đăng nhập.'
+        );
+      }
     } finally {
       setLoading(false);
     }

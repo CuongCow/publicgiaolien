@@ -13,11 +13,17 @@ const PORT = process.env.PORT || config.PORT || 5000;
 app.use(cors({
   origin: ['https://www.giaolien.com', 'http://localhost:3000'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token', 'Access-Control-Allow-Origin'],
+  exposedHeaders: ['x-auth-token'],
   credentials: true,
   preflightContinue: false,
-  optionsSuccessStatus: 204
+  optionsSuccessStatus: 204,
+  maxAge: 86400 // 24 giờ
 }));
+
+// Xử lý preflight requests
+app.options('*', cors());
+
 app.use(express.json());
 
 // Phục vụ các file tĩnh từ thư mục uploads

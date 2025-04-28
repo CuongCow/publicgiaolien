@@ -15,6 +15,8 @@ const axiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
+  crossDomain: true
 });
 
 // Thêm token vào header
