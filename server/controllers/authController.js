@@ -6,6 +6,7 @@ const LoginHistory = require('../models/LoginHistory');
 const nodemailer = require('nodemailer');
 const geoip = require('geoip-lite');
 const UAParser = require('ua-parser-js');
+const InvitationCode = require('../models/InvitationCode');
 
 // Hàm tạo mã xác thực ngẫu nhiên
 const generateVerificationCode = () => {
@@ -25,19 +26,29 @@ const transporter = nodemailer.createTransport({
 // @desc    Đăng ký tài khoản admin
 // @access  Public
 exports.register = async (req, res) => {
-  const { username, password, name, email } = req.body;
-
   try {
-    // Kiểm tra xem username đã tồn tại chưa
+    const { username, password, name, email, inviteCode } = req.body;
+
+    // Kiểm tra mã mời
+    const code = await InvitationCode.findOne({ code: inviteCode });
+    if (!code) {
+      return res.status(400).json({ message: 'Mã mời không hợp lệ' });
+    }
+
+    if (code.isUsed) {
+      return res.status(400).json({ message: 'Mã mời đã được sử dụng' });
+    }
+
+    // Kiểm tra username đã tồn tại chưa
     let admin = await Admin.findOne({ username });
     if (admin) {
       return res.status(400).json({ message: 'Tên đăng nhập đã tồn tại' });
     }
 
-    // Kiểm tra xem email đã tồn tại chưa
+    // Kiểm tra email đã tồn tại chưa
     admin = await Admin.findOne({ email });
     if (admin) {
-      return res.status(400).json({ message: 'Email đã được sử dụng' });
+      return res.status(400).json({ message: 'Email đã tồn tại' });
     }
 
     // Tạo admin mới
@@ -45,18 +56,21 @@ exports.register = async (req, res) => {
       username,
       password,
       name,
-      email
+      email,
+      role: 'admin'
     });
 
     // Mã hóa mật khẩu
     const salt = await bcrypt.genSalt(10);
     admin.password = await bcrypt.hash(password, salt);
 
-    // Lưu admin
     await admin.save();
 
-    // Gửi email chào mừng
-    await sendWelcomeEmail(email, name);
+    // Đánh dấu mã mời đã sử dụng
+    code.isUsed = true;
+    code.usedBy = admin._id;
+    code.usedAt = new Date();
+    await code.save();
 
     // Tạo token
     const payload = {
@@ -67,16 +81,16 @@ exports.register = async (req, res) => {
 
     jwt.sign(
       payload,
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' },
+      process.env.JWT_SECRET || 'your_jwt_secret',
+      { expiresIn: '24h' },
       (err, token) => {
         if (err) throw err;
         res.json({ token });
       }
     );
   } catch (err) {
-    console.error('Register error:', err.message);
-    res.status(500).json({ message: 'Lỗi server' });
+    console.error(err.message);
+    res.status(500).send('Server error');
   }
 };
 
@@ -84,94 +98,20 @@ exports.register = async (req, res) => {
 // @desc    Đăng nhập
 // @access  Public
 exports.login = async (req, res) => {
-  const { username, password } = req.body;
-
   try {
-    // Kiểm tra xem admin có tồn tại không
-    const admin = await Admin.findOne({ username });
+    const { username, password } = req.body;
+
+    // Kiểm tra username
+    let admin = await Admin.findOne({ username });
     if (!admin) {
-      // Ghi lại đăng nhập thất bại
-      await LoginHistory.create({
-        username,
-        ipAddress: req.ip || req.connection.remoteAddress,
-        userAgent: req.headers['user-agent'],
-        status: 'failed'
-      });
-      
-      return res.status(400).json({ message: 'Thông tin đăng nhập không đúng' });
+      return res.status(400).json({ message: 'Tên đăng nhập hoặc mật khẩu không đúng' });
     }
 
     // Kiểm tra mật khẩu
     const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) {
-      // Ghi lại đăng nhập thất bại
-      await LoginHistory.create({
-        adminId: admin._id,
-        username: admin.username,
-        ipAddress: req.ip || req.connection.remoteAddress,
-        userAgent: req.headers['user-agent'],
-        status: 'failed'
-      });
-      
-      return res.status(400).json({ message: 'Thông tin đăng nhập không đúng' });
+      return res.status(400).json({ message: 'Tên đăng nhập hoặc mật khẩu không đúng' });
     }
-
-    // Thu thập thông tin về người dùng đăng nhập
-    const ipAddress = req.ip || req.connection.remoteAddress;
-    const userAgent = req.headers['user-agent'];
-    const loginTime = new Date();
-    
-    // Phân tích user agent để lấy thông tin thiết bị
-    let deviceInfo = 'Không xác định';
-    try {
-      if (userAgent) {
-        const parser = new UAParser(userAgent);
-        const result = parser.getResult();
-        const browser = result.browser.name ? `${result.browser.name} ${result.browser.version}` : 'Không xác định';
-        const os = result.os.name ? `${result.os.name} ${result.os.version}` : 'Không xác định';
-        const device = result.device.vendor 
-          ? `${result.device.vendor} ${result.device.model || ''} ${result.device.type || ''}`
-          : (result.device.type || 'Desktop');
-        deviceInfo = `${browser} trên ${os} (${device})`.trim();
-      }
-    } catch (uaError) {
-      console.error('Lỗi phân tích user agent:', uaError);
-      deviceInfo = userAgent || 'Không xác định';
-    }
-    
-    // Lấy thông tin vị trí từ IP
-    let locationInfo = 'Không xác định';
-    try {
-      // Làm sạch địa chỉ IP (xóa ::ffff: nếu có)
-      const cleanIp = ipAddress.replace(/^::ffff:/, '');
-      const geo = geoip.lookup(cleanIp);
-      if (geo) {
-        locationInfo = `${geo.city || ''}, ${geo.region || ''}, ${geo.country || ''}`.replace(/, ,/g, ',').replace(/^,|,$/g, '');
-      }
-    } catch (geoError) {
-      console.error('Lỗi khi lấy thông tin vị trí:', geoError);
-    }
-    
-    // Lưu lại lịch sử đăng nhập
-    await LoginHistory.create({
-      adminId: admin._id,
-      username: admin.username,
-      ipAddress,
-      userAgent,
-      deviceInfo,
-      location: locationInfo,
-      loginTime,
-      status: 'success'
-    });
-    
-    // Gửi email cảnh báo đăng nhập
-    await sendLoginAlertEmail(admin.email, admin.name, {
-      ipAddress,
-      deviceInfo,
-      loginTime: loginTime.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
-      username: admin.username,
-      location: locationInfo
-    });
 
     // Tạo token
     const payload = {
@@ -182,24 +122,16 @@ exports.login = async (req, res) => {
 
     jwt.sign(
       payload,
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' },
+      process.env.JWT_SECRET || 'your_jwt_secret',
+      { expiresIn: '24h' },
       (err, token) => {
         if (err) throw err;
-        res.json({ 
-          token,
-          admin: {
-            id: admin.id,
-            username: admin.username,
-            name: admin.name,
-            email: admin.email
-          }
-        });
+        res.json({ token });
       }
     );
   } catch (err) {
-    console.error('Login error:', err.message);
-    res.status(500).json({ message: 'Lỗi server' });
+    console.error(err.message);
+    res.status(500).send('Server error');
   }
 };
 
@@ -209,13 +141,10 @@ exports.login = async (req, res) => {
 exports.getMe = async (req, res) => {
   try {
     const admin = await Admin.findById(req.admin.id).select('-password');
-    if (!admin) {
-      return res.status(404).json({ message: 'Không tìm thấy admin' });
-    }
     res.json(admin);
   } catch (err) {
-    console.error('GetMe error:', err.message);
-    res.status(500).json({ message: 'Lỗi server' });
+    console.error(err.message);
+    res.status(500).send('Server error');
   }
 };
 
@@ -550,13 +479,11 @@ const sendLoginAlertEmail = async (email, name, loginInfo) => {
 exports.getLoginHistory = async (req, res) => {
   try {
     const history = await LoginHistory.find({ adminId: req.admin.id })
-      .sort({ loginTime: -1 })
-      .limit(10);
-    
+      .sort({ timestamp: -1 });
     res.json(history);
   } catch (err) {
-    console.error('Get login history error:', err.message);
-    res.status(500).json({ message: 'Lỗi server' });
+    console.error(err.message);
+    res.status(500).send('Server error');
   }
 };
 
@@ -566,20 +493,13 @@ exports.getLoginHistory = async (req, res) => {
 exports.getLoginHistoryDetail = async (req, res) => {
   try {
     const history = await LoginHistory.findById(req.params.id);
-    
     if (!history) {
       return res.status(404).json({ message: 'Không tìm thấy lịch sử đăng nhập' });
     }
-    
-    // Kiểm tra quyền truy cập
-    if (history.adminId.toString() !== req.admin.id) {
-      return res.status(403).json({ message: 'Không có quyền truy cập' });
-    }
-    
     res.json(history);
   } catch (err) {
-    console.error('Get login history detail error:', err.message);
-    res.status(500).json({ message: 'Lỗi server' });
+    console.error(err.message);
+    res.status(500).send('Server error');
   }
 };
 
