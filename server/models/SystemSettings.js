@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const SystemSettingsSchema = new mongoose.Schema({
   termType: {
     type: String,
-    enum: ['default', 'custom'],
+    enum: ['default', 'custom', 'journey'],
     default: 'default'
   },
   customTerm: {

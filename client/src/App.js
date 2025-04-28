@@ -81,12 +81,15 @@ function App() {
   }, []);
 
   // Route bảo vệ cho admin
-  const ProtectedRoute = ({ children }) => {
+  const ProtectedRoute = ({ children, requiredRole }) => {
+    // Lấy thông tin vai trò của người dùng từ localStorage
+    const admin = JSON.parse(localStorage.getItem('admin') || '{}');
+    const userRole = admin?.role || 'user';
+    
     if (loading) {
       return <div className="loading">Đang tải...</div>;
     }
     
-
     if (!isAuthenticated) {
       console.log('Chuyển hướng: Chưa xác thực');
       return <Navigate to="/login" />;
@@ -104,7 +107,6 @@ function App() {
     }
     
     return children;
-    return isAuthenticated ? children : <Navigate to="/login" />;
   };
   
   // Route bảo vệ cho Super Admin

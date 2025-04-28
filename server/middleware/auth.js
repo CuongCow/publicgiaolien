@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const config = require('../config');
 const SystemSettings = require('../models/SystemSettings');
 
-module.exports = async function(req, res, next) {
+const auth = async function(req, res, next) {
   // Lấy địa chỉ IP của request
   const clientIP = req.ip || req.connection.remoteAddress;
   
@@ -46,4 +46,6 @@ module.exports = async function(req, res, next) {
     console.error('Error checking blocked IP:', err);
     next(); // Vẫn cho phép request tiếp tục trong trường hợp lỗi
   }
-}; 
+};
+
+module.exports = { auth }; 

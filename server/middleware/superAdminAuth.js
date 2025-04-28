@@ -1,7 +1,7 @@
 const Admin = require('../models/Admin');
 
 // Middleware để kiểm tra người dùng có quyền Super Admin không
-module.exports = async function(req, res, next) {
+const superAdminAuth = async function(req, res, next) {
   try {
     // Kiểm tra xem người dùng đã đăng nhập chưa (req.admin.id từ middleware auth trước đó)
     if (!req.admin || !req.admin.id) {
@@ -26,4 +26,6 @@ module.exports = async function(req, res, next) {
     console.error('SuperAdmin authorization error:', err);
     res.status(500).json({ message: 'Lỗi server' });
   }
-}; 
+};
+
+module.exports = { superAdminAuth }; 

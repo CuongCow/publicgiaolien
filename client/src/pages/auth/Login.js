@@ -51,6 +51,9 @@ const Login = () => {
         console.error('Dữ liệu admin không đầy đủ:', response.data);
       }
       
+      // Đặt flag để hiển thị thông báo khi vừa đăng nhập
+      sessionStorage.setItem('justLoggedIn', 'true');
+      
       // Chuyển hướng dựa trên vai trò
       const adminRole = response.data.admin?.role || 'admin';
       console.log('Vai trò từ response:', adminRole);
@@ -59,18 +62,7 @@ const Login = () => {
         navigate('/superadmin');
       } else {
         navigate('/admin');
-=======
-      
-      // Đặt flag để hiển thị thông báo khi vừa đăng nhập
-      sessionStorage.setItem('justLoggedIn', 'true');
-      
-      // Thêm thông tin admin vào localStorage để tránh phải gọi API lại
-      if (response.data.admin) {
-        localStorage.setItem('admin', JSON.stringify(response.data.admin));
       }
-      
-      // Chuyển hướng đến dashboard
-      navigate('/admin/dashboard');
     } catch (err) {
       console.error('Login error:', err);
       if (err.message) {
