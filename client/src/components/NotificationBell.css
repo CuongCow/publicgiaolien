@@ -1,0 +1,67 @@
+/* CSS tùy chỉnh cho NotificationBell */
+
+/* Loại bỏ tất cả hiệu ứng và kiểu mặc định của Dropdown.Toggle */
+#notification-dropdown.dropdown-toggle::after {
+  display: none; /* Ẩn mũi tên dropdown */
+}
+
+#notification-dropdown:focus {
+  box-shadow: none !important;
+}
+
+#notification-dropdown:hover {
+  color: #0d6efd !important; /* Màu khi hover */
+}
+
+#notification-dropdown:active {
+  color: #0a58ca !important; /* Màu khi active */
+}
+
+/* Tùy chỉnh badge thông báo */
+.notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  font-size: 0.6rem;
+  padding: 0.2rem 0.4rem;
+}
+
+/* Tùy chỉnh item trong dropdown */
+.notification-item {
+  border-left: none !important;
+  border-right: none !important;
+  border-top: none;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s ease;
+}
+
+.notification-item:hover {
+  background-color: #f8f9fa;
+}
+
+/* Hiệu ứng cho item chưa đọc */
+.notification-item.unread {
+  background-color: rgba(13, 110, 253, 0.05);
+}
+
+.notification-item.unread:hover {
+  background-color: rgba(13, 110, 253, 0.08);
+}
+
+@media (max-width: 575px) {
+  .dropdown-menu {
+    width: 100vw !important;
+    left: -100px !important;
+    right: auto !important;
+  }
+}
+
+@media (max-width: 991px) {
+  #notification-dropdown {
+    height: 36px;
+    width: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+} 

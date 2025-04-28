@@ -521,3 +521,157 @@ body {
   background-color: #333;
   border-color: #444;
 }
+
+/* Mobile optimizations */
+@media (max-width: 576px) {
+  .container {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .card {
+    border-radius: 10px;
+    margin-bottom: 16px;
+  }
+
+  .card-body {
+    padding: 16px;
+  }
+
+  .table {
+    font-size: 0.85rem;
+  }
+
+  .btn {
+    padding: 6px 14px;
+    font-size: 0.85rem;
+  }
+
+  .nav-link {
+    padding: 0.4rem 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .navbar .navbar-brand {
+    font-size: 1.1rem;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  h2 {
+    font-size: 1.3rem;
+  }
+
+  h3 {
+    font-size: 1.1rem;
+  }
+
+  .table th, .table td {
+    padding: 8px;
+  }
+
+  .dropdown-menu {
+    font-size: 0.85rem;
+  }
+
+  .dropdown-item {
+    padding: 0.4rem 1rem;
+  }
+
+  .form-control, .form-select {
+    font-size: 0.9rem;
+    padding: 8px 12px;
+  }
+
+  .form-label {
+    font-size: 0.9rem;
+  }
+
+  .form-text {
+    font-size: 0.75rem;
+  }
+
+  .badge {
+    font-size: 0.65rem;
+    padding: 0.25em 0.5em;
+  }
+}
+
+/* Large mobile optimizations */
+@media (max-width: 767px) and (min-width: 577px) {
+  .container {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+
+  .card-body {
+    padding: 18px;
+  }
+
+  .table {
+    font-size: 0.9rem;
+  }
+
+  .btn {
+    padding: 7px 16px;
+  }
+
+  h1 {
+    font-size: 1.7rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  h3 {
+    font-size: 1.3rem;
+  }
+}
+
+/* Profile và thông báo trong navbar */
+.notification-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 4px;
+}
+
+@media (max-width: 991px) {
+  .navbar-collapse .d-flex.align-items-center.justify-content-end {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(0,0,0,0.05);
+  }
+  
+  .notification-wrapper {
+    margin-right: 15px !important;
+  }
+  
+  .notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+  }
+}
+
+/* Thêm vào media query đã có */
+@media (max-width: 576px) {
+  .navbar-collapse .dropdown-menu {
+    position: fixed !important;
+    top: auto !important;
+    right: 10px !important;
+    left: 10px !important;
+    width: calc(100% - 20px) !important;
+    max-width: none !important;
+  }
+}

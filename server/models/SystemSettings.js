@@ -1,20 +1,52 @@
 const mongoose = require('mongoose');
 
 const SystemSettingsSchema = new mongoose.Schema({
-  adminId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'admin',
-    required: true,
-    index: true
-  },
   termType: {
     type: String,
-    enum: ['default', 'journey', 'custom'],
+    enum: ['default', 'custom'],
     default: 'default'
   },
   customTerm: {
     type: String,
     default: ''
+  },
+  databaseRetentionDays: {
+    type: Number,
+    default: 30,
+    min: 1,
+    max: 365
+  },
+  securitySettings: {
+    maxLoginAttempts: {
+      type: Number,
+      default: 5
+    },
+    lockoutTimeMinutes: {
+      type: Number,
+      default: 30
+    },
+    sessionTimeoutMinutes: {
+      type: Number,
+      default: 60
+    },
+    requireStrongPasswords: {
+      type: Boolean,
+      default: true
+    },
+    blockedIPs: {
+      type: [String],
+      default: []
+    }
+  },
+  notificationSettings: {
+    enableLoginAlerts: {
+      type: Boolean,
+      default: true
+    },
+    enableSystemNotifications: {
+      type: Boolean,
+      default: true
+    }
   },
   lastUpdated: {
     type: Date,

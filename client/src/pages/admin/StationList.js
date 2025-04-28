@@ -17,6 +17,7 @@ const StationList = () => {
   const qrCodeRef = useRef(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const [filterText, setFilterText] = useState('');
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     fetchStations();
@@ -111,6 +112,11 @@ const StationList = () => {
                 color: #7f8c8d;
                 font-size: 14px;
                 margin-bottom: 20px;
+              }
+              .max-attempts {
+                color: #e74c3c;
+                font-weight: 500;
+                margin: 10px 0;
               }
               @media print {
                 .container {
@@ -214,6 +220,15 @@ const StationList = () => {
     station.name.toLowerCase().includes(filterText.toLowerCase()) ||
     station.teams.some(team => team.toLowerCase().includes(filterText.toLowerCase()))
   );
+
+  // Hàm sao chép link
+  const copyLink = () => {
+    const link = `${window.location.origin}/station/${selectedStation._id}`;
+    navigator.clipboard.writeText(link).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
 
   return (
     <>
@@ -435,49 +450,77 @@ const StationList = () => {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="text-center">
-          {selectedStation && (
-            <>
-              <div ref={qrCodeRef} className="qr-code-container">
-                <h5 className="mb-3 fw-bold">{selectedStation.name}</h5>
-                <p className="mb-2">
-                  <Badge bg="light" text="dark">
-                    <i className="bi bi-repeat me-1"></i>
-                    Số lần thử tối đa: {selectedStation.maxAttempts}
-                  </Badge>
-                </p>
-                <div className="d-flex justify-content-center mb-3">
-                  <QRCodeSVG 
-                    value={`${window.location.origin}/station/${selectedStation._id}`}
-                    size={250}
-                    includeMargin
-                    id="qr-code-svg"
-                    level="H"
-                    bgColor="#FFFFFF"
-                    fgColor="#000000"
-                  />
-                </div>
-                <div className="mb-0 small text-muted bg-light py-2 px-3 rounded">
-                  <i className="bi bi-link-45deg me-1"></i>
-                  {`${window.location.origin}/station/${selectedStation._id}`}
-                </div>
-              </div>
-              <p className="mt-4 text-muted">
+          <div className="d-flex flex-column align-items-center">
+            <div 
+              ref={qrCodeRef} 
+              className="mb-3 p-3 bg-white rounded shadow-sm"
+              style={{ 
+                maxWidth: '300px',
+                width: '100%',
+                aspectRatio: '1/1',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              {selectedStation && (
+                <QRCodeSVG 
+                  value={`${window.location.origin}/station/${selectedStation._id}`}
+                  size={256}
+                  level="H"
+                  includeMargin={true}
+                  renderAs="svg"
+                />
+              )}
+            </div>
+            
+            <div className="text-center">
+              <h5 className="mb-2">{selectedStation?.name}</h5>
+              <p className="text-muted mb-0">
+                <small>ID: {selectedStation?._id}</small>
+              </p>
+              <p className="text-muted mt-2">
+                <i className="bi bi-repeat me-1"></i>
+                Số lần thử tối đa: {selectedStation?.maxAttempts}
+              </p>
+                            <p className="mt-4 text-muted">
                 <i className="bi bi-info-circle me-1"></i>
                 <TermReplacer>In mã QR này và đặt tại các trạm để đội chơi quét mã truy cập</TermReplacer>
               </p>
-            </>
-          )}
+            </div>
+          </div>
         </Modal.Body>
-        <Modal.Footer>
-          <Button variant="outline-secondary" onClick={() => setShowQRModal(false)}>
+        <Modal.Footer className="d-flex flex-wrap justify-content-center gap-2">
+          <Button 
+            variant="outline-secondary" 
+            onClick={() => setShowQRModal(false)}
+            className="flex-grow-1 flex-md-grow-0"
+          >
             <i className="bi bi-x me-1"></i>
             Đóng
           </Button>
-          <Button variant="primary" onClick={handlePrintQR}>
+          <Button 
+            variant="info" 
+            onClick={copyLink}
+            className="flex-grow-1 flex-md-grow-0"
+          >
+            <i className="bi bi-link-45deg me-1"></i>
+            {copied ? 'Đã sao chép!' : 'Sao chép link'}
+          </Button>
+          <Button 
+            variant="primary" 
+            onClick={handlePrintQR}
+            className="flex-grow-1 flex-md-grow-0"
+          >
             <i className="bi bi-printer me-1"></i>
             In
           </Button>
-          <Button variant="success" onClick={handleSaveQRImage} disabled={isDownloading}>
+          <Button 
+            variant="success" 
+            onClick={handleSaveQRImage} 
+            disabled={isDownloading}
+            className="flex-grow-1 flex-md-grow-0"
+          >
             {isDownloading ? (
               <>
                 <Spinner animation="border" size="sm" className="me-1" />

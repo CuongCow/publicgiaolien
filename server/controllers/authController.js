@@ -581,4 +581,52 @@ exports.getLoginHistoryDetail = async (req, res) => {
     console.error('Get login history detail error:', err.message);
     res.status(500).json({ message: 'Lỗi server' });
   }
+};
+
+// Hàm gửi email thông báo hệ thống
+const sendNotificationEmail = async (email, notification) => {
+  const mailOptions = {
+    from: 'Hệ thống Giao Liên <cuong.dn@pctu.edu.vn>',
+    to: email,
+    subject: `Thông báo: ${notification.title}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+        <h2 style="color: #d9534f; text-align: center;">Hệ thống Giao Liên</h2>
+        <h3 style="text-align: center;">Thông báo từ hệ thống</h3>
+        <div style="margin: 20px 0; padding: 15px; background-color: #f8f9fa; border-radius: 5px;">
+          <h4 style="color: #333; margin-top: 0;">${notification.title}</h4>
+          <div style="color: #555;">
+            ${notification.content}
+          </div>
+        </div>
+        <p>Ngày tạo: ${new Date(notification.createdAt).toLocaleString('vi-VN')}</p>
+        <p>Vui lòng đăng nhập vào hệ thống để xem chi tiết và các thông báo khác.</p>
+        <p>Trân trọng,<br>Đội ngũ Hệ thống Giao Liên</p>
+      </div>
+    `
+  };
+
+  await transporter.sendMail(mailOptions);
+};
+
+// Export các hàm xử lý route
+module.exports = {
+  register: exports.register,
+  login: exports.login,
+  getMe: exports.getMe,
+  updateProfile: exports.updateProfile,
+  resetPassword: exports.resetPassword,
+  checkEmail: exports.checkEmail,
+  sendVerification: exports.sendVerification,
+  verifyCode: exports.verifyCode,
+  requestPasswordReset: exports.requestPasswordReset,
+  getLoginHistory: exports.getLoginHistory,
+  getLoginHistoryDetail: exports.getLoginHistoryDetail,
+  emailService: {
+    sendVerificationEmail,
+    sendPasswordResetEmail,
+    sendWelcomeEmail,
+    sendLoginAlertEmail,
+    sendNotificationEmail
+  }
 }; 

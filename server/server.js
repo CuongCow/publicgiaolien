@@ -4,6 +4,7 @@ const cors = require('cors');
 const qrcode = require('qrcode');
 const config = require('./config');
 const path = require('path');
+const { processNotificationEmails } = require('./jobs/notificationEmailJob');
 
 const app = express();
 const PORT = process.env.PORT || config.PORT || 5000;
@@ -22,8 +23,23 @@ app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
 // MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI || config.MONGODB_URI;
 mongoose.connect(MONGODB_URI)
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.log('MongoDB connection error:', err));
+  .then(() => {
+    console.log('MongoDB Connected...');
+    
+    // Lên lịch chạy công việc gửi email thông báo hàng giờ
+    setInterval(async () => {
+      console.log('Đang chạy job gửi email thông báo tự động...');
+      try {
+        await processNotificationEmails();
+      } catch (err) {
+        console.error('Lỗi khi chạy job gửi email thông báo:', err);
+      }
+    }, 60 * 60 * 1000); // 1 giờ
+  })
+  .catch(err => {
+    console.error('MongoDB connection error:', err);
+    process.exit(1);
+  });
 
 // Import Routes
 const authRoutes = require('./routes/auth');
@@ -31,6 +47,7 @@ const stationRoutes = require('./routes/stations');
 const teamRoutes = require('./routes/teams');
 const submissionRoutes = require('./routes/submissions');
 const settingsRoutes = require('./routes/settings');
+const superAdminRoutes = require('./routes/superadmin');
 
 // Use Routes
 app.use('/api/auth', authRoutes);
@@ -38,6 +55,7 @@ app.use('/api/stations', stationRoutes);
 app.use('/api/teams', teamRoutes);
 app.use('/api/submissions', submissionRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/superadmin', superAdminRoutes);
 
 // API kiểm tra trạng thái
 app.get('/api/status', (req, res) => {

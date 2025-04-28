@@ -22,30 +22,37 @@ const AdminSchema = new mongoose.Schema({
     unique: true,
     trim: true
   },
+  role: {
+    type: String,
+    enum: ['admin', 'superadmin'],
+    default: 'admin'
+  },
   createdAt: {
     type: Date,
     default: Date.now
   }
 });
 
-// Hash mật khẩu trước khi lưu
+// Mã hóa mật khẩu trước khi lưu
 AdminSchema.pre('save', async function(next) {
-  // Chỉ hash mật khẩu khi mật khẩu được sửa đổi hoặc tài khoản mới
-  if (!this.isModified('password')) {
+  const admin = this;
+  
+  // Bỏ qua hash mật khẩu nếu đã được đánh dấu
+  if (admin.$locals.skipPasswordHash) {
+    return next();
+  }
+  
+  // Chỉ hash mật khẩu nếu nó bị sửa đổi hoặc mới
+  if (!admin.isModified('password')) {
     return next();
   }
   
   try {
-    // Kiểm tra xem mật khẩu đã được hash chưa
-    if (this.password.length >= 60 && this.password.startsWith('$2a$')) {
-      return next(); // Đã hash, không hash lại
-    }
-    
     const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
+    admin.password = await bcrypt.hash(admin.password, salt);
     next();
-  } catch (error) {
-    next(error);
+  } catch (err) {
+    next(err);
   }
 });
 
