@@ -7,6 +7,7 @@ const nodemailer = require('nodemailer');
 const geoip = require('geoip-lite');
 const UAParser = require('ua-parser-js');
 const InvitationCode = require('../models/InvitationCode');
+const Notification = require('../models/Notification');
 
 // Hàm tạo mã xác thực ngẫu nhiên
 const generateVerificationCode = () => {
@@ -25,7 +26,7 @@ const transporter = nodemailer.createTransport({
 // @route   POST api/auth/register
 // @desc    Đăng ký tài khoản admin
 // @access  Public
-exports.register = async (req, res) => {
+const register = async (req, res) => {
   try {
     const { username, password, name, email, inviteCode } = req.body;
 
@@ -97,7 +98,7 @@ exports.register = async (req, res) => {
 // @route   POST api/auth/login
 // @desc    Đăng nhập
 // @access  Public
-exports.login = async (req, res) => {
+const login = async (req, res) => {
   try {
     const { username, password } = req.body;
 
@@ -138,7 +139,7 @@ exports.login = async (req, res) => {
 // @route   GET api/auth/me
 // @desc    Lấy thông tin admin hiện tại
 // @access  Private
-exports.getMe = async (req, res) => {
+const getMe = async (req, res) => {
   try {
     const admin = await Admin.findById(req.admin.id).select('-password');
     res.json(admin);
@@ -151,7 +152,7 @@ exports.getMe = async (req, res) => {
 // @route   PATCH api/auth/profile
 // @desc    Cập nhật thông tin hồ sơ admin
 // @access  Private
-exports.updateProfile = async (req, res) => {
+const updateProfile = async (req, res) => {
   const { name, email, currentPassword, newPassword } = req.body;
   
   try {
@@ -201,7 +202,7 @@ exports.updateProfile = async (req, res) => {
 // @route   POST api/auth/check-email
 // @desc    Kiểm tra xem email đã tồn tại chưa
 // @access  Public
-exports.checkEmail = async (req, res) => {
+const checkEmail = async (req, res) => {
   const { email } = req.body;
 
   try {
@@ -216,7 +217,7 @@ exports.checkEmail = async (req, res) => {
 // @route   POST api/auth/send-verification
 // @desc    Gửi mã xác thực đến email khi đăng ký
 // @access  Public
-exports.sendVerification = async (req, res) => {
+const sendVerification = async (req, res) => {
   const { email } = req.body;
 
   try {
@@ -251,7 +252,7 @@ exports.sendVerification = async (req, res) => {
 // @route   POST api/auth/verify-code
 // @desc    Xác thực mã
 // @access  Public
-exports.verifyCode = async (req, res) => {
+const verifyCode = async (req, res) => {
   const { email, code } = req.body;
 
   try {
@@ -280,7 +281,7 @@ exports.verifyCode = async (req, res) => {
 // @route   POST api/auth/request-reset
 // @desc    Yêu cầu đặt lại mật khẩu
 // @access  Public
-exports.requestPasswordReset = async (req, res) => {
+const requestPasswordReset = async (req, res) => {
   const { email } = req.body;
 
   try {
@@ -321,7 +322,7 @@ exports.requestPasswordReset = async (req, res) => {
 // @route   POST api/auth/reset-password
 // @desc    Đặt lại mật khẩu
 // @access  Public
-exports.resetPassword = async (req, res) => {
+const resetPassword = async (req, res) => {
   const { email, code, password } = req.body;
 
   try {
@@ -363,6 +364,43 @@ exports.resetPassword = async (req, res) => {
     res.json({ message: 'Đặt lại mật khẩu thành công' });
   } catch (err) {
     console.error('Reset password error:', err.message);
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+};
+
+// @route   GET api/auth/login-history
+// @desc    Lấy lịch sử đăng nhập của admin
+// @access  Private
+const getLoginHistory = async (req, res) => {
+  try {
+    const loginHistory = await LoginHistory.find({ admin: req.admin.id })
+      .sort({ loginTime: -1 })
+      .limit(10);
+    
+    res.json(loginHistory);
+  } catch (err) {
+    console.error('Get login history error:', err.message);
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+};
+
+// @route   GET api/auth/login-history/:id
+// @desc    Lấy chi tiết lịch sử đăng nhập
+// @access  Private
+const getLoginHistoryDetail = async (req, res) => {
+  try {
+    const loginHistory = await LoginHistory.findOne({
+      _id: req.params.id,
+      admin: req.admin.id
+    });
+    
+    if (!loginHistory) {
+      return res.status(404).json({ message: 'Không tìm thấy lịch sử đăng nhập' });
+    }
+    
+    res.json(loginHistory);
+  } catch (err) {
+    console.error('Get login history detail error:', err.message);
     res.status(500).json({ message: 'Lỗi server' });
   }
 };
@@ -473,43 +511,6 @@ const sendLoginAlertEmail = async (email, name, loginInfo) => {
   await transporter.sendMail(mailOptions);
 };
 
-// @route   GET api/auth/login-history
-// @desc    Lấy lịch sử đăng nhập của admin
-// @access  Private
-exports.getLoginHistory = async (req, res) => {
-  try {
-    const loginHistory = await LoginHistory.find({ admin: req.admin.id })
-      .sort({ loginTime: -1 })
-      .limit(10);
-    
-    res.json(loginHistory);
-  } catch (err) {
-    console.error('Get login history error:', err.message);
-    res.status(500).json({ message: 'Lỗi server' });
-  }
-};
-
-// @route   GET api/auth/login-history/:id
-// @desc    Lấy chi tiết lịch sử đăng nhập
-// @access  Private
-exports.getLoginHistoryDetail = async (req, res) => {
-  try {
-    const loginHistory = await LoginHistory.findOne({
-      _id: req.params.id,
-      admin: req.admin.id
-    });
-    
-    if (!loginHistory) {
-      return res.status(404).json({ message: 'Không tìm thấy lịch sử đăng nhập' });
-    }
-    
-    res.json(loginHistory);
-  } catch (err) {
-    console.error('Get login history detail error:', err.message);
-    res.status(500).json({ message: 'Lỗi server' });
-  }
-};
-
 // Hàm gửi email thông báo hệ thống
 const sendNotificationEmail = async (email, notification) => {
   const mailOptions = {
@@ -536,24 +537,88 @@ const sendNotificationEmail = async (email, notification) => {
   await transporter.sendMail(mailOptions);
 };
 
+// @route   GET api/auth/notifications
+// @desc    Lấy thông báo cho user hiện tại
+// @access  Private
+const getNotifications = async (req, res) => {
+  try {
+    const userId = req.admin.id;
+    const userRole = req.admin.role;
+    
+    let query = {
+      isActive: true,
+      expiresAt: { $gt: new Date() },
+      $or: [
+        { targetUsers: 'all' }
+      ]
+    };
+    
+    if (userRole === 'superadmin' || userRole === 'admin') {
+      query.$or.push({ targetUsers: 'admins' });
+      query.$or.push({
+        targetUsers: 'specificAdmins',
+        targetUsersList: userId
+      });
+    } else if (userRole === 'team') {
+      query.$or.push({ targetUsers: 'teams' });
+      query.$or.push({
+        targetUsers: 'specificTeams',
+        targetUsersList: userId
+      });
+    }
+    
+    const notifications = await Notification.find(query)
+      .populate('createdBy', 'username name')
+      .sort({ createdAt: -1 });
+    
+    res.json(notifications);
+  } catch (err) {
+    console.error('Error getting notifications for user:', err);
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+};
+
+// @route   POST api/auth/verify-invite-code
+// @desc    Xác minh mã mời
+// @access  Public
+const verifyInviteCode = async (req, res) => {
+  try {
+    const { code } = req.body;
+    const inviteCode = await InvitationCode.findOne({ code });
+    
+    if (!inviteCode) {
+      return res.status(400).json({ message: 'Mã mời không hợp lệ' });
+    }
+
+    if (inviteCode.isUsed) {
+      return res.status(400).json({ message: 'Mã mời đã được sử dụng' });
+    }
+
+    const now = new Date();
+    if (inviteCode.expiresAt && inviteCode.expiresAt < now) {
+      return res.status(400).json({ message: 'Mã mời đã hết hạn' });
+    }
+
+    res.json({ valid: true });
+  } catch (error) {
+    console.error('Lỗi xác thực mã mời:', error);
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+};
+
 // Export các hàm xử lý route
 module.exports = {
-  register: exports.register,
-  login: exports.login,
-  getMe: exports.getMe,
-  updateProfile: exports.updateProfile,
-  resetPassword: exports.resetPassword,
-  checkEmail: exports.checkEmail,
-  sendVerification: exports.sendVerification,
-  verifyCode: exports.verifyCode,
-  requestPasswordReset: exports.requestPasswordReset,
-  getLoginHistory: exports.getLoginHistory,
-  getLoginHistoryDetail: exports.getLoginHistoryDetail,
-  emailService: {
-    sendVerificationEmail,
-    sendPasswordResetEmail,
-    sendWelcomeEmail,
-    sendLoginAlertEmail,
-    sendNotificationEmail
-  }
+  register,
+  login,
+  getMe,
+  updateProfile,
+  checkEmail,
+  sendVerification,
+  verifyCode,
+  requestPasswordReset,
+  resetPassword,
+  getLoginHistory,
+  getLoginHistoryDetail,
+  getNotifications,
+  verifyInviteCode
 }; 

@@ -59,75 +59,9 @@ router.post('/reset-password', authController.resetPassword);
 // @route   POST api/auth/verify-invite-code
 // @desc    Xác minh mã mời
 // @access  Public
-router.post('/verify-invite-code', async (req, res) => {
-  try {
-    const { code } = req.body;
-    const inviteCode = await InvitationCode.findOne({ code });
-    
-    if (!inviteCode) {
-      return res.status(400).json({ message: 'Mã mời không hợp lệ' });
-    }
-
-    if (inviteCode.isUsed) {
-      return res.status(400).json({ message: 'Mã mời đã được sử dụng' });
-    }
-
-    const now = new Date();
-    if (inviteCode.expiresAt && inviteCode.expiresAt < now) {
-      return res.status(400).json({ message: 'Mã mời đã hết hạn' });
-    }
-
-    res.json({ valid: true });
-  } catch (error) {
-    console.error('Lỗi xác thực mã mời:', error);
-    res.status(500).json({ message: 'Lỗi server' });
-  }
-});
+router.post('/verify-invite-code', authController.verifyInviteCode);
 
 // Tạo route để lấy thông báo cho user hiện tại
-router.get('/notifications', auth, async (req, res) => {
-  try {
-    const Notification = require('../models/Notification');
-    
-    const userId = req.admin.id;
-    const userRole = req.admin.role;
-    
-    // Tìm các thông báo dựa trên tiêu chí:
-    // 1. Thông báo cho 'all'
-    // 2. Thông báo cho 'admins' nếu user là admin
-    // 3. Thông báo cho 'teams' nếu user là team
-    // 4. Thông báo cụ thể cho userId này (specificAdmins hoặc specificTeams)
-    let query = {
-      isActive: true,
-      expiresAt: { $gt: new Date() },
-      $or: [
-        { targetUsers: 'all' }
-      ]
-    };
-    
-    if (userRole === 'superadmin' || userRole === 'admin') {
-      query.$or.push({ targetUsers: 'admins' });
-      query.$or.push({
-        targetUsers: 'specificAdmins',
-        targetUsersList: userId
-      });
-    } else if (userRole === 'team') {
-      query.$or.push({ targetUsers: 'teams' });
-      query.$or.push({
-        targetUsers: 'specificTeams',
-        targetUsersList: userId
-      });
-    }
-    
-    const notifications = await Notification.find(query)
-      .populate('createdBy', 'username name')
-      .sort({ createdAt: -1 });
-    
-    res.json(notifications);
-  } catch (err) {
-    console.error('Error getting notifications for user:', err);
-    res.status(500).json({ message: 'Lỗi server' });
-  }
-});
+router.get('/notifications', auth, authController.getNotifications);
 
 module.exports = router; 
