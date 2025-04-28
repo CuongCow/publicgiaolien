@@ -9,10 +9,11 @@ const { processNotificationEmails } = require('./jobs/notificationEmailJob');
 const app = express();
 const PORT = process.env.PORT || config.PORT || 5000;
 
-// Cấu hình CORS
-const corsOptions = {
-  origin: function (origin, callback) {
-    const allowedOrigins = ['https://www.giaolien.com', 'http://localhost:3000'];
+// Cấu hình CORS an toàn hơn
+const allowedOrigins = ['https://www.giaolien.com', 'http://localhost:3000'];
+app.use(cors({
+  origin: function(origin, callback) {
+    // Cho phép request không có origin (như từ Postman) hoặc nằm trong danh sách
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
@@ -20,20 +21,10 @@ const corsOptions = {
     }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token', 'Access-Control-Allow-Origin', 'Access-Control-Allow-Headers', 'Access-Control-Allow-Methods'],
-  exposedHeaders: ['x-auth-token'],
-  credentials: true,
-  preflightContinue: false,
-  optionsSuccessStatus: 204,
-  maxAge: 86400 // 24 giờ
-};
-
-// Áp dụng CORS middleware
-app.use(cors(corsOptions));
-
-// Xử lý preflight requests
-app.options('*', cors(corsOptions));
-
+  allowedHeaders: ['Content-Type', 'x-auth-token'],
+  credentials: true
+}));
+app.options('*', cors()); // Đảm bảo trả về 200 cho preflight
 app.use(express.json());
 
 // Phục vụ các file tĩnh từ thư mục uploads
