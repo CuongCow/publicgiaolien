@@ -474,16 +474,18 @@ const sendLoginAlertEmail = async (email, name, loginInfo) => {
 };
 
 // @route   GET api/auth/login-history
-// @desc    Lấy lịch sử đăng nhập
+// @desc    Lấy lịch sử đăng nhập của admin
 // @access  Private
 exports.getLoginHistory = async (req, res) => {
   try {
-    const history = await LoginHistory.find({ adminId: req.admin.id })
-      .sort({ timestamp: -1 });
-    res.json(history);
+    const loginHistory = await LoginHistory.find({ admin: req.admin.id })
+      .sort({ loginTime: -1 })
+      .limit(10);
+    
+    res.json(loginHistory);
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    console.error('Get login history error:', err.message);
+    res.status(500).json({ message: 'Lỗi server' });
   }
 };
 
@@ -492,14 +494,19 @@ exports.getLoginHistory = async (req, res) => {
 // @access  Private
 exports.getLoginHistoryDetail = async (req, res) => {
   try {
-    const history = await LoginHistory.findById(req.params.id);
-    if (!history) {
+    const loginHistory = await LoginHistory.findOne({
+      _id: req.params.id,
+      admin: req.admin.id
+    });
+    
+    if (!loginHistory) {
       return res.status(404).json({ message: 'Không tìm thấy lịch sử đăng nhập' });
     }
-    res.json(history);
+    
+    res.json(loginHistory);
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    console.error('Get login history detail error:', err.message);
+    res.status(500).json({ message: 'Lỗi server' });
   }
 };
 
