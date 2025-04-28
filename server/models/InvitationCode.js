@@ -26,7 +26,11 @@ const InvitationCodeSchema = new mongoose.Schema({
   },
   expiresAt: {
     type: Date,
-    required: true
+    default: function() {
+      const date = new Date();
+      date.setDate(date.getDate() + 30); // Mặc định 30 ngày
+      return date;
+    }
   }
 });
 

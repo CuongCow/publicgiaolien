@@ -14,23 +14,20 @@ const LoginNotification = () => {
       // Xóa flag justLoggedIn khỏi sessionStorage
       sessionStorage.removeItem('justLoggedIn');
       
-      // Gọi API để lấy thông báo mới nhất
-      fetchLatestNotification();
+      // Tạo thông báo chào mừng từ localStorage thay vì gọi API
+      const adminData = JSON.parse(localStorage.getItem('admin') || '{}');
+      const welcomeNotification = {
+        title: 'Đăng nhập thành công',
+        content: adminData.name 
+          ? `Chào mừng ${adminData.name} đã quay trở lại!` 
+          : 'Chào mừng bạn đã quay trở lại!',
+        type: 'success'
+      };
+      
+      setNotification(welcomeNotification);
+      setShow(true);
     }
   }, []);
-  
-  const fetchLatestNotification = async () => {
-    try {
-      const response = await authApi.getNotifications();
-      if (response.data && response.data.length > 0) {
-        // Lấy thông báo đầu tiên (mới nhất)
-        setNotification(response.data[0]);
-        setShow(true);
-      }
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-    }
-  };
   
   // Nếu không có thông báo, không render gì cả
   if (!notification) {

@@ -238,9 +238,14 @@ router.post('/invite-codes', auth, superAdminAuth, async (req, res) => {
     const randomCode = crypto.randomBytes(6).toString('hex').toUpperCase();
     const inviteCode = `GL-${randomCode}`;
     
+    // Tính thời gian hết hạn (30 ngày từ hiện tại)
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30);
+    
     const newInviteCode = new InvitationCode({
       code: inviteCode,
-      createdBy: req.admin.id
+      createdBy: req.admin.id,
+      expiresAt: expiresAt
     });
     
     await newInviteCode.save();

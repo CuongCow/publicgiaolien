@@ -115,11 +115,62 @@ const login = async (req, res) => {
       return res.status(400).json({ message: 'Tên đăng nhập hoặc mật khẩu không đúng' });
     }
 
+    // Lấy thông tin thiết bị và vị trí
+    const ipAddress = req.ip || req.connection.remoteAddress;
+    const geo = geoip.lookup(ipAddress.replace('::ffff:', ''));
+    const location = geo ? `${geo.city || ''}, ${geo.country || ''}` : 'Không xác định';
+    
+    const parser = new UAParser(req.headers['user-agent']);
+    const browserName = parser.getBrowser().name || '';
+    const browserVersion = parser.getBrowser().version || '';
+    const os = parser.getOS().name || '';
+    const deviceInfo = `${browserName} ${browserVersion} (${os})`;
+    
+    // Lưu lịch sử đăng nhập
+    const loginHistory = new LoginHistory({
+      adminId: admin._id,
+      username: admin.username,
+      ipAddress,
+      userAgent: req.headers['user-agent'],
+      deviceInfo,
+      location,
+      status: 'success'
+    });
+    
+    await loginHistory.save();
+
+    // Cố gắng gửi email thông báo đăng nhập
+    try {
+      if (admin.email) {
+        const loginInfo = {
+          username: admin.username,
+          loginTime: new Date().toLocaleString('vi-VN'),
+          ipAddress,
+          location,
+          deviceInfo
+        };
+
+        await sendLoginAlertEmail(admin.email, admin.name || admin.username, loginInfo);
+      }
+    } catch (emailErr) {
+      console.error('Lỗi khi gửi email thông báo đăng nhập:', emailErr);
+      // Không trả về lỗi cho người dùng nếu gửi email thất bại
+    }
+
     // Tạo token
     const payload = {
       admin: {
         id: admin.id
       }
+    };
+
+    // Tạo bản sao admin mà không có field password
+    const adminInfo = {
+      id: admin._id,
+      username: admin.username,
+      name: admin.name,
+      email: admin.email,
+      role: admin.role
     };
 
     jwt.sign(
@@ -128,7 +179,7 @@ const login = async (req, res) => {
       { expiresIn: '24h' },
       (err, token) => {
         if (err) throw err;
-        res.json({ token });
+        res.json({ token, admin: adminInfo });
       }
     );
   } catch (err) {
@@ -621,5 +672,13 @@ module.exports = {
   getLoginHistory,
   getLoginHistoryDetail,
   getNotifications,
-  verifyInviteCode
+  verifyInviteCode,
+  // Thêm export các hàm gửi email
+  emailService: {
+    sendVerificationEmail,
+    sendPasswordResetEmail,
+    sendWelcomeEmail,
+    sendLoginAlertEmail,
+    sendNotificationEmail
+  }
 }; 

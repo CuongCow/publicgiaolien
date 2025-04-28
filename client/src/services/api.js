@@ -16,7 +16,7 @@ const axiosInstance = axios.create({
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   },
-  withCredentials: true
+  withCredentials: false
 });
 
 // Thêm interceptor để xử lý lỗi

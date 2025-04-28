@@ -42,14 +42,20 @@ function App() {
     const checkAuthStatus = async () => {
       try {
         const token = localStorage.getItem('token');
-        if (token) {
-          // Kiểm tra token hiện tại
+        const adminData = localStorage.getItem('admin');
+        
+        if (token && adminData) {
+          // Đầu tiên, thiết lập trạng thái đã xác thực dựa trên dữ liệu trong localStorage
+          setIsAuthenticated(true);
+          
+          // Sau đó, thử xác thực với server (không block việc render UI)
           try {
             await authApi.getMe();
-            setIsAuthenticated(true);
+            // Nếu thành công, không cần làm gì thêm
           } catch (tokenError) {
-            console.error('Token không hợp lệ:', tokenError);
-            // Nếu token không hợp lệ, xóa thông tin đăng nhập
+            console.error('Token không hợp lệ hoặc hết hạn:', tokenError);
+            
+            // Nếu token không hợp lệ, xóa thông tin đăng nhập và đặt lại trạng thái
             localStorage.removeItem('token');
             localStorage.removeItem('admin');
             setIsAuthenticated(false);

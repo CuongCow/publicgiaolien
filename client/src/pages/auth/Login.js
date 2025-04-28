@@ -37,18 +37,12 @@ const Login = () => {
         password: formData.password 
       });
       
-      // Ghi log để debug
-      console.log('Đăng nhập thành công, dữ liệu nhận được:', response.data);
-      
       // Lưu token vào localStorage
       localStorage.setItem('token', response.data.token);
       
       // Đảm bảo response.data.admin có đầy đủ thông tin
       if (response.data.admin) {
-        console.log('Thông tin admin đầy đủ:', response.data.admin);
         localStorage.setItem('admin', JSON.stringify(response.data.admin));
-      } else {
-        console.error('Dữ liệu admin không đầy đủ:', response.data);
       }
       
       // Đặt flag để hiển thị thông báo khi vừa đăng nhập
@@ -56,7 +50,6 @@ const Login = () => {
       
       // Chuyển hướng dựa trên vai trò
       const adminRole = response.data.admin?.role || 'admin';
-      console.log('Vai trò từ response:', adminRole);
       
       if (adminRole === 'superadmin') {
         navigate('/superadmin');
@@ -64,7 +57,6 @@ const Login = () => {
         navigate('/admin');
       }
     } catch (err) {
-      console.error('Login error:', err);
       if (err.message) {
         setError(err.message);
       } else if (err.response?.status === 401) {
