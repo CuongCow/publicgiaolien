@@ -11,9 +11,12 @@ const PORT = process.env.PORT || config.PORT || 5000;
 
 // Middleware
 app.use(cors({
-  origin: '*', // Cho phép tất cả các origin
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'x-auth-token']
+  origin: ['https://www.giaolien.com', 'http://localhost:3000'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token'],
+  credentials: true,
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
 app.use(express.json());
 
