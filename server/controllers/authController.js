@@ -8,6 +8,7 @@ const geoip = require('geoip-lite');
 const UAParser = require('ua-parser-js');
 const InvitationCode = require('../models/InvitationCode');
 const Notification = require('../models/Notification');
+const config = require('../config');
 
 // Hàm tạo mã xác thực ngẫu nhiên
 const generateVerificationCode = () => {
@@ -82,7 +83,7 @@ const register = async (req, res) => {
 
     jwt.sign(
       payload,
-      process.env.JWT_SECRET || 'your_jwt_secret',
+      config.JWT_SECRET,
       { expiresIn: '24h' },
       (err, token) => {
         if (err) throw err;
@@ -123,7 +124,7 @@ const login = async (req, res) => {
 
     jwt.sign(
       payload,
-      process.env.JWT_SECRET || 'your_jwt_secret',
+      config.JWT_SECRET,
       { expiresIn: '24h' },
       (err, token) => {
         if (err) throw err;
