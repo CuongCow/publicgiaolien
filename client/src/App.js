@@ -3,12 +3,12 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
 import { SystemSettingsProvider } from './context/SystemSettingsContext';
+import LoginNotification from './components/LoginNotification';
 
 // Import các component
 import HomePage from './pages/HomePage';
 import AboutPage from './pages/AboutPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
-import SuperAdminDashboard from './pages/admin/SuperAdminDashboard';
 import StationForm from './pages/admin/StationForm';
 import StationList from './pages/admin/StationList';
 import TeamRanking from './pages/admin/TeamRanking';
@@ -23,10 +23,19 @@ import TeamList from './pages/admin/TeamList';
 import SubmissionsHistory from './pages/admin/SubmissionsHistory';
 import { authApi } from './services/api';
 
+// Import trang Super Admin
+import SuperAdminDashboard from './pages/superadmin/SuperAdminDashboard';
+import AdminManagement from './pages/superadmin/AdminManagement';
+import InviteCodeManagement from './pages/superadmin/InviteCodeManagement';
+import NotificationManagement from './pages/superadmin/NotificationManagement';
+import TeamSummary from './pages/superadmin/TeamSummary';
+import SafetySettings from './pages/superadmin/SafetySettings';
+import SystemLogs from './pages/superadmin/SystemLogs';
+import DatabaseManagement from './pages/superadmin/DatabaseManagement';
+
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [userRole, setUserRole] = useState(null);
 
   useEffect(() => {
     // Kiểm tra trạng thái xác thực khi component được load
@@ -34,15 +43,25 @@ function App() {
       try {
         const token = localStorage.getItem('token');
         if (token) {
-          const res = await authApi.getMe();
-          setIsAuthenticated(true);
-          setUserRole(res.data.role || 'admin');
+          // Kiểm tra token hiện tại
+          try {
+            await authApi.getMe();
+            setIsAuthenticated(true);
+          } catch (tokenError) {
+            console.error('Token không hợp lệ:', tokenError);
+            // Nếu token không hợp lệ, xóa thông tin đăng nhập
+            localStorage.removeItem('token');
+            localStorage.removeItem('admin');
+            setIsAuthenticated(false);
+          }
+        } else {
+          setIsAuthenticated(false);
         }
       } catch (error) {
+        console.error('Lỗi kiểm tra xác thực:', error);
         localStorage.removeItem('token');
         localStorage.removeItem('admin');
         setIsAuthenticated(false);
-        setUserRole(null);
       } finally {
         setLoading(false);
       }
@@ -62,11 +81,12 @@ function App() {
   }, []);
 
   // Route bảo vệ cho admin
-  const ProtectedRoute = ({ children, requiredRole = null }) => {
+  const ProtectedRoute = ({ children }) => {
     if (loading) {
       return <div className="loading">Đang tải...</div>;
     }
     
+
     if (!isAuthenticated) {
       console.log('Chuyển hướng: Chưa xác thực');
       return <Navigate to="/login" />;
@@ -84,12 +104,44 @@ function App() {
     }
     
     return children;
+    return isAuthenticated ? children : <Navigate to="/login" />;
+  };
+  
+  // Route bảo vệ cho Super Admin
+  const SuperAdminRoute = ({ children }) => {
+    const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+    const [loadingSuperAdmin, setLoadingSuperAdmin] = useState(true);
+    
+    useEffect(() => {
+      const checkSuperAdmin = async () => {
+        try {
+          const token = localStorage.getItem('token');
+          if (token) {
+            const response = await authApi.getMe();
+            setIsSuperAdmin(response.data.role === 'superadmin');
+          }
+        } catch (error) {
+          setIsSuperAdmin(false);
+        } finally {
+          setLoadingSuperAdmin(false);
+        }
+      };
+      
+      checkSuperAdmin();
+    }, []);
+    
+    if (loadingSuperAdmin) {
+      return <div className="loading">Đang tải...</div>;
+    }
+    
+    return isSuperAdmin ? children : <Navigate to="/admin" />;
   };
 
   return (
     <SystemSettingsProvider>
       <Router>
         <div className="App">
+          <LoginNotification />
           <Routes>
             {/* Home Page */}
             <Route path="/" element={<HomePage />} />
@@ -100,22 +152,15 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             
-            {/* SuperAdmin routes */}
-            <Route path="/superadmin" element={
-              <ProtectedRoute requiredRole="superadmin">
-                <SuperAdminDashboard />
-              </ProtectedRoute>
-            } />
-            
             {/* Admin routes */}
             <Route path="/admin" element={
               <ProtectedRoute>
-                {userRole === 'superadmin' ? <Navigate to="/superadmin" /> : <AdminDashboard />}
+                <AdminDashboard />
               </ProtectedRoute>
             } />
             <Route path="/admin/dashboard" element={
               <ProtectedRoute>
-                {userRole === 'superadmin' ? <Navigate to="/superadmin" /> : <AdminDashboard />}
+                <AdminDashboard />
               </ProtectedRoute>
             } />
             <Route path="/admin/stations" element={
@@ -157,6 +202,48 @@ function App() {
               <ProtectedRoute>
                 <AdminSettings />
               </ProtectedRoute>
+            } />
+            
+            {/* Super Admin routes */}
+            <Route path="/superadmin" element={
+              <SuperAdminRoute>
+                <SuperAdminDashboard />
+              </SuperAdminRoute>
+            } />
+            <Route path="/superadmin/admins" element={
+              <SuperAdminRoute>
+                <AdminManagement />
+              </SuperAdminRoute>
+            } />
+            <Route path="/superadmin/invite-codes" element={
+              <SuperAdminRoute>
+                <InviteCodeManagement />
+              </SuperAdminRoute>
+            } />
+            <Route path="/superadmin/notifications" element={
+              <SuperAdminRoute>
+                <NotificationManagement />
+              </SuperAdminRoute>
+            } />
+            <Route path="/superadmin/teams" element={
+              <SuperAdminRoute>
+                <TeamSummary />
+              </SuperAdminRoute>
+            } />
+            <Route path="/superadmin/security" element={
+              <SuperAdminRoute>
+                <SafetySettings />
+              </SuperAdminRoute>
+            } />
+            <Route path="/superadmin/logs" element={
+              <SuperAdminRoute>
+                <SystemLogs />
+              </SuperAdminRoute>
+            } />
+            <Route path="/superadmin/database" element={
+              <SuperAdminRoute>
+                <DatabaseManagement />
+              </SuperAdminRoute>
             } />
             
             {/* User routes */}

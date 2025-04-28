@@ -4,30 +4,52 @@ const cors = require('cors');
 const qrcode = require('qrcode');
 const config = require('./config');
 const path = require('path');
+const { processNotificationEmails } = require('./jobs/notificationEmailJob');
 
 const app = express();
 const PORT = process.env.PORT || config.PORT || 5000;
 
-// Middleware
+// Cấu hình CORS an toàn hơn
+const allowedOrigins = ['https://www.giaolien.com', 'http://localhost:3000'];
 app.use(cors({
-  origin: '*', // Cho phép tất cả các origin
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'x-auth-token']
+  origin: function(origin, callback) {
+    // Cho phép request không có origin (như từ Postman) hoặc nằm trong danh sách
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'x-auth-token'],
+  credentials: true
 }));
+app.options('*', cors()); // Đảm bảo trả về 200 cho preflight
 app.use(express.json());
 
 // Phục vụ các file tĩnh từ thư mục uploads
 app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // MongoDB Connection
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://cuongdn:v446gy9nDmuyKsqg@cluster0.frhl2tm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
-mongoose.connect(MONGODB_URI, {
-  serverSelectionTimeoutMS: 5000, // Timeout for server selection
-  socketTimeoutMS: 45000,       // Close sockets after 45 seconds of inactivity
-  family: 4                    // Use IPv4, skip trying IPv6
-})
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.log('MongoDB connection error:', err));
+const MONGODB_URI = process.env.MONGODB_URI || config.MONGODB_URI;
+mongoose.connect(MONGODB_URI)
+  .then(() => {
+    console.log('MongoDB Connected...');
+    
+    // Lên lịch chạy công việc gửi email thông báo hàng giờ
+    setInterval(async () => {
+      console.log('Đang chạy job gửi email thông báo tự động...');
+      try {
+        await processNotificationEmails();
+      } catch (err) {
+        console.error('Lỗi khi chạy job gửi email thông báo:', err);
+      }
+    }, 60 * 60 * 1000); // 1 giờ
+  })
+  .catch(err => {
+    console.error('MongoDB connection error:', err);
+    process.exit(1);
+  });
 
 // Import Routes
 const authRoutes = require('./routes/auth');
@@ -35,7 +57,7 @@ const stationRoutes = require('./routes/stations');
 const teamRoutes = require('./routes/teams');
 const submissionRoutes = require('./routes/submissions');
 const settingsRoutes = require('./routes/settings');
-const invitationRoutes = require('./routes/invitations');
+const superAdminRoutes = require('./routes/superadmin');
 
 // Use Routes
 app.use('/api/auth', authRoutes);
@@ -43,7 +65,7 @@ app.use('/api/stations', stationRoutes);
 app.use('/api/teams', teamRoutes);
 app.use('/api/submissions', submissionRoutes);
 app.use('/api/settings', settingsRoutes);
-app.use('/api/invitations', invitationRoutes);
+app.use('/api/superadmin', superAdminRoutes);
 
 // API kiểm tra trạng thái
 app.get('/api/status', (req, res) => {
@@ -64,28 +86,6 @@ app.get('/', (req, res) => {
       '/api/status'
     ]
   });
-});
-
-// Middleware xử lý lỗi chung
-app.use((err, req, res, next) => {
-  console.error('Server error:', err.stack);
-  
-  // Kiểm tra lỗi kết nối MongoDB
-  if (err.name === 'MongoNetworkError' || err.name === 'MongoTimeoutError') {
-    return res.status(503).json({
-      message: 'Không thể kết nối đến cơ sở dữ liệu. Vui lòng thử lại sau.'
-    });
-  }
-  
-  // Trả về lỗi chung
-  res.status(err.status || 500).json({
-    message: err.message || 'Có lỗi xảy ra ở máy chủ, vui lòng thử lại sau.'
-  });
-});
-
-// Xử lý route không tồn tại
-app.use((req, res) => {
-  res.status(404).json({ message: 'Không tìm thấy endpoint' });
 });
 
 // Start server - lắng nghe trên tất cả các địa chỉ IP

@@ -1,0 +1,5 @@
+# Thêm vào .gitignore hiện tại
+# Bỏ qua các file backup nhưng vẫn giữ thư mục
+/backups/*.json
+/backups/*.*
+!/backups/.gitkeep 

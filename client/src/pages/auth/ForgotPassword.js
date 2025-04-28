@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Container, Card, Form, Button, Alert, InputGroup } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import { Container, Form, Button, Alert, InputGroup, Row, Col } from 'react-bootstrap';
 import { useNavigate, Link } from 'react-router-dom';
 import { authApi } from '../../services/api';
 
@@ -14,7 +14,13 @@ const ForgotPassword = () => {
   const [step, setStep] = useState(1); // 1: Nhập email, 2: Nhập mã xác thực, 3: Đặt lại mật khẩu
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
 
   const handleRequestReset = async (e) => {
     e.preventDefault();
@@ -126,172 +132,301 @@ const ForgotPassword = () => {
     setShowConfirmPassword(!showConfirmPassword);
   };
 
+  const getStepProgress = () => {
+    return (step / 3) * 100;
+  };
+
   return (
-    <Container className="d-flex justify-content-center align-items-center min-vh-100">
-      <Card className="shadow-sm" style={{ width: '450px' }}>
-        <Card.Body className="p-4">
-          <h2 className="text-center mb-4">Quên mật khẩu</h2>
-          
-          {error && <Alert variant="danger">{error}</Alert>}
-          {success && <Alert variant="success">{success}</Alert>}
-          
-          {step === 1 && (
-            <Form onSubmit={handleRequestReset}>
-              <p className="text-center mb-4">
-                Vui lòng nhập địa chỉ email bạn đã dùng để đăng ký tài khoản. 
-                Chúng tôi sẽ gửi mã xác thực để bạn có thể đặt lại mật khẩu.
-              </p>
-              
-              <Form.Group className="mb-4">
-                <Form.Label>Email</Form.Label>
-                <Form.Control
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  placeholder="Nhập địa chỉ email"
-                />
-              </Form.Group>
-              
-              <div className="d-grid gap-2">
-                <Button 
-                  variant="primary" 
-                  type="submit" 
-                  disabled={loading}
-                >
-                  {loading ? 'Đang xử lý...' : 'Gửi mã xác thực'}
-                </Button>
-                
-          <div className="text-center mt-3">
-            <p className="mb-0">
-              <Link to="/login">Quay lại đăng nhập</Link>
-            </p>
-          </div>
+    <div className="auth-page forgot-password-page">
+      <Container fluid>
+        <Row className="align-items-center min-vh-100">
+          <Col md={6} className="d-none d-md-block auth-image">
+            <div className="map-overlay">
+              <img src="/logo192.png" alt="Logo" className="auth-logo" />
+              <h1 className="auth-title">Giao Liên</h1>
+              <p className="auth-subtitle">Hệ thống quản lý trò chơi</p>
+            </div>
+          </Col>
+          <Col md={6} xs={12}>
+            <div className={`auth-form-container ${mounted ? 'fade-in' : ''}`}>
+              <div className="d-block d-md-none text-center mb-4">
+                <img src="/logo192.png" alt="Logo" className="auth-mobile-logo" />
+                <h1 className="auth-mobile-title">Giao Liên</h1>
               </div>
-            </Form>
-          )}
-          
-          {step === 2 && (
-            <Form onSubmit={handleVerifyCode}>
-              <p className="text-center mb-4">
-                Chúng tôi đã gửi mã xác thực đến email <strong>{email}</strong>. 
-                Vui lòng kiểm tra hộp thư (bao gồm thư mục spam) và nhập mã xác thực bên dưới.
-              </p>
               
-              <Form.Group className="mb-4">
-                <Form.Label>Mã xác thực</Form.Label>
-                <InputGroup>
-                  <Form.Control
-                    type="text"
-                    value={verificationCode}
-                    onChange={(e) => setVerificationCode(e.target.value)}
-                    required
-                    placeholder="Nhập mã xác thực"
-                  />
-                </InputGroup>
-              </Form.Group>
-              
-              <div className="d-grid gap-2">
-                <Button 
-                  variant="primary" 
-                  type="submit" 
-                  disabled={loading}
-                >
-                  {loading ? 'Đang xử lý...' : 'Xác thực'}
-                </Button>
+              <div className="auth-form">
+                <div className="text-center mb-3">
+                  <h2 className="auth-form-title">Quên mật khẩu</h2>
+                  <p className="auth-form-subtitle">Đặt lại mật khẩu trong 3 bước đơn giản</p>
+                </div>
                 
-                <Button 
-                  variant="outline-secondary" 
-                  type="button" 
-                  disabled={loading}
-                  onClick={resendVerificationCode}
-                >
-                  Gửi lại mã xác thực
-                </Button>
+                <div className="mb-4">
+                  <div className="step-progress-container">
+                    <div className="progress">
+                      <div 
+                        className="progress-bar" 
+                        role="progressbar"
+                        style={{ width: `${getStepProgress()}%` }}
+                      ></div>
+                    </div>
+                    <div className="step-indicators">
+                      <div className={`step-indicator ${step >= 1 ? 'active' : ''}`}>1</div>
+                      <div className={`step-indicator ${step >= 2 ? 'active' : ''}`}>2</div>
+                      <div className={`step-indicator ${step >= 3 ? 'active' : ''}`}>3</div>
+                    </div>
+                  </div>
+                  <div className="step-labels d-flex justify-content-between">
+                    <small className={step === 1 ? 'active' : ''}>Xác nhận Email</small>
+                    <small className={step === 2 ? 'active' : ''}>Nhập mã</small>
+                    <small className={step === 3 ? 'active' : ''}>Mật khẩu mới</small>
+                  </div>
+                </div>
                 
-                <Button 
-                  variant="link" 
-                  type="button" 
-                  disabled={loading}
-                  onClick={() => setStep(1)}
-                >
-                  Quay lại
-                </Button>
+                {error && (
+                  <Alert variant="danger" className="animated-alert">
+                    <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                    {error}
+                  </Alert>
+                )}
+                
+                {success && (
+                  <Alert variant="success" className="animated-alert">
+                    <i className="bi bi-check-circle-fill me-2"></i>
+                    {success}
+                  </Alert>
+                )}
+                
+                {step === 1 && (
+                  <Form onSubmit={handleRequestReset} className="step-form">
+                    <div className="text-center mb-4">
+                      <div className="form-icon">
+                        <i className="bi bi-envelope"></i>
+                      </div>
+                      <p className="step-description">
+                        Vui lòng nhập địa chỉ email bạn đã dùng để đăng ký tài khoản. 
+                        Chúng tôi sẽ gửi mã xác thực để bạn có thể đặt lại mật khẩu.
+                      </p>
+                    </div>
+                    
+                    <Form.Group className="mb-4">
+                      <Form.Label>Email</Form.Label>
+                      <InputGroup className="auth-input-group">
+                        <InputGroup.Text>
+                          <i className="bi bi-envelope-fill"></i>
+                        </InputGroup.Text>
+                        <Form.Control
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          required
+                          placeholder="Nhập địa chỉ email"
+                          className="auth-input"
+                        />
+                      </InputGroup>
+                    </Form.Group>
+                    
+                    <div className="d-grid gap-2">
+                      <Button 
+                        className="auth-submit-btn"
+                        type="submit" 
+                        disabled={loading}
+                      >
+                        {loading ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            Đang xử lý...
+                          </>
+                        ) : (
+                          <>
+                            <i className="bi bi-send me-2"></i>
+                            Gửi mã xác thực
+                          </>
+                        )}
+                      </Button>
+                      
+                      <div className="text-center mt-3">
+                        <Link to="/login" className="auth-link">
+                          <i className="bi bi-arrow-left me-1"></i> Quay lại đăng nhập
+                        </Link>
+                      </div>
+                    </div>
+                  </Form>
+                )}
+                
+                {step === 2 && (
+                  <Form onSubmit={handleVerifyCode} className="step-form">
+                    <div className="email-verification-container">
+                      <div className="verification-icon mb-3">
+                        <i className="bi bi-shield-lock"></i>
+                      </div>
+                      <p className="text-center mb-4 step-description">
+                        Chúng tôi đã gửi mã xác thực đến email <strong>{email}</strong>. 
+                        Vui lòng kiểm tra hộp thư (bao gồm thư mục spam) và nhập mã xác thực bên dưới.
+                      </p>
+                      
+                      <Form.Group className="mb-4">
+                        <Form.Label>Mã xác thực</Form.Label>
+                        <InputGroup className="auth-input-group verification-code-input">
+                          <InputGroup.Text>
+                            <i className="bi bi-key-fill"></i>
+                          </InputGroup.Text>
+                          <Form.Control
+                            type="text"
+                            value={verificationCode}
+                            onChange={(e) => setVerificationCode(e.target.value)}
+                            required
+                            placeholder="Nhập mã xác thực"
+                            className="auth-input text-center"
+                          />
+                        </InputGroup>
+                      </Form.Group>
+                      
+                      <div className="d-grid gap-2">
+                        <Button 
+                          className="auth-submit-btn"
+                          type="submit" 
+                          disabled={loading}
+                        >
+                          {loading ? (
+                            <>
+                              <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                              Đang xử lý...
+                            </>
+                          ) : (
+                            <>
+                              <i className="bi bi-check-circle me-2"></i>
+                              Xác thực
+                            </>
+                          )}
+                        </Button>
+                        
+                        <Button 
+                          variant="outline-primary" 
+                          type="button" 
+                          disabled={loading}
+                          onClick={resendVerificationCode}
+                          className="auth-resend-btn"
+                        >
+                          <i className="bi bi-arrow-repeat me-2"></i>
+                          Gửi lại mã xác thực
+                        </Button>
+                        
+                        <Button 
+                          variant="outline-secondary" 
+                          type="button" 
+                          disabled={loading}
+                          onClick={() => setStep(1)}
+                          className="auth-back-btn"
+                        >
+                          <i className="bi bi-arrow-left me-2"></i>
+                          Quay lại
+                        </Button>
+                      </div>
+                    </div>
+                  </Form>
+                )}
+                
+                {step === 3 && (
+                  <Form onSubmit={handleResetPassword} className="step-form">
+                    <div className="text-center mb-4">
+                      <div className="form-icon">
+                        <i className="bi bi-lock"></i>
+                      </div>
+                      <p className="step-description">
+                        Vui lòng nhập mật khẩu mới cho tài khoản của bạn.
+                      </p>
+                    </div>
+                    
+                    <Form.Group className="mb-3">
+                      <Form.Label>Mật khẩu mới</Form.Label>
+                      <InputGroup className="auth-input-group">
+                        <InputGroup.Text>
+                          <i className="bi bi-lock-fill"></i>
+                        </InputGroup.Text>
+                        <Form.Control
+                          type={showNewPassword ? "text" : "password"}
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          required
+                          placeholder="Nhập mật khẩu mới"
+                          minLength="6"
+                          className="auth-input"
+                        />
+                        <Button 
+                          variant="link"
+                          className="password-toggle-btn"
+                          onClick={toggleShowNewPassword}
+                          title={showNewPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                        >
+                          <i className={showNewPassword ? "bi bi-eye-slash" : "bi bi-eye"}></i>
+                        </Button>
+                      </InputGroup>
+                    </Form.Group>
+                    
+                    <Form.Group className="mb-4">
+                      <Form.Label>Xác nhận mật khẩu mới</Form.Label>
+                      <InputGroup className="auth-input-group">
+                        <InputGroup.Text>
+                          <i className="bi bi-lock"></i>
+                        </InputGroup.Text>
+                        <Form.Control
+                          type={showConfirmPassword ? "text" : "password"}
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          required
+                          placeholder="Nhập lại mật khẩu mới"
+                          minLength="6"
+                          className="auth-input"
+                        />
+                        <Button 
+                          variant="link"
+                          className="password-toggle-btn"
+                          onClick={toggleShowConfirmPassword}
+                          title={showConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                        >
+                          <i className={showConfirmPassword ? "bi bi-eye-slash" : "bi bi-eye"}></i>
+                        </Button>
+                      </InputGroup>
+                    </Form.Group>
+                    
+                    <div className="d-grid gap-2">
+                      <Button 
+                        className="auth-submit-btn"
+                        type="submit" 
+                        disabled={loading}
+                      >
+                        {loading ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            Đang xử lý...
+                          </>
+                        ) : (
+                          <>
+                            <i className="bi bi-check2-all me-2"></i>
+                            Đặt lại mật khẩu
+                          </>
+                        )}
+                      </Button>
+                      
+                      <Button 
+                        variant="outline-secondary" 
+                        type="button" 
+                        disabled={loading}
+                        onClick={() => setStep(2)}
+                        className="auth-back-btn"
+                      >
+                        <i className="bi bi-arrow-left me-2"></i>
+                        Quay lại
+                      </Button>
+                    </div>
+                  </Form>
+                )}
               </div>
-            </Form>
-          )}
-          
-          {step === 3 && (
-            <Form onSubmit={handleResetPassword}>
-              <p className="text-center mb-4">
-                Vui lòng nhập mật khẩu mới cho tài khoản của bạn.
-              </p>
-              
-              <Form.Group className="mb-3">
-                <Form.Label>Mật khẩu mới</Form.Label>
-                <InputGroup>
-                  <Form.Control
-                    type={showNewPassword ? "text" : "password"}
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    required
-                    placeholder="Nhập mật khẩu mới"
-                    minLength="6"
-                  />
-                  <Button 
-                    variant="outline-secondary" 
-                    onClick={toggleShowNewPassword}
-                    title={showNewPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-                  >
-                    <i className={showNewPassword ? "bi bi-eye-slash" : "bi bi-eye"}></i>
-                  </Button>
-                </InputGroup>
-              </Form.Group>
-              
-              <Form.Group className="mb-4">
-                <Form.Label>Xác nhận mật khẩu mới</Form.Label>
-                <InputGroup>
-                  <Form.Control
-                    type={showConfirmPassword ? "text" : "password"}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                    placeholder="Nhập lại mật khẩu mới"
-                    minLength="6"
-                  />
-                  <Button 
-                    variant="outline-secondary" 
-                    onClick={toggleShowConfirmPassword}
-                    title={showConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-                  >
-                    <i className={showConfirmPassword ? "bi bi-eye-slash" : "bi bi-eye"}></i>
-                  </Button>
-                </InputGroup>
-              </Form.Group>
-              
-              <div className="d-grid gap-2">
-                <Button 
-                  variant="primary" 
-                  type="submit" 
-                  disabled={loading}
-                >
-                  {loading ? 'Đang xử lý...' : 'Đặt lại mật khẩu'}
-                </Button>
-                
-                <Button 
-                  variant="link" 
-                  type="button" 
-                  disabled={loading}
-                  onClick={() => setStep(2)}
-                >
-                  Quay lại
-                </Button>
-              </div>
-            </Form>
-          )}
-        </Card.Body>
-      </Card>
-    </Container>
+            </div>
+          </Col>
+        </Row>
+      </Container>
+    </div>
   );
 };
 

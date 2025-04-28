@@ -5,6 +5,13 @@ const Admin = require('../models/Admin');
 const config = require('../config');
 const { auth } = require('../middleware/auth');
 const authController = require('../controllers/authController');
+const InvitationCode = require('../models/InvitationCode');
+const LoginHistory = require('../models/LoginHistory');
+const superAdminAuth = require('../middleware/superAdminAuth');
+const SystemLog = require('../models/SystemLog');
+const SystemSettings = require('../models/SystemSettings');
+const Notification = require('../models/Notification');
+const mongoose = require('mongoose');
 
 // Đăng ký admin mới
 router.post('/register', authController.register);
@@ -20,9 +27,6 @@ router.get('/login-history', auth, authController.getLoginHistory);
 
 // Lấy chi tiết lịch sử đăng nhập
 router.get('/login-history/:id', auth, authController.getLoginHistoryDetail);
-
-// Lấy danh sách admin
-router.get('/admins', auth, authController.getAllAdmins);
 
 // Cập nhật thông tin admin
 router.patch('/profile', auth, authController.updateProfile);
@@ -51,5 +55,13 @@ router.post('/request-reset', authController.requestPasswordReset);
 // @desc    Đặt lại mật khẩu
 // @access  Public
 router.post('/reset-password', authController.resetPassword);
+
+// @route   POST api/auth/verify-invite-code
+// @desc    Xác minh mã mời
+// @access  Public
+router.post('/verify-invite-code', authController.verifyInviteCode);
+
+// Tạo route để lấy thông báo cho user hiện tại
+router.get('/notifications', auth, authController.getNotifications);
 
 module.exports = router; 
