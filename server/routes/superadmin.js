@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
 const superAdminAuth = require('../middleware/superAdminAuth');
-const InviteCode = require('../models/InviteCode');
+const InvitationCode = require('../models/InvitationCode');
 const Admin = require('../models/Admin');
 const SystemLog = require('../models/SystemLog');
 const SystemSettings = require('../models/SystemSettings');
@@ -238,7 +238,7 @@ router.post('/invite-codes', auth, superAdminAuth, async (req, res) => {
     const randomCode = crypto.randomBytes(6).toString('hex').toUpperCase();
     const inviteCode = `GL-${randomCode}`;
     
-    const newInviteCode = new InviteCode({
+    const newInviteCode = new InvitationCode({
       code: inviteCode,
       createdBy: req.admin.id
     });
@@ -264,7 +264,7 @@ router.post('/invite-codes', auth, superAdminAuth, async (req, res) => {
 // Lấy danh sách mã mời
 router.get('/invite-codes', auth, superAdminAuth, async (req, res) => {
   try {
-    const inviteCodes = await InviteCode.find()
+    const inviteCodes = await InvitationCode.find()
       .populate('createdBy', 'username name')
       .populate('usedBy', 'username name')
       .sort({ createdAt: -1 });
@@ -279,7 +279,7 @@ router.get('/invite-codes', auth, superAdminAuth, async (req, res) => {
 // Xóa mã mời
 router.delete('/invite-codes/:id', auth, superAdminAuth, async (req, res) => {
   try {
-    const inviteCode = await InviteCode.findByIdAndDelete(req.params.id);
+    const inviteCode = await InvitationCode.findByIdAndDelete(req.params.id);
     if (!inviteCode) {
       return res.status(404).json({ message: 'Không tìm thấy mã mời' });
     }
@@ -712,7 +712,7 @@ router.get('/database/stats', auth, superAdminAuth, async (req, res) => {
       stations: await mongoose.connection.db.collection('stations').countDocuments(),
       submissions: await mongoose.connection.db.collection('submissions').countDocuments(),
       systemLogs: await SystemLog.countDocuments(),
-      inviteCodes: await InviteCode.countDocuments(),
+      inviteCodes: await InvitationCode.countDocuments(),
       notifications: await Notification.countDocuments(),
       loginHistory: await mongoose.connection.db.collection('loginhistories').countDocuments()
     };

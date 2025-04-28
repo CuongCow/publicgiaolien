@@ -5,7 +5,13 @@ const Admin = require('../models/Admin');
 const config = require('../config');
 const { auth } = require('../middleware/auth');
 const authController = require('../controllers/authController');
-const InviteCode = require('../models/InviteCode');
+const InvitationCode = require('../models/InvitationCode');
+const LoginHistory = require('../models/LoginHistory');
+const superAdminAuth = require('../middleware/superAdminAuth');
+const SystemLog = require('../models/SystemLog');
+const SystemSettings = require('../models/SystemSettings');
+const Notification = require('../models/Notification');
+const mongoose = require('mongoose');
 
 // Đăng ký admin mới
 router.post('/register', authController.register);
@@ -59,48 +65,25 @@ router.post('/reset-password', authController.resetPassword);
 router.post('/verify-invite-code', async (req, res) => {
   try {
     const { code } = req.body;
-    
-    if (!code) {
-      return res.status(400).json({ 
-        isValid: false,
-        message: 'Vui lòng cung cấp mã mời' 
-      });
-    }
-    
-    const inviteCode = await InviteCode.findOne({ code });
+    const inviteCode = await InvitationCode.findOne({ code });
     
     if (!inviteCode) {
-      return res.status(400).json({ 
-        isValid: false,
-        message: 'Mã mời không hợp lệ' 
-      });
+      return res.status(400).json({ message: 'Mã mời không hợp lệ' });
     }
-    
+
     if (inviteCode.isUsed) {
-      return res.status(400).json({ 
-        isValid: false,
-        message: 'Mã mời đã được sử dụng' 
-      });
+      return res.status(400).json({ message: 'Mã mời đã được sử dụng' });
     }
-    
+
     const now = new Date();
     if (inviteCode.expiresAt && inviteCode.expiresAt < now) {
-      return res.status(400).json({ 
-        isValid: false,
-        message: 'Mã mời đã hết hạn' 
-      });
+      return res.status(400).json({ message: 'Mã mời đã hết hạn' });
     }
-    
-    res.json({ 
-      isValid: true,
-      message: 'Mã mời hợp lệ' 
-    });
-  } catch (err) {
-    console.error('Error verifying invite code:', err);
-    res.status(500).json({ 
-      isValid: false,
-      message: 'Lỗi server' 
-    });
+
+    res.json({ valid: true });
+  } catch (error) {
+    console.error('Lỗi xác thực mã mời:', error);
+    res.status(500).json({ message: 'Lỗi server' });
   }
 });
 
