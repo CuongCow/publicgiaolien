@@ -44,14 +44,14 @@ const TeamRanking = () => {
             setGameName(stationResponse.data.gameName);
           }
         } catch (err) {
-          console.error('Error fetching station data for game name:', err);
+          console.error(t('error_fetching_station_data'), err);
         }
       }
       
       setError(null);
     } catch (err) {
       setError(t('ranking_load_error'));
-      console.error('Error fetching ranking:', err);
+      console.error(t('error_fetching_ranking'), err);
     } finally {
       setLoading(false);
     }
@@ -159,7 +159,7 @@ const TeamRanking = () => {
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       setError(t('excel_export_error'));
-      console.error('Error exporting to Excel:', err);
+      console.error(t('error_exporting_excel'), err);
     } finally {
       setExportLoading(false);
     }
@@ -183,7 +183,7 @@ const TeamRanking = () => {
       }, 3000);
     } catch (err) {
       setError(t('ranking_reset_error'));
-      console.error('Error resetting ranking:', err);
+      console.error(t('error_resetting_ranking'), err);
     } finally {
       setResetLoading(false);
     }
@@ -207,7 +207,7 @@ const TeamRanking = () => {
       }, 5000);
     } catch (err) {
       setError(t('scores_reset_error'));
-      console.error('Error resetting scores:', err);
+      console.error(t('error_resetting_scores'), err);
     } finally {
       setResetScoresLoading(false);
     }
