@@ -87,13 +87,13 @@ export const translations = {
     game_note_note: 'Ghi chú chung sẽ hiển thị cho tất cả đội chơi khi tham gia',
     teams_label: 'Tên các đội chơi',
     add_team: 'Thêm',
-    add_multiple_teams: 'Thêm nhiều đội',
+    add_multiple_teams: 'Thêm nhiều',
     teams_input_note: 'Nhập tên đội và nhấn "Thêm" hoặc nhập danh sách đội cách nhau bởi dấu phẩy',
     available_teams: 'Danh sách đội có sẵn',
     selected_teams: 'Danh sách đội đã chọn',
     teams_list: 'Danh sách đội',
     stations_list: 'Danh sách trạm',
-    add_new_station: '+ Thêm trạm mới',
+    add_new_station: 'Thêm trạm mới',
     remove_station: 'Xóa trạm',
     station_name_label: 'Tên trạm',
     station_name_placeholder: 'Nhập tên trạm',
@@ -340,6 +340,8 @@ export const translations = {
     
     // Thông tin ứng dụng
     app_version: 'Phiên bản:',
+    app_version_note: 'Sửa lỗi:',
+    app_version_note_content: 'Sửa các lỗi middleware hash',
     app_framework: 'Khung giao diện:',
     app_backend: 'Backend:',
     app_database: 'Cơ sở dữ liệu:',
@@ -424,7 +426,7 @@ export const translations = {
     go_back: 'Quay lại',
     enter_ott_content: 'Nhập nội dung OTT',
     enter_nw_content: 'Nhập nội dung NW',
-    add_multiple_answers: 'Thêm nhiều đáp án',
+    add_multiple_answers: 'Thêm nhiều',
     answers_input_note: 'Nhập đáp án và nhấn "Thêm" hoặc nhập danh sách đáp án cách nhau bởi dấu phẩy',
     team_count: 'đội',
     
@@ -472,7 +474,7 @@ export const translations = {
     enter_nw_content_placeholder: 'Nhập nội dung NW',
     enter_answer_placeholder: 'Nhập đáp án',
     add_answer_button: 'Thêm',
-    add_multiple_answers_button: 'Thêm nhiều đáp án',
+    add_multiple_answers_button: 'Thêm nhiều',
     loading_text: 'Đang tải...',
 
     // Thông tin tài khoản và hệ thống
@@ -492,6 +494,17 @@ export const translations = {
 
     password: 'Mật khẩu',
     password_label: 'Mật khẩu',
+
+    // Thêm các mục dịch mới cho tính năng mật thư riêng
+    game_settings: 'Cài đặt mật thư',
+    message_type_common: 'Mật thư chung cho các đội',
+    message_type_individual: 'Mật thư riêng cho từng đội',
+    message_type_common_note: 'Tất cả các đội sẽ thấy cùng một nội dung mật thư',
+    message_type_individual_note: 'Mỗi đội sẽ thấy nội dung mật thư khác nhau',
+    message_type_label: 'Loại mật thư',
+    team_content_tab: 'Nội dung cho đội {team}',
+    team_content_warning: 'Vui lòng thêm ít nhất một đội để thiết lập nội dung riêng',
+    image_upload_error: 'Có lỗi khi tải ảnh lên. Vui lòng thử lại.',
   },
   en: {
     welcome: 'Welcome',
@@ -808,6 +821,8 @@ export const translations = {
     export_success: 'Excel export successful!',
     export_error: 'Unable to export Excel file. Please try again later.',
     app_version: 'Version:',
+    app_version_note: 'Fix bugs:',
+    app_version_note_content: 'Fix hash middleware bugs',
     app_framework: 'Framework:',
     app_backend: 'Backend:',
     app_database: 'Database:',

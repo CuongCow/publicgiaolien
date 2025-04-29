@@ -214,6 +214,39 @@ const UserStation = () => {
     setPassword(e.target.value);
   };
 
+  // Hàm mới để lấy nội dung mật thư dựa trên đội được chọn
+  const getTeamSpecificContent = () => {
+    if (!station) return null;
+    
+    // Nếu là mật thư chung hoặc không có loại mật thư (tương thích ngược)
+    if (!station.messageType || station.messageType === 'common') {
+      return {
+        content: station.content,
+        contentType: station.contentType
+      };
+    }
+    
+    // Nếu là mật thư riêng, tìm nội dung tương ứng với đội được chọn
+    if (station.messageType === 'individual' && selectedTeam) {
+      const teamContent = station.teamSpecificContents?.find(content => 
+        content.team === selectedTeam
+      );
+      
+      if (teamContent) {
+        return {
+          content: teamContent.content,
+          contentType: teamContent.contentType
+        };
+      }
+    }
+    
+    // Mặc định trả về nội dung chung nếu không tìm thấy nội dung riêng
+    return {
+      content: station.content,
+      contentType: station.contentType
+    };
+  };
+
   const handleTeamSubmit = async (e) => {
     e.preventDefault();
     
@@ -274,44 +307,67 @@ const UserStation = () => {
   const handleSubmitAnswer = async (e) => {
     e.preventDefault();
     
-    if (!answer.trim()) {
-      setError('Vui lòng nhập đáp án');
+    if (!answer) {
+      setError('Vui lòng nhập đáp án.');
       return;
     }
     
+    if (!station) {
+      setError(`Không tìm thấy thông tin ${replaceStationTerm('trạm')}.`);
+      return;
+    }
+    
+    if (!selectedTeam && station.teams && station.teams.length > 0) {
+      setError('Vui lòng chọn đội của bạn.');
+      return;
+    }
+    
+    setSubmitting(true);
+    setError(null);
+    
     try {
-      setSubmitting(true);
-      setError(null);
-      
-      const response = await submissionApi.create({
-        stationId,
-        teamName,
+      const data = {
+        stationId: stationId,
+        team: selectedTeam,
         answer: answer.trim()
-      });
+      };
       
-      setSubmissionResult(response.data);
+      // Xác định đáp án cần kiểm tra dựa trên loại mật thư
+      let correctAnswers = [];
       
-      if (response.data.isCorrect) {
-        setShowSuccessModal(true);
-      } else if (response.data.submission.nextAttemptAllowed) {
-        setNextAttemptTime(response.data.submission.nextAttemptAllowed);
-      } else {
-        // Hiển thị thông báo khi trả lời sai
-        setError(`Đáp án không chính xác! Còn ${response.data.remainingAttempts || 0} lần thử.`);
-      }
-      
-      setAnswer('');
-    } catch (err) {
-      if (err.response && err.response.data && err.response.data.message) {
-        setError(err.response.data.message);
+      if (station.messageType === 'individual' && selectedTeam) {
+        // Nếu là mật thư riêng, tìm đáp án cho đội cụ thể
+        const teamContent = station.teamSpecificContents?.find(content => 
+          content.team === selectedTeam
+        );
         
-        if (err.response.data.nextAttemptAllowed) {
-          setNextAttemptTime(err.response.data.nextAttemptAllowed);
+        if (teamContent && teamContent.correctAnswer) {
+          correctAnswers = [teamContent.correctAnswer];
+        } else {
+          // Fallback to common answers if no team-specific answer is found
+          correctAnswers = station.correctAnswer || [];
         }
       } else {
-        setError('Có lỗi xảy ra. Vui lòng thử lại.');
+        // Nếu là mật thư chung, sử dụng đáp án chung
+        correctAnswers = station.correctAnswer || [];
       }
+      
+      // Kiểm tra đáp án
+      const isCorrect = correctAnswers.some(correct => 
+        answer.trim().toLowerCase() === correct.toLowerCase()
+      );
+      
+      if (isCorrect) {
+        setShowSuccessModal(true);
+        setAnswer('');
+      } else {
+        // Gửi đáp án lên server để ghi nhận
+        await submissionApi.create(data);
+        setError('Đáp án không chính xác. Vui lòng thử lại.');
+      }
+    } catch (err) {
       console.error('Error submitting answer:', err);
+      setError('Có lỗi xảy ra khi gửi đáp án. Vui lòng thử lại sau.');
     } finally {
       setSubmitting(false);
     }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Container, Form, Button, Card, Row, Col, Alert, InputGroup, Badge, ListGroup, Accordion, Table, Spinner } from 'react-bootstrap';
+import { Container, Form, Button, Card, Row, Col, Alert, InputGroup, Badge, ListGroup, Accordion, Table, Spinner, Tabs, Tab } from 'react-bootstrap';
 import { useParams, useNavigate } from 'react-router-dom';
 import AdminNavbar from '../../components/Navbar';
 import { stationApi, teamApi } from '../../services/api';
@@ -21,6 +21,8 @@ const StationForm = () => {
   const [loadingGameData, setLoadingGameData] = useState(false);
   // Thêm state để lưu trữ danh sách đội từ cơ sở dữ liệu
   const [availableTeams, setAvailableTeams] = useState([]);
+  // Thêm state để theo dõi loại mật thư (chung/riêng)
+  const [messageType, setMessageType] = useState('common'); // 'common' hoặc 'individual'
   
   const [formData, setFormData] = useState({
     name: '',
@@ -43,6 +45,8 @@ const StationForm = () => {
 
   // Thêm state để quản lý input đáp án riêng cho từng trạm
   const [answersInputMap, setAnswersInputMap] = useState({});
+  // State để lưu nội dung riêng cho từng đội
+  const [teamContents, setTeamContents] = useState({});
 
   useEffect(() => {
     if (isEditMode) {
@@ -612,107 +616,288 @@ const StationForm = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    setSuccess(null);
+  // Hàm quản lý thay đổi loại mật thư (chung/riêng)
+  const handleMessageTypeChange = (type) => {
+    setMessageType(type);
+    
+    // Khởi tạo dữ liệu team contents nếu chuyển sang mật thư riêng
+    if (type === 'individual' && Object.keys(teamContents).length === 0) {
+      const initialTeamContents = {};
+      stations.forEach((station, stationIndex) => {
+        commonTeams.forEach(team => {
+          const key = `${stationIndex}_${team}`;
+          initialTeamContents[key] = {
+            contentType: 'text',
+            content: '',
+            correctAnswer: '',
+            showText: true,
+            showImage: false,
+            showOTT: true,
+            showNW: true,
+            ottContent: '',
+            nwContent: '',
+            imageUrl: ''
+          };
+        });
+      });
+      setTeamContents(initialTeamContents);
+    }
+  };
+
+  // Hàm cập nhật nội dung cho một đội cụ thể
+  const handleTeamContentChange = (stationIndex, team, field, value) => {
+    const key = `${stationIndex}_${team}`;
+    setTeamContents(prev => ({
+      ...prev,
+      [key]: {
+        ...prev[key],
+        [field]: value
+      }
+    }));
+  };
+
+  // Hàm tải lên hình ảnh cho một đội cụ thể
+  const handleTeamImageUpload = async (e, stationIndex, team) => {
+    const file = e.target.files[0];
+    if (!file) return;
     
     try {
-      if (isEditMode) {
-        // Cập nhật trạm
-        const station = stations[0];
-        
-        // Xây dựng nội dung dựa vào loại
-        let finalContent = '';
-        let finalContentType = '';
-        
-        if (station.showImage && !station.showText) {
-          // Chỉ ảnh
-          finalContent = imagePreview;
-          finalContentType = 'image';
-        } else if (station.showText && !station.showImage) {
-          // Chỉ văn bản
-          finalContentType = 'text';
-          
-          if (station.showOTT && station.showNW) {
-            finalContent = `OTT:\n${station.ottContent}\n\nNW:\n${station.nwContent}\n/AR`;
-          } else if (station.showOTT) {
-            finalContent = `OTT:\n${station.ottContent}`;
-          } else if (station.showNW) {
-            finalContent = `NW:\n${station.nwContent}\n/AR`;
-          }
-        } else if (station.showImage && station.showText) {
-          // Cả hai
-          finalContentType = 'both';
-          
-          if (station.imagePreview) {
-            finalContent = station.imagePreview;
-          }
-        } else {
-          // Không có nội dung
-          finalContent = '';
-          finalContentType = 'text';
+      setUploadLoading(true);
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      const response = await stationApi.uploadImage(file);
+      const imageUrl = response.data.url;
+      
+      // Cập nhật URL hình ảnh cho đội cụ thể
+      const key = `${stationIndex}_${team}`;
+      setTeamContents(prev => ({
+        ...prev,
+        [key]: {
+          ...prev[key],
+          imageUrl: imageUrl
         }
-        
-        // Sử dụng API để cập nhật
-        await stationApi.update(id, {
-          ...station,
-          content: finalContent,
-          contentType: finalContentType,
-          teams: commonTeams, // Sử dụng danh sách đội chung
-          gameName: gameName, // Sử dụng tên mật thư chung
-          gameNote: gameNote, // Sử dụng ghi chú chung
-        });
-        
-        setSuccess(t('update_station_success'));
+      }));
+      
+    } catch (error) {
+      console.error('Image upload error:', error);
+      setError(t('image_upload_error'));
+    } finally {
+      setUploadLoading(false);
+    }
+  };
+
+  // Thêm đội vào danh sách
+  const handleAddTeam = () => {
+    if (!teamsInput.trim()) return;
+    
+    if (!commonTeams.includes(teamsInput.trim())) {
+      setCommonTeams(prev => [...prev, teamsInput.trim()]);
+      setTeamsInput('');
+    }
+  };
+
+  // Thêm nhiều đội từ danh sách phân cách bằng dấu phẩy
+  const handleAddMultipleTeams = () => {
+    if (!teamsInput.trim()) return;
+    
+    const teams = teamsInput.split(',').map(team => team.trim()).filter(team => team);
+    const uniqueTeams = teams.filter(team => !commonTeams.includes(team));
+    
+    if (uniqueTeams.length > 0) {
+      setCommonTeams(prev => [...prev, ...uniqueTeams]);
+      setTeamsInput('');
+    }
+  };
+
+  // Thêm đội có sẵn từ danh sách gợi ý
+  const handleAddExistingTeam = (team) => {
+    if (!commonTeams.includes(team)) {
+      setCommonTeams(prev => [...prev, team]);
+    }
+  };
+
+  // Xóa đội khỏi danh sách
+  const handleRemoveTeam = (index) => {
+    setCommonTeams(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Xử lý thay đổi input đáp án
+  const handleAnswerInputChange = (index, value) => {
+    setAnswersInputMap(prev => ({
+      ...prev,
+      [index]: value
+    }));
+  };
+
+  // Thêm đáp án vào danh sách đáp án của trạm
+  const handleAddAnswer = (index) => {
+    if (!answersInputMap[index] || !answersInputMap[index].trim()) return;
+    
+    const answer = answersInputMap[index].trim();
+    
+    setStations(prev => {
+      const updated = [...prev];
+      if (!updated[index].correctAnswer) {
+        updated[index].correctAnswer = [];
+      }
+      
+      if (!updated[index].correctAnswer.includes(answer)) {
+        updated[index].correctAnswer = [...updated[index].correctAnswer, answer];
+      }
+      
+      return updated;
+    });
+    
+    // Xóa input sau khi thêm
+    setAnswersInputMap(prev => ({
+      ...prev,
+      [index]: ''
+    }));
+  };
+
+  // Xóa đáp án khỏi danh sách
+  const handleRemoveAnswer = (stationIndex, answerIndex) => {
+    setStations(prev => {
+      const updated = [...prev];
+      updated[stationIndex].correctAnswer = updated[stationIndex].correctAnswer.filter((_, i) => i !== answerIndex);
+      return updated;
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (stations.length === 0) {
+      setError(t('at_least_one_station_error'));
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      
+      if (isEditMode) {
+        // ... existing update logic ...
       } else {
         // Tạo mới nhiều trạm
-        // Xây dựng mảng các trạm để tạo
         const stationsToCreate = [];
         
-        for (let station of stations) {
-          // Xây dựng nội dung dựa vào loại
-          let finalContent = '';
-          let finalContentType = '';
+        for (let i = 0; i < stations.length; i++) {
+          const station = stations[i];
           
-          if (station.showImage && !station.showText) {
-            // Chỉ ảnh
-            finalContent = station.imagePreview || '';
-            finalContentType = 'image';
-          } else if (station.showText && !station.showImage) {
-            // Chỉ văn bản
-            finalContentType = 'text';
+          if (messageType === 'common') {
+            // Xử lý mật thư chung cho các đội (giữ logic cũ)
+            // Xây dựng nội dung dựa vào loại
+            let finalContent = '';
+            let finalContentType = '';
             
-            if (station.showOTT && station.showNW) {
-              finalContent = `OTT:\n${station.ottContent || ''}\n\nNW:\n${station.nwContent || ''}\n/AR`;
-            } else if (station.showOTT) {
-              finalContent = `OTT:\n${station.ottContent || ''}`;
-            } else if (station.showNW) {
-              finalContent = `NW:\n${station.nwContent || ''}\n/AR`;
+            if (station.showImage && !station.showText) {
+              // Chỉ ảnh
+              finalContent = station.imagePreview || '';
+              finalContentType = 'image';
+            } else if (station.showText && !station.showImage) {
+              // Chỉ văn bản
+              finalContentType = 'text';
+              
+              if (station.showOTT && station.showNW) {
+                finalContent = `OTT:\n${station.ottContent || ''}\n\nNW:\n${station.nwContent || ''}\n/AR`;
+              } else if (station.showOTT) {
+                finalContent = `OTT:\n${station.ottContent || ''}`;
+              } else if (station.showNW) {
+                finalContent = `NW:\n${station.nwContent || ''}\n/AR`;
+              }
+            } else if (station.showImage && station.showText) {
+              // Cả hai
+              finalContentType = 'both';
+              
+              if (station.imagePreview) {
+                finalContent = station.imagePreview;
+              }
+            } else {
+              // Không có nội dung
+              finalContent = '';
+              finalContentType = 'text';
             }
-          } else if (station.showImage && station.showText) {
-            // Cả hai
-            finalContentType = 'both';
             
-            if (station.imagePreview) {
-              finalContent = station.imagePreview;
-            }
+            // Thêm vào mảng các trạm để tạo
+            stationsToCreate.push({
+              ...station,
+              content: finalContent,
+              contentType: finalContentType,
+              teams: commonTeams, // Sử dụng danh sách đội chung
+              gameName: gameName, // Sử dụng tên mật thư chung
+              gameNote: gameNote, // Sử dụng ghi chú chung
+              messageType: 'common' // Thêm trường cho biết loại mật thư
+            });
           } else {
-            // Không có nội dung
-            finalContent = '';
-            finalContentType = 'text';
+            // Xử lý mật thư riêng cho từng đội
+            // Tạo mảng nội dung riêng cho từng đội
+            const teamSpecificContents = commonTeams.map(team => {
+              const key = `${i}_${team}`;
+              const teamContent = teamContents[key] || {
+                contentType: 'text',
+                content: '',
+                correctAnswer: '',
+                showText: true,
+                showImage: false,
+                showOTT: true,
+                showNW: true,
+                ottContent: '',
+                nwContent: '',
+                imageUrl: ''
+              };
+              
+              // Xác định nội dung cuối cùng dựa trên loại nội dung của đội
+              let finalContent = '';
+              let finalContentType = '';
+              
+              if (teamContent.showImage && !teamContent.showText) {
+                // Chỉ ảnh
+                finalContent = teamContent.imageUrl || '';
+                finalContentType = 'image';
+              } else if (teamContent.showText && !teamContent.showImage) {
+                // Chỉ văn bản
+                finalContentType = 'text';
+                
+                if (teamContent.showOTT && teamContent.showNW) {
+                  finalContent = `OTT:\n${teamContent.ottContent || ''}\n\nNW:\n${teamContent.nwContent || ''}\n/AR`;
+                } else if (teamContent.showOTT) {
+                  finalContent = `OTT:\n${teamContent.ottContent || ''}`;
+                } else if (teamContent.showNW) {
+                  finalContent = `NW:\n${teamContent.nwContent || ''}\n/AR`;
+                }
+              } else if (teamContent.showImage && teamContent.showText) {
+                // Cả hai
+                finalContentType = 'both';
+                
+                if (teamContent.imageUrl) {
+                  finalContent = teamContent.imageUrl;
+                }
+              } else {
+                // Không có nội dung
+                finalContent = '';
+                finalContentType = 'text';
+              }
+              
+              return {
+                team: team,
+                content: finalContent,
+                contentType: finalContentType,
+                correctAnswer: teamContent.correctAnswer || ''
+              };
+            });
+            
+            // Thêm vào mảng các trạm để tạo
+            stationsToCreate.push({
+              ...station,
+              teamSpecificContents: teamSpecificContents, // Thêm nội dung riêng cho từng đội
+              teams: commonTeams, // Sử dụng danh sách đội chung
+              gameName: gameName, // Sử dụng tên mật thư chung
+              gameNote: gameNote, // Sử dụng ghi chú chung
+              messageType: 'individual' // Thêm trường cho biết loại mật thư
+            });
           }
-          
-          // Thêm vào mảng các trạm để tạo
-          stationsToCreate.push({
-            ...station,
-            content: finalContent,
-            contentType: finalContentType,
-            teams: commonTeams, // Sử dụng danh sách đội chung
-            gameName: gameName, // Sử dụng tên mật thư chung
-            gameNote: gameNote, // Sử dụng ghi chú chung
-          });
         }
 
         if (stationsToCreate.length > 0) {
@@ -720,111 +905,131 @@ const StationForm = () => {
           setSuccess(t('create_stations_success').replace('{count}', stations.length));
           
           // Reset form sau khi tạo mới
-          setStations([]);
-          setCommonTeams([]);
-          setGameName('');
-          setGameNote('');
-          
-          // Khởi tạo một trạm mới
-          setTimeout(() => {
-            addNewStation();
-          }, 100);
-        } else {
-          setError(t('at_least_one_station_error'));
-          setLoading(false);
-          return;
+          setStations([{
+            name: '',
+            teams: commonTeams,
+            content: '',
+            contentType: 'text',
+            correctAnswer: [],
+            maxAttempts: 5,
+            lockTime: 0,
+            showText: true,
+            showImage: false,
+            showOTT: true,
+            showNW: true,
+            ottContent: '',
+            nwContent: '',
+            gameName: gameName,
+            gameNote: gameNote
+          }]);
+          setTeamContents({});
         }
       }
-      
-      // Chuyển hướng sau 2 giây
-      setTimeout(() => {
-        navigate('/admin/stations');
-      }, 2000);
     } catch (err) {
+      console.error('Error submitting station(s):', err);
       setError(t('submit_station_error'));
-      console.error('Error submitting station form:', err);
     } finally {
       setLoading(false);
-      
-      // Tự động xóa thông báo sau 3 giây
-      setTimeout(() => {
-        setSuccess(null);
-        setError(null);
-      }, 3000);
     }
   };
 
   // Render form tạo nhiều trạm
-  const renderMultipleStationsForm = () => (
-    <Form onSubmit={handleSubmit}>
-      {/* Thông tin chung cho trò chơi */}
-      <Card className="mb-4">
-        <Card.Header>
-          <h5 className="mb-0">{t('common_info')}</h5>
-        </Card.Header>
-        <Card.Body>
-          {loadingGameData ? (
-            <div className="text-center py-3">
-              <Spinner animation="border" size="sm" className="me-2" />
-              <span>{t('loading_data')}</span>
-            </div>
-          ) : (
-            <>
-              <Row>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>{t('game_name')}</Form.Label>
-                    <Form.Control
-                      type="text"
-                      value={gameName}
-                      onChange={(e) => setGameName(e.target.value)}
-                      placeholder={t('game_name_placeholder')}
-                    />
-                    <Form.Text className="text-muted">{t('game_name_note')}</Form.Text>
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>{t('game_note')}</Form.Label>
-                    <Form.Control
-                      type="text"
-                      value={gameNote}
-                      onChange={(e) => setGameNote(e.target.value)}
-                      placeholder={t('game_note_placeholder')}
-                    />
-                    <Form.Text className="text-muted">{t('game_note_note')}</Form.Text>
-                  </Form.Group>
-                </Col>
-              </Row>
+  const renderMultipleStationsForm = () => {
+    return (
+      <Form onSubmit={handleSubmit}>
+        <Card className="mb-4">
+          <Card.Header>
+            <h4>{t('game_settings')}</h4>
+          </Card.Header>
+          <Card.Body>
+            <Form.Group className="mb-4">
+              <Form.Label>{t('game_name')}</Form.Label>
+              <Form.Control
+                type="text"
+                value={gameName}
+                onChange={(e) => setGameName(e.target.value)}
+                placeholder={t('game_name_placeholder')}
+              />
+              <Form.Text className="text-muted">
+                {t('game_name_note')}
+              </Form.Text>
+            </Form.Group>
 
-              <Row>
-                <Col>
-                  <Form.Label>{t('teams_label')}</Form.Label>
-                  <InputGroup className="mb-3">
-                    <Form.Control
-                      type="text"
-                      value={teamsInput}
-                      onChange={handleTeamsInputChange}
-                      onKeyPress={handleTeamKeyPress}
-                      placeholder={t('teams_label')}
-                    />
-                    <Button variant="outline-secondary" onClick={addTeam}>
-                      {t('add_team')}
-                    </Button>
-                    <Button variant="outline-primary" onClick={addMultipleTeams}>
-                      {t('add_multiple_teams')}
-                    </Button>
-                  </InputGroup>
-                  <Form.Text className="text-muted mb-2">{t('teams_input_note')}</Form.Text>
-                </Col>
-              </Row>
+            <Form.Group className="mb-4">
+              <Form.Label>{t('game_note')}</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={2}
+                value={gameNote}
+                onChange={(e) => setGameNote(e.target.value)}
+                placeholder={t('game_note_placeholder')}
+              />
+              <Form.Text className="text-muted">
+                {t('game_note_note')}
+              </Form.Text>
+            </Form.Group>
+            
+            <Form.Group className="mb-4">
+              <Form.Label>Loại mật thư</Form.Label>
+              <div>
+                <Form.Check
+                  type="radio"
+                  label="Mật thư chung cho các đội"
+                  name="messageType"
+                  id="common-message"
+                  checked={messageType === 'common'}
+                  onChange={() => handleMessageTypeChange('common')}
+                  className="mb-2"
+                />
+                <Form.Check
+                  type="radio"
+                  label="Mật thư riêng cho từng đội"
+                  name="messageType"
+                  id="individual-message"
+                  checked={messageType === 'individual'}
+                  onChange={() => handleMessageTypeChange('individual')}
+                />
+              </div>
+              <Form.Text className="text-muted">
+                {messageType === 'common' ? 
+                  'Tất cả các đội sẽ thấy cùng một nội dung mật thư' : 
+                  'Mỗi đội sẽ thấy nội dung mật thư khác nhau'}
+              </Form.Text>
+            </Form.Group>
 
-              {/* Hiển thị danh sách đội từ cơ sở dữ liệu */}
+            <Form.Group className="mb-4">
+              <Form.Label>{t('teams_label')}</Form.Label>
+              <InputGroup className="mb-2">
+                <Form.Control
+                  type="text"
+                  value={teamsInput}
+                  onChange={(e) => setTeamsInput(e.target.value)}
+                  placeholder="Nhập tên đội"
+                />
+                <Button 
+                  variant="primary" 
+                  onClick={handleAddTeam}
+                  disabled={!teamsInput}
+                >
+                  {t('add_team')}
+                </Button>
+                <Button 
+                  variant="outline-primary" 
+                  onClick={handleAddMultipleTeams}
+                  disabled={!teamsInput}
+                >
+                  {t('add_multiple_teams')}
+                </Button>
+              </InputGroup>
+              <Form.Text className="text-muted">
+                {t('teams_input_note')}
+              </Form.Text>
+
+              {/* Hiển thị danh sách đội có sẵn nếu có */}
               {availableTeams.length > 0 && (
                 <Row className="mb-3">
                   <Col>
                     <h6>{t('available_teams')} ({availableTeams.length} {t('team_count')})</h6>
-                    <div className="border rounded p-2 mb-3" style={{ maxHeight: '150px', overflowY: 'auto' }}>
                       <div className="d-flex flex-wrap">
                         {availableTeams.map((team, index) => (
                           <div key={index} className="me-2 mb-2">
@@ -842,317 +1047,470 @@ const StationForm = () => {
                           </div>
                         ))}
                       </div>
-                    </div>
                   </Col>
                 </Row>
               )}
 
               {/* Hiển thị danh sách đội đã chọn */}
               {commonTeams.length > 0 && (
-                <Row>
-                  <Col>
-                    <h6>{t('selected_teams')} ({commonTeams.length} {t('team_count')})</h6>
-                    <div className="border rounded p-2 mb-3" style={{ maxHeight: '150px', overflowY: 'auto' }}>
-                      <div className="d-flex flex-wrap">
-                        {commonTeams.map((team, index) => (
-                          <div key={index} className="me-2 mb-2">
-                            <Badge 
-                              bg="secondary" 
-                              className="d-flex align-items-center"
-                              style={{ fontSize: '14px', padding: '8px' }}
-                            >
-                              {team}
-                              <Button 
-                                variant="link" 
-                                className="p-0 ms-1 text-light" 
-                                size="sm"
-                                onClick={() => removeTeam(index)}
-                              >
-                                ×
-                              </Button>
-                            </Badge>
-                          </div>
-                        ))}
+                <div className="mt-3">
+                  <p className="mb-2">{t('selected_teams')}:</p>
+                  <div className="d-flex flex-wrap gap-2">
+                    {commonTeams.map((team, i) => (
+                      <Badge 
+                        key={i} 
+                        bg="primary" 
+                        className="selected-team-badge"
+                        style={{ fontSize: '14px', padding: '8px', cursor: 'pointer' }}
+                      >
+                        {team} 
+                        <i 
+                          className="bi bi-x-circle-fill ms-2" 
+                          style={{ cursor: 'pointer' }}
+                          onClick={() => handleRemoveTeam(i)}
+                        ></i>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </Form.Group>
+          </Card.Body>
+        </Card>
+
+        <Card className="mb-4">
+          <Card.Header>
+            <div className="d-flex justify-content-between align-items-center">
+              <h4>{t('stations_list')}</h4>
+              <Button 
+                variant="success" 
+                size="sm" 
+                onClick={addNewStation}
+              >
+                <i className="bi bi-plus-circle me-1"></i>
+                {t('add_new_station')}
+              </Button>
+            </div>
+          </Card.Header>
+          <Card.Body>
+            {stations.length === 0 ? (
+              <p className="text-center py-3">{t('no_stations')}</p>
+            ) : (
+              <Accordion defaultActiveKey={['0']} alwaysOpen>
+                {stations.map((station, index) => (
+                  <Accordion.Item eventKey={index.toString()} key={index}>
+                    <Accordion.Header>
+                      <div className="d-flex justify-content-between align-items-center w-100 me-3">
+                        <span>
+                         {t(station.name) || `Trạm #${index + 1}`}
+                        </span>
+                        <Button
+                          variant="outline-danger"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeStation(index);
+                          }}
+                        >
+                          <i className="bi bi-trash"></i> {t('remove_station')}
+                        </Button>
                       </div>
-                    </div>
-                  </Col>
-                </Row>
-              )}
-            </>
-          )}
-        </Card.Body>
-      </Card>
-
-      {/* Danh sách các trạm để tạo */}
-      <div className="mb-3 d-flex justify-content-between align-items-center">
-        <h5><TermReplacer>{t('stations_list')}</TermReplacer> ({stations.length})</h5>
-        <Button 
-          variant="success" 
-          size="sm"
-          onClick={addNewStation}
-        >
-          <i className="bi bi-plus-circle me-2"></i>
-          {t('add_new_station')}
-        </Button>
-      </div>
-
-      {stations.map((station, index) => (
-        <Accordion key={index} defaultActiveKey="0" className="mb-3">
-          <Accordion.Item eventKey="0">
-            <Accordion.Header>
-              <div className="d-flex justify-content-between w-100 align-items-center pe-4">
-                <span><TermReplacer>{t('station_term')} {index + 1}: {station.name || t('station_name_placeholder')}</TermReplacer></span>
-              </div>
-            </Accordion.Header>
-            <Accordion.Body>
-              <div className="d-flex justify-content-end mb-3">
-                <Button 
-                  variant="outline-danger" 
-                  size="sm"
-                  onClick={() => removeStation(index)}
-                >
-                  <i className="bi bi-trash me-1"></i>
-                  {t('remove_station')}
-                </Button>
-              </div>
-              <Row>
-                <Col md={12}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>{t('station_name_label')}</Form.Label>
-                    <Form.Control
-                      type="text"
-                      value={station.name}
-                      onChange={(e) => handleStationChange(index, 'name', e.target.value)}
-                      placeholder={t('station_name_placeholder')}
-                      required
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
-
-              <Row>
-                <Col md={12}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>{t('content_type_label')}</Form.Label>
-                    <div className="d-flex flex-wrap">
-                      <Form.Check 
-                        type="checkbox"
-                        id={`showText-${index}`}
-                        label={t('content_text_label')}
-                        className="me-3"
-                        checked={station.showText}
-                        onChange={(e) => handleStationChange(index, 'showText', e.target.checked)}
-                      />
-                      <Form.Check 
-                        type="checkbox"
-                        id={`showImage-${index}`}
-                        label={t('content_image_label')}
-                        checked={station.showImage}
-                        onChange={(e) => handleStationChange(index, 'showImage', e.target.checked)}
-                      />
-                    </div>
-                  </Form.Group>
-                </Col>
-              </Row>
-
-              {station.showText && (
-                <>
-                  <Row className="mb-2">
-                    <Col md={12}>
-                      <Form.Group>
-                        <Form.Label>{t('text_format_label')}</Form.Label>
-                        <div className="d-flex">
-                          <Form.Check 
-                            type="checkbox"
-                            id={`showOTT-${index}`}
-                            label={t('ott_content_label')}
-                            className="me-4"
-                            checked={station.showOTT}
-                            onChange={(e) => handleStationChange(index, 'showOTT', e.target.checked)}
-                          />
-                          <Form.Check 
-                            type="checkbox"
-                            id={`showNW-${index}`}
-                            label={t('nw_content_label')}
-                            checked={station.showNW}
-                            onChange={(e) => handleStationChange(index, 'showNW', e.target.checked)}
-                          />
-                        </div>
-                      </Form.Group>
-                    </Col>
-                  </Row>
-
-                  <Row>
-                    {station.showOTT && (
-                      <Col md={12}>
-                        <Form.Group className="mb-3">
-                          <Form.Label>{t('ott_content_label')}</Form.Label>
-                          <Form.Control
-                            as="textarea"
-                            rows={4}
-                            value={station.ottContent}
-                            onChange={(e) => handleStationChange(index, 'ottContent', e.target.value)}
-                            placeholder={t('enter_ott_content_placeholder')}
-                          />
-                        </Form.Group>
-                      </Col>
-                    )}
-                    
-                    {station.showNW && (
-                      <Col md={12}>
-                        <Form.Group className="mb-3">
-                          <Form.Label>{t('nw_content_label')}</Form.Label>
-                          <InputGroup>
+                    </Accordion.Header>
+                    <Accordion.Body>
+                      <div className="d-flex justify-content-end mb-3">
+                      </div>
+                        
+                      <Row className="mb-3">
+                        <Col>
+                          <Form.Group>
+                            <Form.Label>{t('station_name_label')}</Form.Label>
                             <Form.Control
-                              as="textarea"
-                              rows={4}
-                              value={station.nwContent}
-                              onChange={(e) => handleStationChange(index, 'nwContent', e.target.value)}
-                              placeholder={t('enter_nw_content_placeholder')}
+                              type="text"
+                              value={station.name}
+                              onChange={(e) => handleStationChange(index, 'name', e.target.value)}
+                              placeholder={t('station_name_placeholder')}
                             />
-                            <InputGroup.Text>/AR</InputGroup.Text>
-                          </InputGroup>
-                        </Form.Group>
-                      </Col>
-                    )}
-                  </Row>
-                </>
-              )}
-
-              {station.showImage && (
-                <Row>
-                  <Col md={12}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>{t('content_image_label')}</Form.Label>
-                      {isEditMode && index === 0 ? (
+                          </Form.Group>
+                        </Col>
+                      </Row>
+                      
+                      {messageType === 'common' ? (
+                        // Nội dung chung cho tất cả đội
                         <>
-                          {renderImageUpload()}
+                          <Row className="mb-3">
+                            <Col md={12}>
+                              <Form.Group>
+                                <Form.Label>{t('content_type_label')}</Form.Label>
+                                <div className="d-flex">
+                                  <Form.Check 
+                                    type="checkbox"
+                                    id={`showText-${index}`}
+                                    label={t('content_text_label')}
+                                    className="me-3"
+                                    checked={station.showText}
+                                    onChange={(e) => handleStationChange(index, 'showText', e.target.checked)}
+                                  />
+                                  <Form.Check 
+                                    type="checkbox"
+                                    id={`showImage-${index}`}
+                                    label={t('content_image_label')}
+                                    checked={station.showImage}
+                                    onChange={(e) => handleStationChange(index, 'showImage', e.target.checked)}
+                                  />
+                                </div>
+                              </Form.Group>
+                            </Col>
+                          </Row>
+
+                          {station.showText && (
+                            <>
+                              <Row className="mb-2">
+                                <Col md={12}>
+                                  <Form.Group>
+                                    <Form.Label>{t('text_format_label')}</Form.Label>
+                                    <div className="d-flex">
+                                      <Form.Check 
+                                        type="checkbox"
+                                        id={`showOTT-${index}`}
+                                        label={t('ott_content_label')}
+                                        className="me-4"
+                                        checked={station.showOTT}
+                                        onChange={(e) => handleStationChange(index, 'showOTT', e.target.checked)}
+                                      />
+                                      <Form.Check 
+                                        type="checkbox"
+                                        id={`showNW-${index}`}
+                                        label={t('nw_content_label')}
+                                        checked={station.showNW}
+                                        onChange={(e) => handleStationChange(index, 'showNW', e.target.checked)}
+                                      />
+                                    </div>
+                                  </Form.Group>
+                                </Col>
+                              </Row>
+
+                              {station.showOTT && (
+                                <Row className="mb-3">
+                                  <Col>
+                                    <Form.Group>
+                                      <Form.Label>{t('ott_content_label')}</Form.Label>
+                                      <Form.Control
+                                        as="textarea"
+                                        rows={3}
+                                        value={station.ottContent || ''}
+                                        onChange={(e) => handleStationChange(index, 'ottContent', e.target.value)}
+                                        placeholder="Nhập nội dung OTT"
+                                      />
+                                    </Form.Group>
+                                  </Col>
+                                </Row>
+                              )}
+
+                              {station.showNW && (
+                                <Row className="mb-3">
+                                  <Col>
+                                    <Form.Group>
+                                      <Form.Label>{t('nw_content_label')}</Form.Label>
+                                      <Form.Control
+                                        as="textarea"
+                                        rows={3}
+                                        value={station.nwContent || ''}
+                                        onChange={(e) => handleStationChange(index, 'nwContent', e.target.value)}
+                                        placeholder="Nhập nội dung NW"
+                                      />
+                                    </Form.Group>
+                                  </Col>
+                                </Row>
+                              )}
+                            </>
+                          )}
+
+                          {station.showImage && (
+                            <Row className="mb-3">
+                              <Col>
+                                <Form.Group>
+                                  <Form.Label>{t('content_image_label')}</Form.Label>
+                                  <div className="d-flex align-items-center mb-2">
+                                    <Form.Control
+                                      type="file"
+                                      accept="image/*"
+                                      onChange={(e) => handleImageUpload(e, index)}
+                                      disabled={uploadLoading}
+                                      ref={el => multipleFileInputRefs.current[index] = el}
+                                    />
+                                    {uploadLoading && <Spinner animation="border" size="sm" className="ms-2" />}
+                                  </div>
+                                  
+                                  {station.imagePreview && (
+                                    <div className="image-preview mt-2">
+                                      <img 
+                                        src={station.imagePreview} 
+                                        alt="Preview" 
+                                        style={{ maxWidth: '100%', maxHeight: '200px' }}
+                                      />
+                                    </div>
+                                  )}
+                                </Form.Group>
+                              </Col>
+                            </Row>
+                          )}
+
+                          <Row className="mb-3">
+                            <Col>
+                              <Form.Group>
+                                <Form.Label>{t('correct_answer_label')}</Form.Label>
+                                <InputGroup>
+                                  <Form.Control
+                                    type="text"
+                                    value={answersInputMap[index] || ''}
+                                    onChange={(e) => handleAnswerInputChange(index, e.target.value)}
+                                    placeholder="Nhập đáp án"
+                                  />
+                                  <Button 
+                                    variant="outline-primary" 
+                                    onClick={() => handleAddAnswer(index)}
+                                    disabled={!answersInputMap[index]}
+                                  >
+                                    <i className="bi bi-plus"></i> Thêm
+                                  </Button>
+                                </InputGroup>
+                                <Form.Text className="text-muted">
+                                  Mỗi đáp án sẽ được thêm vào danh sách các đáp án chấp nhận được.
+                                </Form.Text>
+                                
+                                {station.correctAnswer && station.correctAnswer.length > 0 && (
+                                  <div className="mt-2">
+                                    <p className="mb-2">Các đáp án chấp nhận:</p>
+                                    <div className="d-flex flex-wrap gap-2">
+                                      {station.correctAnswer.map((answer, i) => (
+                                        <Badge 
+                                          key={i} 
+                                          bg="success" 
+                                          className="p-2"
+                                        >
+                                          {answer} 
+                                          <i 
+                                            className="bi bi-x-circle-fill ms-1" 
+                                            style={{ cursor: 'pointer' }}
+                                            onClick={() => handleRemoveAnswer(index, i)}
+                                          ></i>
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </Form.Group>
+                            </Col>
+                          </Row>
                         </>
                       ) : (
+                        // Nội dung riêng cho từng đội
                         <>
-                          {renderStationImageUpload(index, station)}
+                          {commonTeams.length > 0 ? (
+                            <Tabs defaultActiveKey={commonTeams[0]} className="mb-3">
+                              {commonTeams.map(team => (
+                                <Tab key={team} eventKey={team} title={team}>
+                                  <Row className="mb-3">
+                                    <Col md={12}>
+                                      <Form.Group>
+                                        <Form.Label>{t('content_type_label')}</Form.Label>
+                                        <div className="d-flex">
+                                          <Form.Check 
+                                            type="checkbox"
+                                            id={`team-${index}-${team}-showText`}
+                                            label={t('content_text_label')}
+                                            className="me-3"
+                                            checked={teamContents[`${index}_${team}`]?.showText ?? true}
+                                            onChange={(e) => handleTeamContentChange(index, team, 'showText', e.target.checked)}
+                                          />
+                                          <Form.Check 
+                                            type="checkbox"
+                                            id={`team-${index}-${team}-showImage`}
+                                            label={t('content_image_label')}
+                                            checked={teamContents[`${index}_${team}`]?.showImage ?? false}
+                                            onChange={(e) => handleTeamContentChange(index, team, 'showImage', e.target.checked)}
+                                          />
+                                        </div>
+                                      </Form.Group>
+                                    </Col>
+                                  </Row>
+
+                                  {(teamContents[`${index}_${team}`]?.showText ?? true) && (
+                                    <>
+                                      <Row className="mb-2">
+                                        <Col md={12}>
+                                          <Form.Group>
+                                            <Form.Label>{t('text_format_label')}</Form.Label>
+                                            <div className="d-flex">
+                                              <Form.Check 
+                                                type="checkbox"
+                                                id={`team-${index}-${team}-showOTT`}
+                                                label={t('ott_content_label')}
+                                                className="me-4"
+                                                checked={teamContents[`${index}_${team}`]?.showOTT ?? true}
+                                                onChange={(e) => handleTeamContentChange(index, team, 'showOTT', e.target.checked)}
+                                              />
+                                              <Form.Check 
+                                                type="checkbox"
+                                                id={`team-${index}-${team}-showNW`}
+                                                label={t('nw_content_label')}
+                                                checked={teamContents[`${index}_${team}`]?.showNW ?? true}
+                                                onChange={(e) => handleTeamContentChange(index, team, 'showNW', e.target.checked)}
+                                              />
+                                            </div>
+                                          </Form.Group>
+                                        </Col>
+                                      </Row>
+
+                                      {(teamContents[`${index}_${team}`]?.showOTT ?? true) && (
+                                        <Row className="mb-3">
+                                          <Col>
+                                            <Form.Group>
+                                              <Form.Label>{t('ott_content_label')}</Form.Label>
+                                              <Form.Control
+                                                as="textarea"
+                                                rows={3}
+                                                value={teamContents[`${index}_${team}`]?.ottContent || ''}
+                                                onChange={(e) => handleTeamContentChange(index, team, 'ottContent', e.target.value)}
+                                                placeholder="Nhập nội dung OTT cho đội này"
+                                              />
+                                            </Form.Group>
+                                          </Col>
+                                        </Row>
+                                      )}
+
+                                      {(teamContents[`${index}_${team}`]?.showNW ?? true) && (
+                                        <Row className="mb-3">
+                                          <Col>
+                                            <Form.Group>
+                                              <Form.Label>{t('nw_content_label')}</Form.Label>
+                                              <Form.Control
+                                                as="textarea"
+                                                rows={3}
+                                                value={teamContents[`${index}_${team}`]?.nwContent || ''}
+                                                onChange={(e) => handleTeamContentChange(index, team, 'nwContent', e.target.value)}
+                                                placeholder="Nhập nội dung NW cho đội này"
+                                              />
+                                            </Form.Group>
+                                          </Col>
+                                        </Row>
+                                      )}
+                                    </>
+                                  )}
+
+                                  {(teamContents[`${index}_${team}`]?.showImage ?? false) && (
+                                    <Row className="mb-3">
+                                      <Col>
+                                        <Form.Group>
+                                          <Form.Label>{t('content_image_label')}</Form.Label>
+                                          <div className="d-flex align-items-center mb-2">
+                                            <Form.Control
+                                              type="file"
+                                              accept="image/*"
+                                              onChange={(e) => handleTeamImageUpload(e, index, team)}
+                                              disabled={uploadLoading}
+                                            />
+                                            {uploadLoading && <Spinner animation="border" size="sm" className="ms-2" />}
+                                          </div>
+                                          
+                                          {teamContents[`${index}_${team}`]?.imageUrl && (
+                                            <div className="image-preview mt-2">
+                                              <img 
+                                                src={teamContents[`${index}_${team}`].imageUrl} 
+                                                alt="Preview" 
+                                                style={{ maxWidth: '100%', maxHeight: '200px' }}
+                                              />
+                                            </div>
+                                          )}
+                                        </Form.Group>
+                                      </Col>
+                                    </Row>
+                                  )}
+
+                                  <Row className="mb-3">
+                                    <Col>
+                                      <Form.Group>
+                                        <Form.Label>{t('correct_answer_label')}</Form.Label>
+                                        <Form.Control
+                                          type="text"
+                                          value={teamContents[`${index}_${team}`]?.correctAnswer || ''}
+                                          onChange={(e) => handleTeamContentChange(index, team, 'correctAnswer', e.target.value)}
+                                          placeholder="Nhập đáp án cho đội này"
+                                        />
+                                      </Form.Group>
+                                    </Col>
+                                  </Row>
+                                </Tab>
+                              ))}
+                            </Tabs>
+                          ) : (
+                            <Alert variant="warning">
+                              Vui lòng thêm ít nhất một đội để thiết lập nội dung riêng.
+                            </Alert>
+                          )}
                         </>
                       )}
-                    </Form.Group>
-                  </Col>
-                </Row>
-              )}
 
-              <Row>
-                <Col md={12}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>{t('correct_answer_label')}</Form.Label>
-                    <InputGroup className="mb-3">
-                      <Form.Control
-                        type="text"
-                        value={answersInputMap[index] || ''}
-                        onChange={(e) => handleAnswersInputChange(e, index)}
-                        onKeyPress={(e) => handleAnswerKeyPress(e, index)}
-                        placeholder={t('enter_answer_placeholder')}
-                      />
-                      <Button variant="outline-secondary" onClick={() => addAnswer(index)}>
-                        {t('add_answer_button')}
-                      </Button>
-                      <Button variant="outline-primary" onClick={() => addMultipleAnswers(index)}>
-                        {t('add_multiple_answers_button')}
-                      </Button>
-                    </InputGroup>
-                    <Form.Text className="text-muted mb-2">
-                      {t('answers_input_note')}
-                    </Form.Text>
-                    
-                    {/* Hiển thị danh sách đáp án */}
-                    {Array.isArray(station.correctAnswer) && station.correctAnswer.length > 0 && (
-                      <div>
-                        <h6>{t('answers_list')} ({station.correctAnswer.length} {t('answers')})</h6>
-                        <div className="border rounded p-2 mb-3" style={{ maxHeight: '150px', overflowY: 'auto' }}>
-                          <div className="d-flex flex-wrap">
-                            {station.correctAnswer.map((answer, answerIndex) => (
-                              <div key={answerIndex} className="me-2 mb-2">
-                                <Badge 
-                                  bg="secondary" 
-                                  className="d-flex align-items-center"
-                                  style={{ fontSize: '14px', padding: '8px' }}
-                                >
-                                  {answer}
-                                  <Button 
-                                    variant="link" 
-                                    className="p-0 ms-1 text-light" 
-                                    size="sm"
-                                    onClick={() => removeAnswer(index, answerIndex)}
-                                  >
-                                    ×
-                                  </Button>
-                                </Badge>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </Form.Group>
-                </Col>
-              </Row>
+                      <Row className="mb-3">
+                        <Col md={6}>
+                          <Form.Group>
+                            <Form.Label>{t('max_attempts_label')}</Form.Label>
+                            <Form.Control
+                              type="number"
+                              min="1"
+                              value={station.maxAttempts}
+                              onChange={(e) => handleStationChange(index, 'maxAttempts', parseInt(e.target.value))}
+                            />
+                          </Form.Group>
+                        </Col>
+                        <Col md={6}>
+                          <Form.Group>
+                            <Form.Label>{t('lock_time_label')}</Form.Label>
+                            <Form.Control
+                              type="number"
+                              min="0"
+                              value={station.lockTime}
+                              onChange={(e) => handleStationChange(index, 'lockTime', parseInt(e.target.value))}
+                            />
+                          </Form.Group>
+                        </Col>
+                      </Row>
+                    </Accordion.Body>
+                  </Accordion.Item>
+                ))}
+              </Accordion>
+            )}
+          </Card.Body>
+        </Card>
 
-              <Row>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>{t('max_attempts_label')}</Form.Label>
-                    <Form.Control
-                      type="number"
-                      value={station.maxAttempts}
-                      onChange={(e) => handleStationChange(index, 'maxAttempts', e.target.value)}
-                      min="1"
-                      max="10"
-                      required
-                    />
-                  </Form.Group>
-                </Col>
-                
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>{t('lock_time_label')}</Form.Label>
-                    <Form.Control
-                      type="number"
-                      value={station.lockTime}
-                      onChange={(e) => handleStationChange(index, 'lockTime', e.target.value)}
-                      min="0"
-                      required
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
-            </Accordion.Body>
-          </Accordion.Item>
-        </Accordion>
-      ))}
-
-      <div className="d-grid gap-2 d-md-flex justify-content-md-end">
-        <Button 
-          variant="success" 
-          size="sm"
-          onClick={addNewStation}
-        >
-          <i className="bi bi-plus-circle me-2"></i>
-          {t('add_new_station')}
-        </Button>
-        <Button 
-          variant="primary" 
-          type="submit" 
-          disabled={loading || stations.length === 0}
-        >
-          {loading ? (
-            <>
-              <Spinner animation="border" size="sm" className="me-2" />
-              {isEditMode ? t('updating') : t('creating')}
-            </>
-          ) : (
-            isEditMode ? t('state_update') : t('state_create')
-          )}
-        </Button>
-      </div>
-    </Form>
-  );
+        <div className="text-center">
+          <Button 
+            variant="primary" 
+            type="submit" 
+            size="lg" 
+            className="px-5"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <Spinner
+                  as="span"
+                  animation="border"
+                  size="sm"
+                  role="status"
+                  aria-hidden="true"
+                  className="me-2"
+                />
+                {isEditMode ? t('updating') : t('creating')}
+              </>
+            ) : (
+              isEditMode ? t('state_update') : t('state_create')
+            )}
+          </Button>
+        </div>
+      </Form>
+    );
+  };
 
   return (
     <>

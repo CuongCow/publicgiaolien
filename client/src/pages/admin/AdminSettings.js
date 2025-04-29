@@ -301,7 +301,8 @@ const AdminSettings = () => {
                 <h5 className="mb-0">{t('system_info')}</h5>
               </Card.Header>
               <Card.Body>
-                <p><strong>{t('app_version')}</strong> 1.0.3</p>
+                <p><strong>{t('app_version')}</strong> 1.0.4</p>
+                <p><strong>{t('app_version_note')}</strong> {t('app_version_note_content')}</p>
                 <p><strong>{t('app_framework')}</strong> React + Bootstrap 5</p>
                 <p><strong>{t('app_backend')}</strong> Node.js + Express</p>
                 <p><strong>{t('app_database')}</strong> MongoDB</p>

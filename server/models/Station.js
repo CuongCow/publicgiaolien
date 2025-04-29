@@ -1,5 +1,27 @@
 const mongoose = require('mongoose');
 
+// Schema con cho nội dung riêng của từng đội
+const TeamSpecificContentSchema = new mongoose.Schema({
+  team: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  content: {
+    type: String,
+    default: ''
+  },
+  contentType: {
+    type: String,
+    enum: ['text', 'image', 'both'],
+    default: 'text'
+  },
+  correctAnswer: {
+    type: String,
+    default: ''
+  }
+}, { _id: false });
+
 const StationSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -76,6 +98,17 @@ const StationSchema = new mongoose.Schema({
   gameNote: {
     type: String,
     default: 'Trung thành với bản mã'
+  },
+  // Trường mới để xác định loại mật thư
+  messageType: {
+    type: String,
+    enum: ['common', 'individual'],
+    default: 'common'
+  },
+  // Mảng chứa nội dung riêng cho từng đội
+  teamSpecificContents: {
+    type: [TeamSpecificContentSchema],
+    default: []
   },
   createdAt: {
     type: Date,
