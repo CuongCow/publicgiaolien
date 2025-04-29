@@ -124,11 +124,8 @@ const AboutPage = () => {
                 </p>
                 <p>
                   Lấy cảm hứng từ vai trò lịch sử của các "Giao Liên" trong chiến tranh Việt Nam, hệ thống 
-                  được thiết kế để tái hiện và giáo dục người chơi về lịch sử đấu tranh của dân tộc. Cần hiểu rằng 
-                  Giao Liên và Tình báo là hai vai trò hoàn toàn khác nhau trong lịch sử. Trong khi Tình báo đóng vai 
-                  trò then chốt trong việc nắm bắt và thu thập thông tin, thì Giao Liên chỉ đơn giản là người vận chuyển, 
-                  đưa thông tin giữa Tình báo và quân ta. Hệ thống của chúng tôi tập trung vào vai trò Giao Liên - 
-                  những người anh hùng thầm lặng đảm bảo thông tin quan trọng được truyền đi an toàn.
+                  được thiết kế để tái hiện và giáo dục người chơi về lịch sử đấu tranh của dân tộc, đồng thời 
+                  tạo ra không gian trải nghiệm thú vị và bổ ích.
                 </p>
                 <div className="text-center mt-5">
                   {!loading && (

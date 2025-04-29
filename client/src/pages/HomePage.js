@@ -82,27 +82,35 @@ const HomePage = () => {
               <Card.Header>
                 <h2 className="section-title">
                   <span className="title-icon">★</span>
-                  Tình Báo (Giao Liên) Là Gì Trong Chiến Tranh Việt Nam?
+                  Giao Liên Và Tình Báo Trong Chiến Tranh Việt Nam
                 </h2>
               </Card.Header>
               <Card.Body>
                 <div className="image-quote">
                   <div className="quote-decoration"></div>
                   <blockquote>
-                    "Tình báo là tai mắt của bộ đội, là những người anh hùng thầm lặng trong cuộc kháng chiến vĩ đại của dân tộc."
+                    "Giao liên là những cầu nối quan trọng, những người anh hùng thầm lặng đã góp phần vào chiến thắng vĩ đại của dân tộc."
                   </blockquote>
                 </div>
                 
                 <p>
-                  "Tình báo (giao liên)" được hiểu là các nhân viên liên lạc, chịu trách nhiệm vận chuyển thông tin, tài liệu, 
-                  và đôi khi là vũ khí giữa các đơn vị trong chiến tranh. Họ đóng vai trò then chốt trong việc đảm bảo 
+                  Trong lịch sử chiến tranh Việt Nam, <strong>Giao Liên</strong> và <strong>Tình Báo</strong> là hai vai trò khác nhau với những nhiệm vụ riêng biệt:
+                </p>
+                
+                <p>
+                  <strong>Giao Liên</strong> đóng vai trò là người vận chuyển, đưa thông tin giữa tình báo và quân ta. Họ chịu trách nhiệm vận chuyển thông tin, tài liệu, 
+                  và đôi khi là vũ khí giữa các đơn vị trong chiến tranh. Giao liên đảm bảo 
                   thông tin được truyền đạt an toàn và kịp thời, đặc biệt trong bối cảnh chiến tranh, nơi giao liên, 
                   đặc biệt là nữ giao liên, thường cải trang để tránh bị phát hiện.
                 </p>
                 <p>
-                  Ví dụ, họ có thể dẫn dắt các cán bộ cấp cao như Lê Duẩn vào Sài Gòn, sử dụng các phương tiện 
-                  như xe ngựa hoặc giỏ đi chợ để che giấu tài liệu. Theo bài viết từ Một góc cuộc chiến tranh Việt Nam 
-                  từ những nữ giao liên, nữ giao liên như Võ Thị Tâm, Nguyễn Thị Phương, và Lại Thị Kim Túy đã đóng vai trò 
+                  Trong khi đó, <strong>Tình Báo</strong> đóng vai trò then chốt trong việc nắm bắt, lấy thông tin. Họ thâm nhập vào hàng ngũ đối phương, 
+                  thu thập thông tin tình báo quan trọng và chuyển giao cho giao liên để đưa về cho quân ta. 
+                  Tình báo là "tai mắt" trong khi giao liên là "cầu nối" của cuộc kháng chiến.
+                </p>
+                <p>
+                  Ví dụ, giao liên có thể dẫn dắt các cán bộ cấp cao như Lê Duẩn vào Sài Gòn, sử dụng các phương tiện 
+                  như xe ngựa hoặc giỏ đi chợ để che giấu tài liệu. Nữ giao liên như Võ Thị Tâm, Nguyễn Thị Phương, và Lại Thị Kim Túy đã đóng vai trò 
                   quan trọng trong việc dẫn dắt cán bộ, vận chuyển vũ khí, và xây dựng cơ sở cách mạng.
                 </p>
               </Card.Body>
@@ -116,58 +124,56 @@ const HomePage = () => {
               <Card.Header>
                 <h2 className="section-title">
                   <span className="title-icon">★</span>
-                  Danh Sách Tất Cả Các Tình Báo Của Việt Nam
+                  Danh Sách Các Tình Báo Và Giao Liên Tiêu Biểu
                 </h2>
               </Card.Header>
               <Card.Body>
                 <div className="vietnam-map-decoration"></div>
                 
                 <p>
-                  Dựa trên các nguồn tài liệu lịch sử, dưới đây là danh sách một số tình báo nổi tiếng của Việt Nam 
-                  trong chiến tranh Việt Nam, được tổng hợp từ 5 nhà tình báo nổi tiếng nhất trong lịch sử Việt Nam:
+                  Dựa trên các nguồn tài liệu lịch sử, dưới đây là danh sách một số tình báo và giao liên nổi tiếng của Việt Nam 
+                  trong chiến tranh:
                 </p>
                 
                 <Table striped bordered hover responsive className="mt-4">
                   <thead className="table-header">
                     <tr>
                       <th>Tên</th>
+                      <th>Vai Trò</th>
                       <th>Thành Tựu Nổi Bật</th>
-                      <th>Năm Sinh/Năm Mất</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
                       <td><strong>Đinh Thị Vân</strong></td>
+                      <td>Tình báo</td>
                       <td>Vẽ bản đồ phòng ngự Nam vĩ tuyến 17, cung cấp thông tin chiến lược quân sự</td>
-                      <td>-</td>
                     </tr>
                     <tr>
                       <td><strong>Phạm Xuân Ẩn</strong></td>
+                      <td>Tình báo</td>
                       <td>Thâm nhập cấp cao, bảo vệ cán bộ Cộng sản, mệnh danh "Ký giả số 1 Việt Nam"</td>
-                      <td>1927-2006</td>
                     </tr>
                     <tr>
                       <td><strong>Phạm Ngọc Thảo</strong></td>
+                      <td>Tình báo</td>
                       <td>Đạo diễn đảo chính, hoạt động độc lập dưới Hồ Chí Minh và Lê Duẩn</td>
-                      <td>1922-?</td>
                     </tr>
                     <tr>
-                      <td><strong>Vũ Ngọc Nhạ</strong></td>
-                      <td>Xây dựng cụm tình báo A22, cung cấp thông tin then chốt, phong Thiếu tướng năm 1988</td>
-                      <td>1928-2002</td>
+                      <td><strong>Nguyễn Thị Phương</strong></td>
+                      <td>Giao liên</td>
+                      <td>Vận chuyển vũ khí và tài liệu bằng thuyền ba lá từ Bến Tre đến Cà Mau</td>
                     </tr>
                     <tr>
-                      <td><strong>Hoàng Minh Đạo</strong></td>
-                      <td>Sáng lập tình báo quân đội, vai trò quan trọng ở Sài Gòn, qua đời 1969, vinh danh 1998</td>
-                      <td>-</td>
+                      <td><strong>Lại Thị Kim Túy</strong></td>
+                      <td>Giao liên</td>
+                      <td>Tham gia dẫn đường trong trận Mậu Thân, đóng góp vào chiến thắng của quân giải phóng</td>
                     </tr>
                   </tbody>
                 </Table>
                 
-                <p className="mt-4">Ngoài ra, còn có các tình báo khác như:</p>
+                <p className="mt-4">Ngoài ra, còn có các giao liên tiêu biểu khác như:</p>
                 <ul className="agent-list">
-                  <li><strong>Nguyễn Thị Phương:</strong> Giao liên vận chuyển vũ khí và tài liệu bằng thuyền ba lá từ Bến Tre đến Cà Mau.</li>
-                  <li><strong>Lại Thị Kim Túy:</strong> Tham gia dẫn đường trong trận Mậu Thân, đóng góp vào chiến thắng của quân giải phóng.</li>
                   <li><strong>Dương Kim Bằng:</strong> Dẫn Lê Duẩn từ Chiến khu Đ vào Sài Gòn năm 1947-1948, cải trang thành thương nhân.</li>
                   <li><strong>Lý Ngọc Phương (Hồ Anh):</strong> Vận chuyển tài liệu bằng ví da trong sứ mệnh 1956-1957, đảm bảo an toàn cho Lê Duẩn.</li>
                   <li><strong>Nguyễn Thị Hữu (Sáu Trung):</strong> Sử dụng đồng hồ để tính thời gian cho các nhiệm vụ, phục vụ Khu ủy Sài Gòn-Gia Định.</li>
@@ -188,7 +194,7 @@ const HomePage = () => {
               </Card.Header>
               <Card.Body>                
                 <p>
-                  Trong hội trại, đặc biệt là trong trò chơi "Hành trình trò chơi lớn," vai trò "Giao Liên" được mô phỏng 
+                  Trong hội trại, đặc biệt là trò chơi "Hành trình trò chơi lớn," vai trò "Giao Liên" được mô phỏng 
                   để tái hiện chức năng lịch sử của họ. Cụ thể, "Giao Liên" là thành viên duy nhất trong đội được phép 
                   sử dụng điện thoại để gửi đáp án mật thư đến Ban Tổ Chức (BTC). Tuy nhiên, họ không được tham gia 
                   giải mã hoặc cho phép giải cùng đội.
