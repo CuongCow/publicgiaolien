@@ -52,6 +52,41 @@ const AboutPage = () => {
           <Col lg={12}>
             <Card className="content-card">
               <Card.Header>
+                <h2 className="section-title">Lời Cam Kết</h2>
+              </Card.Header>
+              <Card.Body>
+                <p>
+                  <strong>Cam kết giữ bảo mật về tất cả cơ sở dữ liệu, đảm bảo riêng tư tuyệt đối</strong>
+                </p>
+                <ul className="agent-list">
+                  <li>
+                    Hệ thống Giao Liên cam kết bảo vệ tuyệt đối thông tin cá nhân và dữ liệu của tất cả người dùng.
+                  </li>
+                  <li>
+                    Chúng tôi không chia sẻ, bán hoặc tiết lộ thông tin của bạn cho bất kỳ bên thứ ba nào mà không có sự đồng ý.
+                  </li>
+                  <li>
+                    Mọi dữ liệu được mã hóa và lưu trữ an toàn trên hệ thống máy chủ được bảo mật.
+                  </li>
+                  <li>
+                    Cam kết thực hiện các biện pháp khắc phục ngay lập tức nếu phát hiện sự cố.
+                  </li>
+                  <li>
+                    Thông báo minh bạch đến Ban tổ chức và các đơn vị liên quan về tình hình sự cố.
+                  </li>
+                  <li>
+                    Đảm bảo các hoạt động mật thư và trò chơi tiếp tục diễn ra một cách công bằng và nguyên vẹn.
+                  </li>
+                </ul>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+
+        <Row className="mb-5">
+          <Col lg={12}>
+            <Card className="content-card">
+              <Card.Header>
                 <h2 className="section-title">Giới Thiệu</h2>
               </Card.Header>
               <Card.Body>

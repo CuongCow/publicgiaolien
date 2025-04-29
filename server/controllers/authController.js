@@ -235,6 +235,8 @@ const updateProfile = async (req, res) => {
       
       // Đánh dấu là đã sửa đổi để tránh hash lại trong pre save
       admin.markModified('password');
+      // Đặt flag để bỏ qua hash mật khẩu trong middleware pre save
+      admin.$locals.skipPasswordHash = true;
     }
     
     await admin.save();
@@ -406,6 +408,8 @@ const resetPassword = async (req, res) => {
     
     // Đánh dấu là đã sửa đổi để tránh hash lại trong pre save
     admin.markModified('password');
+    // Đặt flag để bỏ qua hash mật khẩu trong middleware pre save
+    admin.$locals.skipPasswordHash = true;
     
     // Lưu admin
     await admin.save();
