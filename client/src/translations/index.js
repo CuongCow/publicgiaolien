@@ -395,7 +395,6 @@ export const translations = {
     copy_fallback_error: 'Không thể sao chép. Vui lòng thử lại hoặc sao chép thủ công.',
     login_info: 'THÔNG TIN ĐĂNG NHẬP',
     team_name_label: 'Tên đội',
-    password_label: 'Mật khẩu',
     login_instructions: 'HƯỚNG DẪN ĐĂNG NHẬP',
     scan_qr: 'Quét QR của ban tổ chức cung cấp để vào',
     enter_login_info: 'Nhập thông tin đăng nhập',
@@ -516,7 +515,7 @@ export const translations = {
     station_management_description: 'Create, edit, and manage cipher stations for the game. Each station has a unique QR code for teams to scan and access.',
     station_management_title: 'Station Management',
     manage_all_stations: 'Manage all stations',
-
+    create_station: 'Create Station',
 
     my_profile: 'My Profile',
     loading_profile: 'Loading info...',
@@ -564,8 +563,6 @@ export const translations = {
     select_team_description: 'Please select your team and enter the password',
     team: 'Team',
     select_team_option: '-- Select Team --',
-    password_label: 'Password',
-    enter_password: 'Enter password',
     processing: 'Processing...',
     confirm: 'Confirm',
     logout: 'Logout',
@@ -575,7 +572,6 @@ export const translations = {
     station_term: 'Station',
     unknown_device: 'Unknown',
 
-    // TODO: Add other strings for StationList, SubmissionsHistory, SuperAdminDashboard, TeamList, TeamRanking, UserStation
     submissions_history_heading: 'Submissions History',
     stop_auto_refresh: 'Stop Auto Refresh',
     start_auto_refresh: 'Auto Refresh',
@@ -583,7 +579,6 @@ export const translations = {
     exporting: 'Exporting...',
     export_excel: 'Export Excel',
 
-    // Các chuỗi cho StationForm
     common_info: 'Common Info',
     game_name: 'Camp Cipher Name',
     game_name_placeholder: 'Enter camp cipher name',
@@ -617,11 +612,25 @@ export const translations = {
     creating: 'Creating...',
     updating: 'Updating...',
 
-    // Các chuỗi cho StationList
     no_stations: 'No stations yet',
     first_station_instruction: 'Create the first station to start',
+    search_placeholder: 'Search stations...',
+    no_matching_station: 'No matching station',
+    no_matching_station_note: 'No stations match your search',
+    teams_heading: 'Teams',
+    content_type: 'Content Type',
+    actions: 'Actions',
+    view_qr: 'View QR Code',
+    edit_station: 'Edit Station',
+    delete_station: 'Delete Station',
+    close: 'Close',
+    copy_link: 'Copy Link',
+    copied: 'Copied!',
+    print: 'Print',
+    download_image: 'Download Image',
+    downloading: 'Downloading...',
+    qr_print_instruction: 'Print this QR code and place it at stations for teams to scan and access',
 
-    // Các chuỗi cho TeamList
     team_list_heading: 'Team Management',
     manage_all_teams_note: 'Manage all teams in the system.',
     create_team: 'Create Team',
@@ -658,8 +667,6 @@ export const translations = {
     logs_deleted: 'All status change logs deleted successfully',
     logs_load_success: 'Loaded {count} logs from local storage',
     logs_load_error: 'No logs found in local storage',
-    
-    // New translation keys for TeamList
     old_status: 'Old Status',
     new_status: 'New Status',
     leave_empty_for_auto_password: 'Leave blank for auto-generated password',
@@ -668,96 +675,19 @@ export const translations = {
     no_status_changes_recorded: 'No status changes recorded yet',
     reload_logs_from_storage: 'Reload logs from local storage',
     confirm_delete_team: 'Are you sure you want to delete this team?',
+    status_change_success: 'Status of team "{teamName}" changed from "{oldStatus}" to "{newStatus}"',
+    add_manual_log_success: 'Test log entry added to history',
+    copy_team_info_success: 'Login information for team {teamName} copied',
+    logs_export_excel_success: 'Excel export successful!',
 
-    // Các chuỗi cho TeamRanking
     ranking_heading: 'Team Ranking',
     delete_scores: 'Delete Scores',
     delete_all_ranking: 'Delete All',
     export_ranking: 'Export Excel',
     resetting: 'Deleting...',
-    exporting: 'Exporting...',
-    reset_ranking_confirm: 'Are you sure you want to delete all rankings?',
-    reset_scores_confirm: 'Are you sure you want to delete all scores and rankings?',
-    reset_success: 'Rankings deleted successfully!',
-    reset_scores_success: 'Scores deleted successfully!',
-    delete_ranking_error: 'Unable to delete rankings. Please try again later.',
-    delete_scores_error: 'Unable to delete scores. Please try again later.',
-
-    // SuperAdmin Dashboard Keys
-    superadmin_dashboard_title: 'System Management',
-    superadmin_role: 'Super Admin',
-    admins_label: 'Administrators',
-    total_teams_super: 'Total Teams',
-    invite_codes_label: 'Invite Codes',
-    notifications_label: 'Notifications',
-    logs_label: 'System Logs',
-    database_label: 'Database',
-    view_logs: 'View Logs',
-    manage: 'Manage',
-    
-    // TeamList additional translations
-    status_change_success: 'Status of team "{teamName}" changed from "{oldStatus}" to "{newStatus}"',
-    add_manual_log_success: 'Test log entry added to history',
-    copy_team_info_success: 'Login information for team {teamName} copied',
-    logs_export_excel_success: 'Excel export successful!',
-    
-    // Term Change Note
-    term_change_note_title: 'Note:',
-    term_change_note_description: 'The new term will replace "Station" across the entire system.',
-
-    // Navbar
-    dashboard: 'Dashboard',
-    stations: 'Stations',
-    teams: 'Teams',
-    ranking: 'Ranking',
-    history: 'History',
-    system: 'System',
-    profile: 'Profile',
-    settings: 'Settings',
-    logout: 'Logout',
-    
-    // UserNavbar
-    home: 'Home',
-    about: 'About',
-    admin_panel: 'Admin Panel',
-    login: 'Login',
-    register: 'Register',
-    
-    // StationList
-    search_placeholder: 'Search stations...',
-    no_matching_station: 'No matching station',
-    no_matching_station_note: 'No stations match your search',
-    teams_heading: 'Teams',
-    content_type: 'Content Type',
-    actions: 'Actions',
-    view_qr: 'View QR Code',
-    edit_station: 'Edit Station',
-    delete_station: 'Delete Station',
-    close: 'Close',
-    copy_link: 'Copy Link',
-    copied: 'Copied!',
-    print: 'Print',
-    download_image: 'Download Image',
-    downloading: 'Downloading...',
-    qr_print_instruction: 'Print this QR code and place it at stations for teams to scan and access',
-    
-    // TeamRanking
-    delete_all: 'Delete All',
-    confirm_reset_all: 'Are you sure you want to delete all rankings?',
-    confirm_reset_scores: 'Are you sure you want to delete all scores and rankings?',
-    rank: 'Rank',
-    total_score: 'Total Score',
-    time_participated: 'Time Participated',
-    completed_stations_details: 'Completed Stations Details',
-    no_stations_completed: 'No stations completed',
-    no_ranking_data: 'No teams have completed stations',
-    no_ranking_data_note: 'Rankings will be displayed when teams start completing stations',
-    
-    // Bổ sung các khóa dịch cho TeamRanking
     team_ranking_title: 'Team Ranking',
     reset_scores_tooltip: 'Delete scores and keep teams',
     deleting: 'Deleting...',
-    exporting: 'Exporting...',
     excel_export_success: 'Excel export successful!',
     excel_export_error: 'Unable to export Excel file. Please try again later.',
     ranking_load_error: 'Unable to load rankings. Please try again later.',
@@ -779,13 +709,27 @@ export const translations = {
     scores_and_completed_stations: 'Scores and completed stations',
     submission_history: 'Submission History',
     action_cannot_be_undone: 'This action cannot be undone after confirming!',
+    cancel: 'Cancel',
     confirm_delete: 'Confirm delete',
     reset_scores: 'Reset scores',
     confirm_reset_scores_question: 'Are you sure you want to delete all scores and rankings?',
     note: 'Note',
     delete: 'Delete',
+    reset_ranking_confirm: 'Are you sure you want to delete all rankings?',
+    reset_scores_confirm: 'Are you sure you want to delete all scores and rankings?',
+    delete_ranking_error: 'Unable to delete rankings. Please try again later.',
+    delete_scores_error: 'Unable to delete scores. Please try again later.',
+    delete_all: 'Delete All',
+    confirm_reset_all: 'Are you sure you want to delete all rankings?',
+    confirm_reset_scores: 'Are you sure you want to delete all scores and rankings?',
+    rank: 'Rank',
+    total_score: 'Total Score',
+    time_participated: 'Time Participated',
+    completed_stations_details: 'Completed Stations Details',
+    no_stations_completed: 'No stations completed',
+    no_ranking_data: 'No teams have completed stations',
+    no_ranking_data_note: 'Rankings will be displayed when teams start completing stations',
     
-    // SubmissionsHistory
     filter_by_station: 'Filter by Station',
     filter_by_team: 'Filter by Team',
     all_stations: 'All Stations',
@@ -803,11 +747,26 @@ export const translations = {
     confirm_delete_all_submissions: 'Are you sure you want to delete all submission history?',
     deleting: 'Deleting...',
     last_updated: 'Last updated:',
+    loading_data: 'Loading data...',
+    delete_submissions_title: 'Delete Submission History',
+    delete_submissions_confirm: 'Are you sure you want to delete <strong>all</strong> submission history?',
+    delete_submissions_warning: 'Warning: This action will permanently delete all submission history data from teams.',
+    delete_submissions_note: 'This action does <strong>not</strong> affect:',
+    team_ranking: 'Team rankings',
+    station_info: 'Station information',
+    delete_success: 'Successfully deleted {count} submission history records!',
+    delete_error: 'Unable to delete data. Please try again later.',
+    time_active: {
+      not_available: 'N/A',
+      days_ago: '{count} days ago',
+      hours_ago: '{count} hours ago',
+      minutes_ago: '{count} minutes ago',
+      seconds_ago: '{count} seconds ago',
+      not_active: 'Not active'
+    },
     
-    // UserStation
     station_completion: 'You have completed this station!',
     station_points: 'For this station, your team received',
-    points: 'points',
     correct_answer: 'Correct!',
     correct_answer_congrats: 'Congratulations, you have completed this station.',
     enter_answer: 'Enter your answer',
@@ -819,7 +778,6 @@ export const translations = {
     logout_warning: 'You will need to login again to continue.',
     platform_title: 'Giao Lien Station Management System',
     
-    // SuperAdminDashboard
     system_management: 'System Management',
     admin_management: 'Admin Management',
     invitation_codes: 'Invitation Codes',
@@ -839,23 +797,29 @@ export const translations = {
     create_new_invitation: 'Create New Invitation',
     invitation_description: 'Create an invitation code that allows Admins to register new accounts. The invitation code will be valid for 7 days and can only be used once.',
     create_code: 'Create Code',
-    processing: 'Processing...',
-
-    // Thêm key mới
+    superadmin_dashboard_title: 'System Management',
+    superadmin_role: 'Super Admin',
+    admins_label: 'Administrators',
+    total_teams_super: 'Total Teams',
+    invite_codes_label: 'Invite Codes',
+    notifications_label: 'Notifications',
+    logs_label: 'System Logs',
+    database_label: 'Database',
+    view_logs: 'View Logs',
+    manage: 'Manage',
+    
     copy_to_clipboard: 'Copy to clipboard',
     copy_success: 'Copied!',
-    confirm_delete: 'Are you sure you want to delete?',
     yes: 'Yes',
     no: 'No',
     cancel_action: 'Cancel',
     confirm_action: 'Confirm',
     load_stations_error: 'Unable to load the list. Please try again later.',
+    load_station_list_error: 'Unable to load the list. Please try again later.',
     delete_station_error: 'Unable to delete station. Please try again later.',
     delete_station_confirm: 'Are you sure you want to delete this station?',
     export_success: 'Excel export successful!',
     export_error: 'Unable to export Excel file. Please try again later.',
-    
-    // Thông tin ứng dụng
     app_version: 'Version:',
     app_framework: 'Framework:',
     app_backend: 'Backend:',
@@ -863,14 +827,12 @@ export const translations = {
     app_copyright: '© 2025 Giao Lien System.',
     app_developer: 'Developed by CuongCow',
     
-    // Trạng thái đội chơi
     team_status_active: 'Active',
     team_status_inactive: 'Inactive',
     team_status_hidden: 'Hidden Tab',
     team_status_copied: 'Copied',
     team_status_exited: 'Exited',
     
-    // Các nút/thao tác
     save: 'Save',
     update: 'Update',
     add: 'Add',
@@ -881,7 +843,6 @@ export const translations = {
     filter: 'Filter',
     sort: 'Sort',
     
-    // Thêm khóa dịch còn thiếu cho TeamList
     load_team_error: 'Unable to load team list. Please try again later.',
     reload: 'Reload',
     delete_all_logs: 'Delete all logs',
@@ -921,8 +882,6 @@ export const translations = {
     export_log_new_status: 'New Status',
     status_log_export_filename: 'Team_Status_Logs',
     
-    // Thêm khóa dịch còn thiếu cho StationList
-    load_station_list_error: 'Unable to load the list. Please try again later.',
     station_label: 'Station',
     attempts: 'attempts',
     view_qr_code: 'View QR Code',
@@ -934,16 +893,11 @@ export const translations = {
     max_attempts: 'Maximum Attempts',
     print_qr: 'Print QR Code',
     
-    // Thêm khóa dịch cho StationForm
-    create_station: 'Create Station',
     go_back: 'Go Back',
-    loading: 'Loading...',
     enter_ott_content: 'Enter OTT content',
     enter_nw_content: 'Enter NW content',
     add_multiple_answers: 'Add Multiple Answers',
     team_count: 'teams',
-    
-    // StationForm
     load_station_error: 'Unable to load station information. Please try again later.',
     choose_image: 'Choose Image',
     uploading: 'Uploading...',
@@ -963,46 +917,43 @@ export const translations = {
     enter_answer_error: 'Please enter at least one correct answer.',
     update_station_success: 'Station updated successfully!',
     or: 'or',
-    
-    // SubmissionsHistory
-    load_data_error: 'Unable to load data. Please try again later.',
-    export_excel_success: 'Excel export successful!',
-    export_excel_error: 'Unable to export Excel file. Please try again later.',
-    loading_data: 'Loading data...',
-    delete_submissions_title: 'Delete Submission History',
-    delete_submissions_confirm: 'Are you sure you want to delete <strong>all</strong> submission history?',
-    delete_submissions_warning: 'Warning: This action will permanently delete all submission history data from teams.',
-    delete_submissions_note: 'This action does <strong>not</strong> affect:',
-    teams_list: 'Teams list',
-    team_ranking: 'Team rankings',
-    station_info: 'Station information',
-    deleting: 'Deleting...',
-    delete_success: 'Successfully deleted {count} submission history records!',
-    delete_error: 'Unable to delete data. Please try again later.',
-    time_active: {
-      not_available: 'N/A',
-      days_ago: '{count} days ago',
-      hours_ago: '{count} hours ago',
-      minutes_ago: '{count} minutes ago',
-      seconds_ago: '{count} seconds ago',
-      not_active: 'Not active'
-    },
     add_answer_button: 'Add',
     loading_text: 'Loading...',
-
-    // Thông tin tài khoản và hệ thống
+    
+    term_change_note_title: 'Note:',
+    term_change_note_description: 'The new term will replace "Station" across the system.',
+    
+    dashboard: 'Dashboard',
+    stations: 'Stations',
+    teams: 'Teams',
+    ranking: 'Ranking',
+    history: 'History',
+    system: 'System',
+    profile: 'Profile',
+    home: 'Home',
+    about: 'About',
+    admin_panel: 'Admin Panel',
+    login: 'Login',
+    register: 'Register',
+    
     change_password: 'Change Password',
     update_info: 'Update Information',
     join_date: 'Join date',
     account_info: 'Account Information',
     system_info: 'System Information',
-
-    // Notifications
+    
     loading_notifications: 'Loading notifications...',
     loading_status: 'Loading...',
     no_notifications: 'No notifications',
     error_loading_notifications: 'Unable to load notifications',
     notifications_title: 'Notifications',
     view_all_notifications: 'View all notifications',
+    
+    load_data_error: 'Unable to load data. Please try again later.',
+    export_excel_success: 'Excel export successful!',
+    export_excel_error: 'Unable to export Excel file. Please try again later.',
+    password_label: 'Password',
+    enter_password: 'Enter password',
+    teams_list: 'Teams list'
   }
 }; 
