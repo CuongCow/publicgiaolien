@@ -56,7 +56,6 @@ const register = async (req, res) => {
     // Tạo admin mới
     admin = new Admin({
       username,
-      password,
       name,
       email,
       role: 'admin'
@@ -64,11 +63,12 @@ const register = async (req, res) => {
 
     // Mã hóa mật khẩu
     const salt = await bcrypt.genSalt(10);
-    admin.password = await bcrypt.hash(password, salt);
+    const hashedPassword = await bcrypt.hash(password, salt);
     
-    // Đặt flag để bỏ qua hash mật khẩu trong middleware pre save
-    admin.$locals.skipPasswordHash = true;
+    // Gán trực tiếp mật khẩu đã hash - để tránh hash lại trong middleware
+    admin.password = hashedPassword;
 
+    // Lưu admin
     await admin.save();
 
     // Đánh dấu mã mời đã sử dụng
@@ -234,12 +234,10 @@ const updateProfile = async (req, res) => {
       
       // Mã hóa mật khẩu mới
       const salt = await bcrypt.genSalt(10);
-      admin.password = await bcrypt.hash(newPassword, salt);
+      const hashedPassword = await bcrypt.hash(newPassword, salt);
       
-      // Đánh dấu là đã sửa đổi để tránh hash lại trong pre save
-      admin.markModified('password');
-      // Đặt flag để bỏ qua hash mật khẩu trong middleware pre save
-      admin.$locals.skipPasswordHash = true;
+      // Gán trực tiếp mật khẩu đã hash - để tránh hash lại trong middleware
+      admin.password = hashedPassword;
     }
     
     await admin.save();
@@ -407,12 +405,10 @@ const resetPassword = async (req, res) => {
     
     // Mã hóa mật khẩu mới
     const salt = await bcrypt.genSalt(10);
-    admin.password = await bcrypt.hash(password, salt);
+    const hashedPassword = await bcrypt.hash(password, salt);
     
-    // Đánh dấu là đã sửa đổi để tránh hash lại trong pre save
-    admin.markModified('password');
-    // Đặt flag để bỏ qua hash mật khẩu trong middleware pre save
-    admin.$locals.skipPasswordHash = true;
+    // Gán trực tiếp mật khẩu đã hash - để tránh hash lại trong middleware
+    admin.password = hashedPassword;
     
     // Lưu admin
     await admin.save();

@@ -47,6 +47,12 @@ AdminSchema.pre('save', async function(next) {
     return next();
   }
   
+  // Kiểm tra xem mật khẩu đã hash chưa
+  // Mật khẩu đã hash sẽ bắt đầu bằng "$2a$" hoặc "$2b$" (bcrypt signature)
+  if (admin.password.startsWith('$2a$') || admin.password.startsWith('$2b$')) {
+    return next(); // Đã hash rồi, bỏ qua
+  }
+  
   try {
     const salt = await bcrypt.genSalt(10);
     admin.password = await bcrypt.hash(admin.password, salt);
