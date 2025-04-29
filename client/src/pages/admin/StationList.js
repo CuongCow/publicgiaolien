@@ -485,7 +485,7 @@ const StationList = () => {
                 <i className="bi bi-repeat me-1"></i>
                 {t('max_attempts_label')}: {selectedStation?.maxAttempts}
               </p>
-              <p className="mt-4 text-muted">
+                            <p className="mt-4 text-muted">
                 <i className="bi bi-info-circle me-1"></i>
                 <TermReplacer>{t('qr_print_instruction')}</TermReplacer>
               </p>

@@ -216,7 +216,7 @@ const TeamRanking = () => {
   return (
     <>
       <AdminNavbar />
-      <Container>
+      <Container className="py-4 pt-3 mt-2">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h1>{t('team_ranking_title')}</h1>
           

@@ -19,6 +19,8 @@ const StationForm = () => {
   const [gameName, setGameName] = useState('');
   const [gameNote, setGameNote] = useState('');
   const [loadingGameData, setLoadingGameData] = useState(false);
+  // Thêm state để lưu trữ danh sách đội từ cơ sở dữ liệu
+  const [availableTeams, setAvailableTeams] = useState([]);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -62,9 +64,9 @@ const StationForm = () => {
       // Truy vấn danh sách đội
       const teamsResponse = await teamApi.getAll();
       if (teamsResponse.data && teamsResponse.data.length > 0) {
-        // Chỉ lấy tên các đội
+        // Lưu danh sách đội vào state availableTeams thay vì thêm trực tiếp vào commonTeams
         const teamNames = teamsResponse.data.map(team => team.name);
-        setCommonTeams(teamNames);
+        setAvailableTeams(teamNames);
       }
       
       // Truy vấn thông tin từ một trạm đã có (lấy trạm đầu tiên)
@@ -96,6 +98,14 @@ const StationForm = () => {
       setLoading(true);
       const response = await stationApi.getById(id);
       const station = response.data;
+      
+      // Truy vấn danh sách đội từ cơ sở dữ liệu
+      // để hiển thị tất cả các đội có sẵn khi chỉnh sửa
+      const teamsResponse = await teamApi.getAll();
+      if (teamsResponse.data && teamsResponse.data.length > 0) {
+        const teamNames = teamsResponse.data.map(team => team.name);
+        setAvailableTeams(teamNames);
+      }
       
       // Trích xuất OTT và NW từ content nếu là dạng văn bản
       let ottContent = '';
@@ -591,6 +601,17 @@ const StationForm = () => {
     );
   };
 
+  // Thêm hàm xử lý chọn/bỏ chọn đội
+  const toggleTeamSelection = (teamName) => {
+    if (commonTeams.includes(teamName)) {
+      // Nếu đội đã có trong danh sách chọn, loại bỏ
+      setCommonTeams(prev => prev.filter(team => team !== teamName));
+    } else {
+      // Nếu đội chưa có trong danh sách chọn, thêm vào
+      setCommonTeams(prev => [...prev, teamName]);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -798,11 +819,39 @@ const StationForm = () => {
                 </Col>
               </Row>
 
-              {/* Hiển thị danh sách đội chung */}
+              {/* Hiển thị danh sách đội từ cơ sở dữ liệu */}
+              {availableTeams.length > 0 && (
+                <Row className="mb-3">
+                  <Col>
+                    <h6>{t('available_teams')} ({availableTeams.length} {t('team_count')})</h6>
+                    <div className="border rounded p-2 mb-3" style={{ maxHeight: '150px', overflowY: 'auto' }}>
+                      <div className="d-flex flex-wrap">
+                        {availableTeams.map((team, index) => (
+                          <div key={index} className="me-2 mb-2">
+                            <Badge 
+                              bg={commonTeams.includes(team) ? "primary" : "secondary"} 
+                              className="d-flex align-items-center"
+                              style={{ fontSize: '14px', padding: '8px', cursor: 'pointer' }}
+                              onClick={() => toggleTeamSelection(team)}
+                            >
+                              {team}
+                              {commonTeams.includes(team) && (
+                                <i className="bi bi-check-lg ms-1"></i>
+                              )}
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </Col>
+                </Row>
+              )}
+
+              {/* Hiển thị danh sách đội đã chọn */}
               {commonTeams.length > 0 && (
                 <Row>
                   <Col>
-                    <h6>{t('teams_list')} ({commonTeams.length} {t('team_count')})</h6>
+                    <h6>{t('selected_teams')} ({commonTeams.length} {t('team_count')})</h6>
                     <div className="border rounded p-2 mb-3" style={{ maxHeight: '150px', overflowY: 'auto' }}>
                       <div className="d-flex flex-wrap">
                         {commonTeams.map((team, index) => (

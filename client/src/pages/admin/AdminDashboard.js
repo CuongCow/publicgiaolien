@@ -41,7 +41,7 @@ const AdminDashboard = () => {
   return (
     <>
       <AdminNavbar />
-      <Container>
+      <Container className="py-4 pt-3 mt-2">
         <h1 className="mb-4">{t('system_overview')}</h1>
         
         <Row className="mb-4">

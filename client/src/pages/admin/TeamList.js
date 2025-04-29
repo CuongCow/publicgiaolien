@@ -65,6 +65,8 @@ const TeamList = () => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showPasswords, setShowPasswords] = useState({});
   const [exportLoading, setExportLoading] = useState(false);
+  const [teamSpecificLogs, setTeamSpecificLogs] = useState([]);
+  const [loadingTeamLogs, setLoadingTeamLogs] = useState(false);
   
   // Sử dụng useRef để theo dõi trạng thái trước đó của teams
   const prevTeamsRef = useRef({});
@@ -279,7 +281,17 @@ const TeamList = () => {
     e.preventDefault();
     try {
       manualTeamUpdate.current = true;
-      const newTeam = await teamApi.create(formData);
+      // Tạo bản sao của formData để không thay đổi state trực tiếp
+      const dataToSubmit = { ...formData };
+      
+      // Đảm bảo password có giá trị, nếu trống thì tạo mật khẩu ngẫu nhiên
+      if (!dataToSubmit.password || dataToSubmit.password.trim() === '') {
+        // Tạo mật khẩu ngẫu nhiên gồm 6 ký tự
+        const randomPassword = Math.random().toString(36).substring(2, 8);
+        dataToSubmit.password = randomPassword;
+      }
+      
+      const newTeam = await teamApi.create(dataToSubmit);
       setTeams(prevTeams => [...prevTeams, newTeam.data]);
       setShowCreateModal(false);
       setFormData({ name: '', password: '' });
@@ -342,6 +354,14 @@ const TeamList = () => {
   const showTeamDetail = (team) => {
     setSelectedTeam(team);
     setShowDetailModal(true);
+    
+    // Tải nhật ký thay đổi trạng thái của đội cụ thể
+    setLoadingTeamLogs(true);
+    
+    // Lọc log cho đội được chọn từ danh sách log hiện có
+    const filteredLogs = statusLogs.filter(log => log.teamId === team._id);
+    setTeamSpecificLogs(filteredLogs);
+    setLoadingTeamLogs(false);
   };
 
   // Nút xóa nhật ký
@@ -568,12 +588,13 @@ ${t('notes')}:
   const handleForceLogout = async (teamId) => {
     if (window.confirm('Bạn có chắc chắn muốn buộc đăng xuất đội này khỏi thiết bị của họ?')) {
       try {
+        manualTeamUpdate.current = true;
         const response = await teamApi.forceLogout(teamId);
         if (response.data.success) {
           // Cập nhật danh sách đội
           const updatedTeams = teams.map(team => 
             team._id === teamId 
-              ? { ...team, status: 'inactive', sessionId: null, deviceInfo: null, lastActivity: new Date() } 
+              ? { ...team, status: 'inactive', ip: null, device: null, loginTime: null, sessionId: null } 
               : team
           );
           setTeams(updatedTeams);
@@ -583,8 +604,10 @@ ${t('notes')}:
             setSelectedTeam({
               ...selectedTeam,
               status: 'inactive',
+              ip: null,
+              device: null, 
+              loginTime: null,
               sessionId: null,
-              deviceInfo: null,
               lastActivity: new Date()
             });
           }
@@ -602,7 +625,7 @@ ${t('notes')}:
   return (
     <>
       <AdminNavbar />
-      <Container className="py-4">
+      <Container className="py-4 pt-3 mt-2">
         <Row className="mb-4 align-items-center">
           <Col>
             <h1 className="mb-0 d-flex align-items-center">
@@ -1030,6 +1053,49 @@ ${t('notes')}:
 
               <div className="mt-4 mb-2">
                 <h5>{t('status_history')}</h5>
+                {loadingTeamLogs ? (
+                  <div className="text-center py-3">
+                    <Spinner animation="border" size="sm" />
+                    <span className="ms-2">{t('loading')}</span>
+                  </div>
+                ) : teamSpecificLogs.length === 0 ? (
+                  <p className="text-center text-muted">{t('no_status_changes_recorded')}</p>
+                ) : (
+                  <Table bordered hover size="sm">
+                    <thead>
+                      <tr>
+                        <th>{t('time')}</th>
+                        <th>{t('old_status')}</th>
+                        <th>{t('new_status')}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {teamSpecificLogs.map(log => (
+                        <tr key={log.id}>
+                          <td>{formatDateTime(log.timestamp)}</td>
+                          <td>
+                            <Badge bg={log.oldStatus === 'active' ? 'success' : 
+                              log.oldStatus === 'hidden' ? 'warning' : 
+                              log.oldStatus === 'copied' ? 'danger' : 
+                              log.oldStatus === 'exited' ? 'secondary' : 'light'} 
+                              text={log.oldStatus === 'active' || log.oldStatus === 'hidden' || log.oldStatus === 'copied' || log.oldStatus === 'exited' ? 'white' : 'dark'}>
+                              {getStatusName(log.oldStatus)}
+                            </Badge>
+                          </td>
+                          <td>
+                            <Badge bg={log.newStatus === 'active' ? 'success' : 
+                              log.newStatus === 'hidden' ? 'warning' : 
+                              log.newStatus === 'copied' ? 'danger' : 
+                              log.newStatus === 'exited' ? 'secondary' : 'light'} 
+                              text={log.newStatus === 'active' || log.newStatus === 'hidden' || log.newStatus === 'copied' || log.newStatus === 'exited' ? 'white' : 'dark'}>
+                              {getStatusName(log.newStatus)}
+                            </Badge>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                )}
               </div>
             </div>
           )}
@@ -1038,6 +1104,18 @@ ${t('notes')}:
           <Button variant="secondary" onClick={() => setShowDetailModal(false)}>
             Đóng
           </Button>
+          {selectedTeam && selectedTeam.status === 'active' && (
+            <Button 
+              variant="danger" 
+              onClick={() => {
+                handleForceLogout(selectedTeam._id);
+                setShowDetailModal(false);
+              }}
+            >
+              <i className="bi bi-box-arrow-right me-2"></i>
+              {t('logout')}
+            </Button>
+          )}
         </Modal.Footer>
       </Modal>
     </>
