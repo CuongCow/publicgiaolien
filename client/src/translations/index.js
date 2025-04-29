@@ -687,7 +687,6 @@ export const translations = {
     resetting: 'Deleting...',
     team_ranking_title: 'Team Ranking',
     reset_scores_tooltip: 'Delete scores and keep teams',
-    deleting: 'Deleting...',
     excel_export_success: 'Excel export successful!',
     excel_export_error: 'Unable to export Excel file. Please try again later.',
     ranking_load_error: 'Unable to load rankings. Please try again later.',
@@ -837,7 +836,6 @@ export const translations = {
     update: 'Update',
     add: 'Add',
     edit: 'Edit',
-    delete: 'Delete',
     view: 'View',
     search: 'Search',
     filter: 'Filter',
@@ -951,9 +949,6 @@ export const translations = {
     
     load_data_error: 'Unable to load data. Please try again later.',
     export_excel_success: 'Excel export successful!',
-    export_excel_error: 'Unable to export Excel file. Please try again later.',
-    password_label: 'Password',
-    enter_password: 'Enter password',
-    teams_list: 'Teams list'
+    export_excel_error: 'Unable to export Excel file. Please try again later.'
   }
 }; 
