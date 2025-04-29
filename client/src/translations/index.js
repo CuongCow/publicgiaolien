@@ -487,6 +487,9 @@ export const translations = {
     error_loading_notifications: 'Không thể tải thông báo',
     notifications_title: 'Thông báo',
     view_all_notifications: 'Xem tất cả thông báo',
+
+    password: 'Mật khẩu',
+    password_label: 'Mật khẩu',
   },
   en: {
     welcome: 'Welcome',

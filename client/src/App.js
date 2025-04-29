@@ -5,6 +5,9 @@ import './App.css';
 import { SystemSettingsProvider } from './context/SystemSettingsContext';
 import LoginNotification from './components/LoginNotification';
 import { LanguageProvider } from './context/LanguageContext';
+import { translations } from './translations';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // Import các component
 import HomePage from './pages/HomePage';
@@ -33,6 +36,27 @@ import TeamSummary from './pages/superadmin/TeamSummary';
 import SafetySettings from './pages/superadmin/SafetySettings';
 import SystemLogs from './pages/superadmin/SystemLogs';
 import DatabaseManagement from './pages/superadmin/DatabaseManagement';
+
+// Component con để debug translations
+const DebugTranslations = () => {
+  const { useLanguage } = require('./context/LanguageContext');
+  const { language } = useLanguage();
+  const { translations } = require('./translations');
+  
+  useEffect(() => {
+    console.log('Debug component loaded with language:', language);
+    console.log('Translations available:', Object.keys(translations).join(', '));
+    console.log('Current language keys count:', Object.keys(translations[language] || {}).length);
+    
+    // Log một số key để debug
+    const keysToCheck = ['system_overview', 'total_teams', 'total_stations'];
+    keysToCheck.forEach(key => {
+      console.log(`Key "${key}" có giá trị:`, translations[language]?.[key] || 'không tìm thấy');
+    });
+  }, [language]);
+  
+  return null; // Component này không render gì cả
+};
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -141,119 +165,119 @@ function App() {
     <LanguageProvider>
       <SystemSettingsProvider>
         <Router>
-          <div className="App">
-            <LoginNotification />
-            <Routes>
-              {/* Home Page */}
-              <Route path="/" element={<HomePage />} />
-              <Route path="/about" element={<AboutPage />} />
-              
-              {/* Auth routes */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              
-              {/* Admin routes */}
-              <Route path="/admin" element={
-                <ProtectedRoute>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/dashboard" element={
-                <ProtectedRoute>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/stations" element={
-                <ProtectedRoute>
-                  <StationList />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/stations/new" element={
-                <ProtectedRoute>
-                  <StationForm />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/stations/edit/:id" element={
-                <ProtectedRoute>
-                  <StationForm />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/teams" element={
-                <ProtectedRoute>
-                  <TeamList />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/ranking" element={
-                <ProtectedRoute>
-                  <TeamRanking />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/submissions" element={
-                <ProtectedRoute>
-                  <SubmissionsHistory />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/profile" element={
-                <ProtectedRoute>
-                  <AdminProfile />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/settings" element={
-                <ProtectedRoute>
-                  <AdminSettings />
-                </ProtectedRoute>
-              } />
-              
-              {/* Super Admin routes */}
-              <Route path="/superadmin" element={
-                <SuperAdminRoute>
-                  <SuperAdminDashboard />
-                </SuperAdminRoute>
-              } />
-              <Route path="/superadmin/admins" element={
-                <SuperAdminRoute>
-                  <AdminManagement />
-                </SuperAdminRoute>
-              } />
-              <Route path="/superadmin/invite-codes" element={
-                <SuperAdminRoute>
-                  <InviteCodeManagement />
-                </SuperAdminRoute>
-              } />
-              <Route path="/superadmin/notifications" element={
-                <SuperAdminRoute>
-                  <NotificationManagement />
-                </SuperAdminRoute>
-              } />
-              <Route path="/superadmin/teams" element={
-                <SuperAdminRoute>
-                  <TeamSummary />
-                </SuperAdminRoute>
-              } />
-              <Route path="/superadmin/security" element={
-                <SuperAdminRoute>
-                  <SafetySettings />
-                </SuperAdminRoute>
-              } />
-              <Route path="/superadmin/logs" element={
-                <SuperAdminRoute>
-                  <SystemLogs />
-                </SuperAdminRoute>
-              } />
-              <Route path="/superadmin/database" element={
-                <SuperAdminRoute>
-                  <DatabaseManagement />
-                </SuperAdminRoute>
-              } />
-              
-              {/* User routes */}
-              <Route path="/station/:stationId" element={<UserStation />} />
-              
-              {/* Default routes */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </div>
+          <ToastContainer />
+          <LoginNotification />
+          <DebugTranslations />
+          <Routes>
+            {/* Home Page */}
+            <Route path="/" element={<HomePage />} />
+            <Route path="/about" element={<AboutPage />} />
+            
+            {/* Auth routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            
+            {/* Admin routes */}
+            <Route path="/admin" element={
+              <ProtectedRoute>
+                <AdminDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/dashboard" element={
+              <ProtectedRoute>
+                <AdminDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/stations" element={
+              <ProtectedRoute>
+                <StationList />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/stations/new" element={
+              <ProtectedRoute>
+                <StationForm />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/stations/edit/:id" element={
+              <ProtectedRoute>
+                <StationForm />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/teams" element={
+              <ProtectedRoute>
+                <TeamList />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/ranking" element={
+              <ProtectedRoute>
+                <TeamRanking />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/submissions" element={
+              <ProtectedRoute>
+                <SubmissionsHistory />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/profile" element={
+              <ProtectedRoute>
+                <AdminProfile />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/settings" element={
+              <ProtectedRoute>
+                <AdminSettings />
+              </ProtectedRoute>
+            } />
+            
+            {/* Super Admin routes */}
+            <Route path="/superadmin" element={
+              <SuperAdminRoute>
+                <SuperAdminDashboard />
+              </SuperAdminRoute>
+            } />
+            <Route path="/superadmin/admins" element={
+              <SuperAdminRoute>
+                <AdminManagement />
+              </SuperAdminRoute>
+            } />
+            <Route path="/superadmin/invite-codes" element={
+              <SuperAdminRoute>
+                <InviteCodeManagement />
+              </SuperAdminRoute>
+            } />
+            <Route path="/superadmin/notifications" element={
+              <SuperAdminRoute>
+                <NotificationManagement />
+              </SuperAdminRoute>
+            } />
+            <Route path="/superadmin/teams" element={
+              <SuperAdminRoute>
+                <TeamSummary />
+              </SuperAdminRoute>
+            } />
+            <Route path="/superadmin/security" element={
+              <SuperAdminRoute>
+                <SafetySettings />
+              </SuperAdminRoute>
+            } />
+            <Route path="/superadmin/logs" element={
+              <SuperAdminRoute>
+                <SystemLogs />
+              </SuperAdminRoute>
+            } />
+            <Route path="/superadmin/database" element={
+              <SuperAdminRoute>
+                <DatabaseManagement />
+              </SuperAdminRoute>
+            } />
+            
+            {/* User routes */}
+            <Route path="/station/:stationId" element={<UserStation />} />
+            
+            {/* Default routes */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </Router>
       </SystemSettingsProvider>
     </LanguageProvider>
