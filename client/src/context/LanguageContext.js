@@ -12,10 +12,15 @@ export const LanguageProvider = ({ children }) => {
     // Lấy cài đặt ngôn ngữ từ server khi khởi động
     const fetchLanguageSetting = async () => {
       try {
-        // Sử dụng đường dẫn tương đối thay vì URL đầy đủ
         const response = await axios.get('/api/settings/language');
-        setLanguage(response.data.language);
-        console.log('Đã tải ngôn ngữ từ server:', response.data.language);
+        // Kiểm tra response.data.language có giá trị hợp lệ
+        if (response.data && response.data.language) {
+          setLanguage(response.data.language);
+          console.log('Đã tải ngôn ngữ từ server:', response.data.language);
+        } else {
+          console.warn('Server trả về ngôn ngữ không hợp lệ, sử dụng mặc định');
+          setLanguage('vi'); // Giá trị mặc định
+        }
         setTranslationsLoaded(true);
       } catch (error) {
         console.error('Lỗi khi lấy cài đặt ngôn ngữ:', error);
