@@ -264,7 +264,6 @@ export const translations = {
     scores_and_completed_stations: 'Điểm số và trạm đã hoàn thành',
     submission_history: 'Lịch sử nộp bài',
     action_cannot_be_undone: 'Thao tác này không thể hoàn tác sau khi xác nhận!',
-    cancel: 'Hủy',
     reset_scores: 'Xóa điểm số',
     confirm_reset_scores_question: 'Bạn có chắc chắn muốn xóa tất cả điểm số và thứ hạng không?',
     note: 'Lưu ý',
