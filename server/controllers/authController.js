@@ -65,6 +65,9 @@ const register = async (req, res) => {
     // Mã hóa mật khẩu
     const salt = await bcrypt.genSalt(10);
     admin.password = await bcrypt.hash(password, salt);
+    
+    // Đặt flag để bỏ qua hash mật khẩu trong middleware pre save
+    admin.$locals.skipPasswordHash = true;
 
     await admin.save();
 
