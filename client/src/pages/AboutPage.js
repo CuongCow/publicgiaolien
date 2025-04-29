@@ -63,10 +63,37 @@ const AboutPage = () => {
                     Hệ thống Giao Liên cam kết bảo vệ tuyệt đối thông tin cá nhân và dữ liệu của tất cả người dùng.
                   </li>
                   <li>
-                    Chúng tôi không chia sẻ, bán hoặc tiết lộ thông tin của bạn cho bất kỳ bên thứ ba nào mà không có sự đồng ý.
+                    Không chia sẻ thông tin cho bên thứ ba khi chưa có sự đồng ý. Cam kết không bán hoặc trao đổi thông tin cá nhân với bên thứ ba.
                   </li>
                   <li>
-                    Mọi dữ liệu được mã hóa và lưu trữ an toàn trên hệ thống máy chủ được bảo mật.
+                    Nếu có chia sẻ, phải có sự đồng ý rõ ràng của người dùng hoặc theo quy định pháp luật.
+                  </li>
+                  <li>
+                    Bảo vệ dữ liệu bằng các biện pháp kỹ thuật và tổ chức: áp dụng mã hóa, tường lửa, phân quyền truy cập.
+                  </li>
+                  <li>
+                    Tuân thủ các quy định pháp lý về bảo mật thông tin như Luật An toàn thông tin mạng (Việt Nam), GDPR (châu Âu), CCPA (California, Mỹ).
+                  </li>
+                  <li>
+                    Cho phép người dùng kiểm soát dữ liệu cá nhân: xem, sửa, xoá hoặc yêu cầu ngừng xử lý dữ liệu cá nhân thông qua cổng thông tin, email hoặc trung tâm hỗ trợ.
+                  </li>
+                  <li>
+                    Cam kết lưu trữ dữ liệu trong thời gian hợp lý, không giữ thông tin cá nhân lâu hơn mức cần thiết, tự động xoá hoặc ẩn danh dữ liệu sau một thời gian nhất định.
+                  </li>
+                </ul>
+                
+                <p className="mt-4">
+                  <strong>Nếu như vi phạm</strong>
+                </p>
+                <ul className="agent-list">
+                  <li>
+                    Tôi chịu toàn bộ trách nghiệm về hành vi bị lộ thông tin của bạn.
+                  </li>
+                  <li>
+                    Thông báo kịp thời nếu xảy ra vi phạm dữ liệu, cung cấp thông tin cụ thể nếu dữ liệu bị rò rỉ hoặc bị tấn công.
+                  </li>
+                  <li>
+                    Hướng dẫn người dùng các biện pháp xử lý và phòng tránh tiếp theo.
                   </li>
                   <li>
                     Cam kết thực hiện các biện pháp khắc phục ngay lập tức nếu phát hiện sự cố.
@@ -97,8 +124,11 @@ const AboutPage = () => {
                 </p>
                 <p>
                   Lấy cảm hứng từ vai trò lịch sử của các "Giao Liên" trong chiến tranh Việt Nam, hệ thống 
-                  được thiết kế để tái hiện và giáo dục người chơi về lịch sử đấu tranh của dân tộc, đồng thời 
-                  tạo ra không gian trải nghiệm thú vị và bổ ích.
+                  được thiết kế để tái hiện và giáo dục người chơi về lịch sử đấu tranh của dân tộc. Cần hiểu rằng 
+                  Giao Liên và Tình báo là hai vai trò hoàn toàn khác nhau trong lịch sử. Trong khi Tình báo đóng vai 
+                  trò then chốt trong việc nắm bắt và thu thập thông tin, thì Giao Liên chỉ đơn giản là người vận chuyển, 
+                  đưa thông tin giữa Tình báo và quân ta. Hệ thống của chúng tôi tập trung vào vai trò Giao Liên - 
+                  những người anh hùng thầm lặng đảm bảo thông tin quan trọng được truyền đi an toàn.
                 </p>
                 <div className="text-center mt-5">
                   {!loading && (
