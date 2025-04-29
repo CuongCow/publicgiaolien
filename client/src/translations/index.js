@@ -61,8 +61,6 @@ export const translations = {
     select_team_description: 'Vui lòng chọn đội của bạn và nhập mật khẩu',
     team: 'Đội',
     select_team_option: '-- Chọn đội --',
-    password_label: 'Mật khẩu',
-    enter_password: 'Nhập mật khẩu',
     processing: 'Đang xử lý...',
     confirm: 'Xác nhận',
     logout: 'Đăng xuất',
@@ -148,7 +146,6 @@ export const translations = {
     basic_info: 'Thông tin cơ bản',
     device_session_info: 'Thông tin thiết bị & Phiên đăng nhập',
     game_info: 'Thông tin trò chơi',
-    status_history: 'Lịch sử thay đổi trạng thái',
     export_logs: 'Xuất nhật ký ra Excel',
     logs_exporting: 'Đang xuất...',
     logs_export_excel: 'Xuất Excel',
@@ -230,7 +227,6 @@ export const translations = {
     content_type: 'Loại nội dung',
     actions: 'Thao tác',
     view_qr: 'Xem mã QR',
-    edit_station: 'Chỉnh sửa',
     delete_station: 'Xóa trạm',
     close: 'Đóng',
     copy_link: 'Sao chép link',
@@ -241,11 +237,9 @@ export const translations = {
     qr_print_instruction: 'In mã QR này và đặt tại các trạm để đội chơi quét mã truy cập',
     
     // TeamRanking
-    delete_all: 'Xóa tất cả',
     confirm_reset_all: 'Bạn có chắc chắn muốn xóa toàn bộ bảng xếp hạng không?',
     confirm_reset_scores: 'Bạn có chắc chắn muốn xóa tất cả điểm số và thứ hạng không?',
     rank: 'Hạng',
-    total_score: 'Tổng điểm',
     time_participated: 'Thời gian tham gia',
     completed_stations_details: 'Chi tiết trạm hoàn thành',
     no_stations_completed: 'Chưa hoàn thành trạm nào',
@@ -283,7 +277,6 @@ export const translations = {
     reset_scores: 'Xóa điểm số',
     confirm_reset_scores_question: 'Bạn có chắc chắn muốn xóa tất cả điểm số và thứ hạng không?',
     note: 'Lưu ý',
-    delete: 'Xóa',
     
     // SubmissionsHistory
     filter_by_station: 'Lọc theo trạm',
@@ -317,7 +310,6 @@ export const translations = {
     try_again: 'Vui lòng thử lại.',
     logout_confirm: 'Bạn có chắc chắn muốn đăng xuất khỏi trạm này?',
     logout_warning: 'Bạn sẽ cần đăng nhập lại để tiếp tục.',
-    cancel: 'Hủy',
     platform_title: 'Hệ thống quản lý trạm của Giao Liên',
     
     // SuperAdminDashboard  
@@ -350,7 +342,6 @@ export const translations = {
     no: 'Không',
     cancel_action: 'Hủy',
     confirm_action: 'Xác nhận',
-    load_station_error: 'Không thể tải trạm. Vui lòng thử lại sau.',
     load_stations_error: 'Không thể tải danh sách. Vui lòng thử lại sau.',
     delete_station_error: 'Không thể xóa trạm. Vui lòng thử lại sau.',
     delete_station_confirm: 'Bạn có chắc chắn muốn xóa trạm này?',
@@ -375,7 +366,6 @@ export const translations = {
     // Các nút/thao tác
     save: 'Lưu',
     update: 'Cập nhật',
-    add: 'Thêm',
     edit: 'Chỉnh sửa',
     delete: 'Xóa',
     view: 'Xem',
@@ -391,7 +381,6 @@ export const translations = {
     team_name: 'Tên đội',
     enter_team_name: 'Nhập tên đội',
     enter_password: 'Nhập mật khẩu',
-    cancel: 'Hủy',
     save_changes: 'Lưu thay đổi',
     team_detail: 'Chi tiết đội',
     team_id: 'ID đội',
@@ -410,7 +399,6 @@ export const translations = {
     login_instructions: 'HƯỚNG DẪN ĐĂNG NHẬP',
     scan_qr: 'Quét QR của ban tổ chức cung cấp để vào',
     enter_login_info: 'Nhập thông tin đăng nhập',
-    select_team: 'Chọn đội',
     press_confirm: 'Nhấn nút "XÁC NHẬN"',
     solve_cipher: 'Giải mật thư và nhập đáp án vào ô trả lời',
     notes: 'LƯU Ý',
@@ -431,11 +419,7 @@ export const translations = {
     
     // Thêm khóa dịch còn thiếu cho StationList
     load_station_list_error: 'Không thể tải danh sách. Vui lòng thử lại sau.',
-    delete_station_confirm: 'Bạn có chắc chắn muốn xóa danh mục này?',
-    delete_station_error: 'Không thể xóa danh mục. Vui lòng thử lại sau.',
     station_label: 'Trạm',
-    teams: 'Đội chơi',
-    no_teams: 'Chưa có đội',
     attempts: 'lần thử',
     view_qr_code: 'Xem mã QR',
     edit_category: 'Chỉnh sửa danh mục',
@@ -448,13 +432,9 @@ export const translations = {
     
     // Thêm khóa dịch cho StationForm
     edit_station: 'Chỉnh sửa trạm',
-    create_station: 'Tạo trạm',
     go_back: 'Quay lại',
-    loading: 'Đang tải...',
     enter_ott_content: 'Nhập nội dung OTT',
     enter_nw_content: 'Nhập nội dung NW',
-    enter_answer: 'Nhập đáp án',
-    add: 'Thêm',
     add_multiple_answers: 'Thêm nhiều đáp án',
     answers_input_note: 'Nhập đáp án và nhấn "Thêm" hoặc nhập danh sách đáp án cách nhau bởi dấu phẩy',
     team_count: 'đội',
@@ -466,13 +446,8 @@ export const translations = {
     image_url_placeholder: 'Nhập URL hình ảnh',
     image_upload_help: 'Bạn có thể tải lên hình ảnh hoặc nhập URL hình ảnh có sẵn',
     preview: 'Xem trước:',
-    enter_ott_content_placeholder: 'Nhập nội dung OTT',
-    enter_nw_content_placeholder: 'Nhập nội dung NW',
-    enter_answer_placeholder: 'Nhập đáp án',
-    add_multiple_answers_button: 'Thêm nhiều đáp án',
     answers_list: 'Danh sách đáp án',
     answers: 'đáp án',
-    answers_input_note: 'Nhập đáp án và nhấn "Thêm" hoặc nhập danh sách đáp án cách nhau bởi dấu phẩy',
     invalid_image: 'Chỉ cho phép tải lên hình ảnh',
     image_size_limit: 'Kích thước hình ảnh không được vượt quá 5MB',
     image_upload_error: 'Không thể tải lên hình ảnh. Vui lòng thử lại.',
@@ -484,12 +459,10 @@ export const translations = {
     load_data_error: 'Không thể tải dữ liệu. Vui lòng thử lại sau.',
     export_excel_success: 'Xuất Excel thành công!',
     export_excel_error: 'Không thể xuất file Excel. Vui lòng thử lại sau.',
-    loading_data: 'Đang tải dữ liệu...',
     delete_submissions_title: 'Xóa lịch sử trả lời',
     delete_submissions_confirm: 'Bạn có chắc chắn muốn xóa <strong>tất cả</strong> lịch sử trả lời không?',
     delete_submissions_warning: 'Cảnh báo: Hành động này sẽ xóa vĩnh viễn tất cả dữ liệu lịch sử trả lời của các đội chơi.',
     delete_submissions_note: 'Thao tác này <strong>không</strong> ảnh hưởng đến:',
-    teams_list: 'Danh sách đội chơi',
     team_ranking: 'Bảng xếp hạng các đội',
     station_info: 'Thông tin trạm',
     cancel: 'Cancel',
@@ -543,7 +516,7 @@ export const translations = {
     station_management_description: 'Create, edit, and manage cipher stations for the game. Each station has a unique QR code for teams to scan and access.',
     station_management_title: 'Station Management',
     manage_all_stations: 'Manage all stations',
-    create_station: 'Create New Station',
+
 
     my_profile: 'My Profile',
     loading_profile: 'Loading info...',
@@ -622,7 +595,6 @@ export const translations = {
     add_team: 'Add',
     add_multiple_teams: 'Add Multiple Teams',
     teams_input_note: 'Enter team name and press "Add" or comma-separated list',
-    teams_list: 'Teams List',
     stations_list: 'Stations List',
     add_new_station: '+ Add New Station',
     remove_station: 'Remove Station',
@@ -753,7 +725,6 @@ export const translations = {
     
     // StationList
     search_placeholder: 'Search stations...',
-    loading_data: 'Loading data...',
     no_matching_station: 'No matching station',
     no_matching_station_note: 'No stations match your search',
     teams_heading: 'Teams',
@@ -808,7 +779,6 @@ export const translations = {
     scores_and_completed_stations: 'Scores and completed stations',
     submission_history: 'Submission History',
     action_cannot_be_undone: 'This action cannot be undone after confirming!',
-    cancel: 'Cancel',
     confirm_delete: 'Confirm delete',
     reset_scores: 'Reset scores',
     confirm_reset_scores_question: 'Are you sure you want to delete all scores and rankings?',
@@ -847,7 +817,6 @@ export const translations = {
     try_again: 'Please try again.',
     logout_confirm: 'Are you sure you want to logout from this station?',
     logout_warning: 'You will need to login again to continue.',
-    cancel: 'Cancel',
     platform_title: 'Giao Lien Station Management System',
     
     // SuperAdminDashboard
@@ -880,7 +849,6 @@ export const translations = {
     no: 'No',
     cancel_action: 'Cancel',
     confirm_action: 'Confirm',
-    load_station_error: 'Unable to load station. Please try again later.',
     load_stations_error: 'Unable to load the list. Please try again later.',
     delete_station_error: 'Unable to delete station. Please try again later.',
     delete_station_confirm: 'Are you sure you want to delete this station?',
@@ -920,8 +888,6 @@ export const translations = {
     edit_team_title: 'Edit Team',
     team_name: 'Team Name',
     enter_team_name: 'Enter team name',
-    enter_password: 'Enter password',
-    cancel: 'Cancel',
     save_changes: 'Save Changes',
     team_detail: 'Team Details',
     team_id: 'Team ID',
@@ -929,18 +895,14 @@ export const translations = {
     last_activity: 'Last Activity',
     device_info: 'Device Information',
     login_session: 'Login Session',
-    total_score: 'Total Score',
     completed_stations: 'Completed Stations',
-    status_history: 'Status Change History',
     copy_error: 'Cannot copy information. Please try again.',
     copy_fallback_error: 'Cannot copy. Please try again or copy manually.',
     login_info: 'LOGIN INFORMATION',
     team_name_label: 'Team Name',
-    password_label: 'Password',
     login_instructions: 'LOGIN INSTRUCTIONS',
     scan_qr: 'Scan the QR code provided by the organizers to access the station',
     enter_login_info: 'Enter login information',
-    select_team: 'Select team',
     press_confirm: 'Press "CONFIRM" button',
     solve_cipher: 'Solve the cipher and enter your answer in the response field',
     notes: 'NOTES',
@@ -961,11 +923,7 @@ export const translations = {
     
     // Thêm khóa dịch còn thiếu cho StationList
     load_station_list_error: 'Unable to load the list. Please try again later.',
-    delete_station_confirm: 'Are you sure you want to delete this category?',
-    delete_station_error: 'Unable to delete category. Please try again later.',
     station_label: 'Station',
-    teams: 'Teams',
-    no_teams: 'No teams yet',
     attempts: 'attempts',
     view_qr_code: 'View QR Code',
     edit_category: 'Edit Category',
@@ -977,16 +935,12 @@ export const translations = {
     print_qr: 'Print QR Code',
     
     // Thêm khóa dịch cho StationForm
-    edit_station: 'Edit Station',
     create_station: 'Create Station',
     go_back: 'Go Back',
     loading: 'Loading...',
     enter_ott_content: 'Enter OTT content',
     enter_nw_content: 'Enter NW content',
-    enter_answer: 'Enter answer',
-    add: 'Add',
     add_multiple_answers: 'Add Multiple Answers',
-    answers_input_note: 'Enter answer and press "Add" or enter a comma-separated list of answers',
     team_count: 'teams',
     
     // StationForm
@@ -1022,9 +976,7 @@ export const translations = {
     teams_list: 'Teams list',
     team_ranking: 'Team rankings',
     station_info: 'Station information',
-    cancel: 'Cancel',
     deleting: 'Deleting...',
-    delete_all: 'Delete All',
     delete_success: 'Successfully deleted {count} submission history records!',
     delete_error: 'Unable to delete data. Please try again later.',
     time_active: {
@@ -1035,13 +987,7 @@ export const translations = {
       seconds_ago: '{count} seconds ago',
       not_active: 'Not active'
     },
-
-    // StationForm placeholders - keys mới
-    enter_ott_content_placeholder: 'Enter OTT content',
-    enter_nw_content_placeholder: 'Enter NW content',
-    enter_answer_placeholder: 'Enter answer',
     add_answer_button: 'Add',
-    add_multiple_answers_button: 'Add multiple answers',
     loading_text: 'Loading...',
 
     // Thông tin tài khoản và hệ thống
