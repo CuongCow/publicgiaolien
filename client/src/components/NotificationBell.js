@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import NotificationModal from './NotificationModal';
 import './NotificationBell.css';
+import { useLanguage } from '../context/LanguageContext';
 
 const NotificationBell = () => {
   const [notifications, setNotifications] = useState([]);
@@ -13,6 +14,7 @@ const NotificationBell = () => {
   const [error, setError] = useState(null);
   const [show, setShow] = useState(false);
   const [showAllModal, setShowAllModal] = useState(false);
+  const { t } = useLanguage();
   
   // Sử dụng localStorage để lưu trữ ID của các thông báo đã đọc
   const readNotificationsRef = useRef(
@@ -50,7 +52,7 @@ const NotificationBell = () => {
       setNotifications(response.data);
     } catch (err) {
       console.error('Error fetching notifications:', err);
-      setError('Không thể tải thông báo');
+      setError(t('error_loading_notifications'));
     } finally {
       setLoading(false);
     }
@@ -113,9 +115,9 @@ const NotificationBell = () => {
       return (
         <ListGroup.Item className="text-center py-3">
           <div className="spinner-border spinner-border-sm text-primary me-2" role="status">
-            <span className="visually-hidden">Đang tải...</span>
+            <span className="visually-hidden">{t('loading_status')}</span>
           </div>
-          Đang tải thông báo...
+          {t('loading_notifications')}
         </ListGroup.Item>
       );
     }
@@ -133,7 +135,7 @@ const NotificationBell = () => {
       return (
         <ListGroup.Item className="text-center py-3">
           <i className="bi bi-bell-slash me-2"></i>
-          Không có thông báo nào
+          {t('no_notifications')}
         </ListGroup.Item>
       );
     }
@@ -202,7 +204,7 @@ const NotificationBell = () => {
 
         <Dropdown.Menu style={{ width: '350px', maxHeight: '500px', overflowY: 'auto' }}>
           <div className="p-2 border-bottom d-flex justify-content-between align-items-center">
-            <h6 className="mb-0">Thông báo</h6>
+            <h6 className="mb-0">{t('notifications_title')}</h6>
             <Badge bg="primary" pill>
               {notifications.length}
             </Badge>
@@ -217,7 +219,7 @@ const NotificationBell = () => {
                 onClick={handleViewAllClick} 
                 className="text-decoration-none"
               >
-                Xem tất cả thông báo
+                {t('view_all_notifications')}
               </a>
             </div>
           )}

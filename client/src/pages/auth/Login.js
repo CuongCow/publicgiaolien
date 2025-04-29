@@ -51,12 +51,20 @@ const Login = () => {
       // Chuyển hướng dựa trên vai trò
       const adminRole = response.data.admin?.role || 'admin';
       
-      if (adminRole === 'superadmin') {
-        navigate('/superadmin');
-      } else {
-        navigate('/admin');
-      }
+      // Thêm timeout nhỏ để đảm bảo localStorage được cập nhật trước khi chuyển trang
+      setTimeout(() => {
+        if (adminRole === 'superadmin') {
+          navigate('/superadmin');
+        } else {
+          navigate('/admin');
+        }
+        
+        // Force reload trang để đảm bảo trạng thái xác thực được cập nhật
+        window.location.reload();
+      }, 100);
     } catch (err) {
+      console.error('DEBUG Login - Lỗi đăng nhập:', err);
+      
       if (err.message) {
         setError(err.message);
       } else if (err.response?.status === 401) {

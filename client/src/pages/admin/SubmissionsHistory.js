@@ -6,9 +6,11 @@ import { formatDateTime, replaceStationTerm } from '../../utils/helpers';
 import TermReplacer from '../../utils/TermReplacer';
 import * as ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
+import { useLanguage } from '../../context/LanguageContext';
 
 const SubmissionsHistory = () => {
   const [submissions, setSubmissions] = useState([]);
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -116,7 +118,7 @@ const SubmissionsHistory = () => {
     } catch (err) {
       // Chỉ hiển thị lỗi nếu không phải đang cập nhật tự động
       if (showLoading) {
-        setError('Không thể tải dữ liệu. Vui lòng thử lại sau.');
+        setError(t('load_data_error'));
       }
       console.error('Error fetching data:', err);
     } finally {
@@ -145,7 +147,6 @@ const SubmissionsHistory = () => {
         { header: replaceStationTerm('Trạm'), key: 'station', width: 25 },
         { header: 'Đáp án đã gửi', key: 'answer', width: 40 },
         { header: 'Kết quả', key: 'result', width: 15 },
-        { header: 'ID', key: 'id', width: 25 }
       ];
       
       // Đặt style cho header
@@ -167,7 +168,6 @@ const SubmissionsHistory = () => {
           station: submission.stationName,
           answer: submission.answer,
           result: submission.isCorrect ? 'Đúng' : 'Sai',
-          id: submission._id
         });
       });
       
@@ -200,10 +200,10 @@ const SubmissionsHistory = () => {
       
       saveAs(new Blob([buffer]), fileName);
       
-      setSuccess('Xuất Excel thành công!');
+      setSuccess(t('export_excel_success'));
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      setError('Không thể xuất file Excel. Vui lòng thử lại sau.');
+      setError(t('export_excel_error'));
       console.error('Error exporting to Excel:', err);
     } finally {
       setExportLoading(false);
@@ -270,17 +270,17 @@ const SubmissionsHistory = () => {
       <AdminNavbar />
       <Container>
         <div className="d-flex justify-content-between align-items-center mb-4">
-          <h1 className="mb-0">Lịch sử trả lời</h1>
+          <h1 className="mb-0">{t('submissions_history_heading')}</h1>
           
           <div>
             <Button 
               variant={autoRefresh ? "secondary" : "outline-secondary"} 
               className="me-2"
               onClick={() => setAutoRefresh(!autoRefresh)}
-              title={autoRefresh ? "Tắt cập nhật tự động" : "Bật cập nhật tự động"}
+              title={autoRefresh ? t('stop_auto_refresh') : t('start_auto_refresh')}
             >
               <i className={`bi bi-${autoRefresh ? 'pause-circle' : 'play-circle'}`}></i>
-              {autoRefresh ? ' Dừng cập nhật' : ' Cập nhật tự động'}
+              {autoRefresh ? t('stop_auto_refresh') : t('start_auto_refresh')}
             </Button>
             
             <Button
@@ -288,10 +288,10 @@ const SubmissionsHistory = () => {
               className="me-2"
               onClick={() => setShowDeleteModal(true)}
               disabled={deleteLoading || submissions.length === 0}
-              title="Xóa toàn bộ lịch sử trả lời"
+              title={t('delete_all_submissions')}
             >
               <i className="bi bi-trash me-1"></i>
-              Xóa tất cả
+              {t('delete_all_submissions')}
             </Button>
             
             <Button 
@@ -302,12 +302,12 @@ const SubmissionsHistory = () => {
               {exportLoading ? (
                 <>
                   <Spinner animation="border" size="sm" className="me-1" />
-                  Đang xuất...
+                  {t('exporting')}
                 </>
               ) : (
                 <>
                   <i className="bi bi-file-excel me-1"></i>
-                  Xuất Excel
+                  {t('export_excel')}
                 </>
               )}
             </Button>
@@ -320,7 +320,7 @@ const SubmissionsHistory = () => {
           <div className="text-muted mb-2 d-flex align-items-center">
             <small>
               <i className="bi bi-clock me-1"></i>
-              Cập nhật lần cuối: {formatDateTime(lastUpdated)}
+              {t('last_updated')} {formatDateTime(lastUpdated)}
               {autoRefresh && <span className="ms-2"><Spinner animation="border" size="sm" style={{ width: '1rem', height: '1rem' }} /></span>}
             </small>
           </div>
@@ -331,7 +331,7 @@ const SubmissionsHistory = () => {
             <Row>
               <Col md={4}>
                 <Form.Group className="mb-3">
-                  <Form.Label><TermReplacer>{replaceStationTerm('Lọc theo trạm')}</TermReplacer></Form.Label>
+                  <Form.Label><TermReplacer>{t('filter_by_station')}</TermReplacer></Form.Label>
                   <Form.Control 
                     as="select" 
                     value={stationFilter} 
@@ -340,7 +340,7 @@ const SubmissionsHistory = () => {
                       setStationFilter(e.target.value);
                     }}
                   >
-                    <option value="">Tất cả các <TermReplacer>{replaceStationTerm('trạm')}</TermReplacer></option>
+                    <option value="">{t('all_stations')}</option>
                     {uniqueStations.map((station) => (
                       <option key={station.id} value={station.id}>
                         {station.name}
@@ -352,13 +352,13 @@ const SubmissionsHistory = () => {
               
               <Col md={4}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Lọc theo đội</Form.Label>
+                  <Form.Label>{t('filter_by_team')}</Form.Label>
                   <Form.Control 
                     as="select" 
                     value={teamFilter} 
                     onChange={(e) => setTeamFilter(e.target.value)}
                   >
-                    <option value="">Tất cả các đội</option>
+                    <option value="">{t('all_teams')}</option>
                     {uniqueTeams.map((team) => (
                       <option key={team} value={team}>{team}</option>
                     ))}
@@ -376,7 +376,7 @@ const SubmissionsHistory = () => {
                   }}
                 >
                   <i className="bi bi-x-circle me-1"></i>
-                  Xóa bộ lọc
+                  {t('clear_filters')}
                 </Button>
               </Col>
             </Row>
@@ -386,14 +386,14 @@ const SubmissionsHistory = () => {
         {loading ? (
           <div className="text-center my-5">
             <Spinner animation="border" variant="primary" />
-            <p className="mt-2">Đang tải dữ liệu...</p>
+            <p className="mt-2">{t('loading_data')}</p>
           </div>
         ) : filteredSubmissions.length === 0 ? (
           <Card className="text-center p-5">
             <Card.Body>
-              <h3>Không có kết quả</h3>
+              <h3>{t('no_results')}</h3>
               <p className="text-muted">
-                Không tìm thấy kết quả nộp bài phù hợp với bộ lọc đã chọn
+                {t('no_submissions_found')}
               </p>
             </Card.Body>
           </Card>
@@ -401,18 +401,16 @@ const SubmissionsHistory = () => {
               <Table striped bordered hover responsive>
                 <thead>
                   <tr>
-                    <th>ID</th>
-                    <th>Đội</th>
-                    <th><TermReplacer>{replaceStationTerm('Trạm')}</TermReplacer></th>
-                    <th>Nhập</th>
-                    <th>Kết quả</th>
-                    <th>Thời gian</th>
+                    <th>{t('team')}</th>
+                    <th><TermReplacer>{t('stations')}</TermReplacer></th>
+                    <th>{t('input')}</th>
+                    <th>{t('result')}</th>
+                    <th>{t('time')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredSubmissions.map((submission) => (
                     <tr key={submission._id}>
-                      <td>{submission._id?.substring(0, 8)}...</td>
                       <td>{submission.teamName || 'N/A'}</td>
                       <td>
                         <TermReplacer>
@@ -424,12 +422,12 @@ const SubmissionsHistory = () => {
                         {submission.isCorrect ? (
                           <span className="text-success">
                             <i className="bi bi-check-circle-fill me-1"></i>
-                            Đúng
+                            {t('correct')}
                           </span>
                         ) : (
                           <span className="text-danger">
                             <i className="bi bi-x-circle-fill me-1"></i>
-                            Sai
+                            {t('incorrect')}
                           </span>
                         )}
                       </td>
@@ -445,24 +443,24 @@ const SubmissionsHistory = () => {
           <Modal.Header closeButton>
             <Modal.Title className="text-danger">
               <i className="bi bi-exclamation-triangle-fill me-2"></i>
-              Xóa lịch sử trả lời
+              {t('delete_submissions_title')}
             </Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            <p>Bạn có chắc chắn muốn xóa <strong>tất cả</strong> lịch sử trả lời không?</p>
+            <p dangerouslySetInnerHTML={{ __html: t('delete_submissions_confirm') }}></p>
             <p className="text-danger">
-              <strong>Cảnh báo:</strong> Hành động này sẽ xóa vĩnh viễn tất cả dữ liệu lịch sử trả lời của các đội chơi.
+              <strong>{t('warning')}:</strong> {t('delete_submissions_warning')}
             </p>
-            <p>Thao tác này <strong>không</strong> ảnh hưởng đến:</p>
+            <p dangerouslySetInnerHTML={{ __html: t('delete_submissions_note') }}></p>
             <ul>
-              <li>Danh sách đội chơi</li>
-              <li>Bảng xếp hạng các đội</li>
-              <li>Thông tin trạm</li>
+              <li>{t('teams_list')}</li>
+              <li>{t('team_ranking')}</li>
+              <li>{t('station_info')}</li>
             </ul>
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={() => setShowDeleteModal(false)} disabled={deleteLoading}>
-              Hủy
+              {t('cancel')}
             </Button>
             <Button 
               variant="danger" 
@@ -472,12 +470,12 @@ const SubmissionsHistory = () => {
               {deleteLoading ? (
                 <>
                   <Spinner animation="border" size="sm" className="me-1" />
-                  Đang xóa...
+                  {t('deleting')}
                 </>
               ) : (
                 <>
                   <i className="bi bi-trash me-1"></i>
-                  Xóa tất cả
+                  {t('delete_all')}
                 </>
               )}
             </Button>

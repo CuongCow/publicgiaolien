@@ -251,4 +251,42 @@ router.post('/logout', async (req, res) => {
   }
 });
 
+// Đăng xuất đội do Admin thực hiện (buộc đăng xuất)
+router.post('/force-logout/:id', auth, async (req, res) => {
+  try {
+    const teamId = req.params.id;
+    
+    // Tìm đội theo ID và đảm bảo admin có quyền quản lý đội này
+    const team = await Team.findOne({
+      _id: teamId,
+      adminId: req.admin.id
+    });
+    
+    if (!team) {
+      return res.status(404).json({ message: 'Không tìm thấy đội hoặc bạn không có quyền quản lý đội này' });
+    }
+    
+    // Đặt lại thông tin phiên và trạng thái
+    team.sessionId = null;
+    team.deviceInfo = null;
+    team.status = 'inactive';
+    team.lastActivity = Date.now();
+    
+    await team.save();
+    
+    res.json({ 
+      success: true, 
+      message: 'Đã buộc đăng xuất đội thành công',
+      team: {
+        _id: team._id,
+        name: team.name,
+        status: team.status,
+        lastActivity: team.lastActivity
+      }
+    });
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
 module.exports = router; 

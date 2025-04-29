@@ -6,11 +6,13 @@ import { replaceStationTerm } from '../../utils/helpers';
 import TermReplacer from '../../utils/TermReplacer';
 import { updateSystemSettings } from '../../utils/helpers';
 import { useSystemSettings } from '../../context/SystemSettingsContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 const UserStation = () => {
   const { stationId } = useParams();
   const navigate = useNavigate();
   const { getAdminSettings } = useSystemSettings();
+  const { t } = useLanguage();
 
   const [station, setStation] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -29,7 +31,9 @@ const UserStation = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [alreadyLoggedInError, setAlreadyLoggedInError] = useState(null);
+  const [forceLogoutMessage, setForceLogoutMessage] = useState(null);
   const answerInputRef = useRef(null);
+  const checkSessionIntervalRef = useRef(null);
 
   useEffect(() => {
     fetchStationData();
@@ -43,6 +47,9 @@ const UserStation = () => {
         setTeamId(teamId);
         setSessionId(sessionId);
         setShowTeamSelection(false);
+        
+        // Bắt đầu kiểm tra trạng thái phiên đăng nhập
+        startSessionCheck(teamId, sessionId);
       } catch (err) {
         console.error('Lỗi khi đọc dữ liệu đội đã lưu:', err);
       }
@@ -53,7 +60,7 @@ const UserStation = () => {
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('beforeunload', handleBeforeUnload);
     
-    // Khi component unmount, xóa event listeners
+    // Khi component unmount, xóa event listeners và interval
     return () => {
       document.removeEventListener('copy', handleCopy);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -65,8 +72,50 @@ const UserStation = () => {
           console.error('Error updating team status:', err)
         );
       }
+      
+      // Xóa interval kiểm tra phiên
+      if (checkSessionIntervalRef.current) {
+        clearInterval(checkSessionIntervalRef.current);
+      }
     };
   }, [stationId, teamId]);
+
+  // Hàm bắt đầu kiểm tra phiên đăng nhập định kỳ
+  const startSessionCheck = (teamId, sessionId) => {
+    // Xóa interval cũ nếu có
+    if (checkSessionIntervalRef.current) {
+      clearInterval(checkSessionIntervalRef.current);
+    }
+    
+    // Tạo một interval mới để kiểm tra mỗi 3 giây
+    checkSessionIntervalRef.current = setInterval(async () => {
+      try {
+        // Gọi API kiểm tra thông tin đội chơi
+        const response = await teamApi.getById(teamId);
+        const team = response.data;
+        
+        // Kiểm tra xem phiên đăng nhập còn hợp lệ không
+        if (!team.sessionId || team.sessionId !== sessionId) {
+          // Hiển thị thông báo đã bị đăng xuất
+          setForceLogoutMessage('Tài khoản của bạn đã được đăng xuất bởi quản trị viên');
+          
+          // Xóa thông tin đội khỏi localStorage
+          localStorage.removeItem('current_team');
+          
+          // Dừng interval kiểm tra phiên
+          clearInterval(checkSessionIntervalRef.current);
+          
+          // Đặt lại trạng thái sau 3 giây
+          setTimeout(() => {
+            resetForm();
+            setForceLogoutMessage(null);
+          }, 3000);
+        }
+      } catch (err) {
+        console.error('Lỗi khi kiểm tra phiên đăng nhập:', err);
+      }
+    }, 3000);
+  };
 
   // Cập nhật bộ đếm ngược
   useEffect(() => {
@@ -198,6 +247,9 @@ const UserStation = () => {
         setSessionId(response.data.sessionId);
         setShowTeamSelection(false);
         setError(null);
+        
+        // Bắt đầu kiểm tra phiên đăng nhập
+        startSessionCheck(response.data.teamId, response.data.sessionId);
       }
     } catch (err) {
       if (err.response?.status === 403 && err.response?.data?.alreadyLoggedIn) {
@@ -274,6 +326,12 @@ const UserStation = () => {
     setShowTeamSelection(true);
     setSubmissionResult(null);
     setShowSuccessModal(false);
+    
+    // Dừng interval kiểm tra phiên
+    if (checkSessionIntervalRef.current) {
+      clearInterval(checkSessionIntervalRef.current);
+      checkSessionIntervalRef.current = null;
+    }
   };
   
   const handleLogoutClick = () => {
@@ -297,6 +355,12 @@ const UserStation = () => {
       resetForm();
       setShowLogoutModal(false);
       setSessionId('');
+      
+      // Dừng interval kiểm tra phiên
+      if (checkSessionIntervalRef.current) {
+        clearInterval(checkSessionIntervalRef.current);
+        checkSessionIntervalRef.current = null;
+      }
     } catch (err) {
       console.error('Lỗi khi đăng xuất:', err);
       
@@ -317,7 +381,7 @@ const UserStation = () => {
       <Container className="d-flex justify-content-center align-items-center min-vh-100">
         <div className="text-center spinner-container">
           <Spinner animation="border" variant="primary" />
-          <p className="mt-3"><TermReplacer>Đang tải thông tin trạm...</TermReplacer></p>
+          <p className="mt-3"><TermReplacer>{t('loading_station_info')}</TermReplacer></p>
           </div>
       </Container>
     );
@@ -331,11 +395,11 @@ const UserStation = () => {
             <div className="mb-4 text-danger">
               <i className="bi bi-exclamation-circle" style={{ fontSize: '3rem' }}></i>
             </div>
-            <h2 className="mb-3"><TermReplacer>Không thể tải trạm</TermReplacer></h2>
+            <h2 className="mb-3"><TermReplacer>{t('error_loading_station')}</TermReplacer></h2>
             <p className="mb-4">{error}</p>
             <Button variant="primary" onClick={() => window.location.reload()}>
               <i className="bi bi-arrow-clockwise me-2"></i>
-              Thử lại
+              {t('retry')}
             </Button>
           </Card.Body>
         </Card>
@@ -350,33 +414,33 @@ const UserStation = () => {
         <div className="d-inline-block bg-light p-4 rounded-circle mb-3">
           <i className="bi bi-people-fill text-primary" style={{ fontSize: '3rem' }}></i>
         </div>
-        <h3>Chọn đội tham gia</h3>
-        <p className="text-muted">Vui lòng chọn đội của bạn và nhập mật khẩu</p>
+        <h3>{t('select_team')}</h3>
+        <p className="text-muted">{t('select_team_description')}</p>
       </div>
       
       {error && <Alert variant="danger">{error}</Alert>}
       
       {alreadyLoggedInError && (
         <Alert variant="warning">
-          <Alert.Heading>Đội đã đăng nhập ở thiết bị khác</Alert.Heading>
+          <Alert.Heading>{t('already_logged_in')}</Alert.Heading>
           <p>{alreadyLoggedInError.message}</p>
           <hr />
           <p className="mb-0">
-            <strong>Thiết bị đang đăng nhập:</strong> {alreadyLoggedInError.deviceInfo || 'Không xác định'}
+            <strong>{t('device_logged_in')}</strong> {alreadyLoggedInError.deviceInfo || t('unknown_device')}
           </p>
         </Alert>
       )}
       
       <Form onSubmit={handleTeamSubmit} className="text-start">
         <Form.Group className="mb-3">
-          <Form.Label>Đội</Form.Label>
+          <Form.Label>{t('team')}</Form.Label>
           <Form.Select 
             value={selectedTeam} 
             onChange={handleTeamSelect}
             className="form-select-lg"
             required
           >
-            <option value="">-- Chọn đội --</option>
+            <option value="">{t('select_team_option')}</option>
             {station.teams.map((team, index) => (
               <option key={index} value={team}>{team}</option>
             ))}
@@ -384,12 +448,12 @@ const UserStation = () => {
         </Form.Group>
         
         <Form.Group className="mb-4">
-          <Form.Label>Mật khẩu</Form.Label>
+          <Form.Label>{t('password_label')}</Form.Label>
           <Form.Control
             type="password"
             value={password}
             onChange={handlePasswordChange}
-            placeholder="Nhập mật khẩu"
+            placeholder={t('enter_password')}
             required
           />
         </Form.Group>
@@ -404,9 +468,9 @@ const UserStation = () => {
             {submitting ? (
               <>
                 <Spinner animation="border" size="sm" className="me-2" />
-                Đang xử lý...
+                {t('processing')}
               </>
-            ) : 'Xác nhận'}
+            ) : t('confirm')}
           </Button>
         </div>
       </Form>
@@ -422,12 +486,32 @@ const UserStation = () => {
               <div className="d-flex align-items-center">
                 <i className="bi bi-geo-alt-fill me-2" style={{ fontSize: '1.5rem' }}></i>
                 <div>
-                  <h2 className="mb-0"><TermReplacer>Trạm</TermReplacer> {station.name}</h2>
+                  <h2 className="mb-0"><TermReplacer>{t('station_term')}</TermReplacer> {station.name}</h2>
                   {station.gameName && <p className="mb-0 mt-1 opacity-75">{station.gameName}</p>}
                 </div>
               </div>
             </Card.Header>
             <Card.Body>
+              {/* Hiển thị thông báo buộc đăng xuất nếu có */}
+              {forceLogoutMessage && (
+                <Alert variant="danger" className="mb-4 text-center">
+                  <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                  {forceLogoutMessage}
+                </Alert>
+              )}
+              
+              {station && station.image && (
+                <div className="text-center mb-4">
+                  <Image 
+                    src={station.image} 
+                    alt={station.name}
+                    fluid
+                    className="station-image rounded" 
+                    style={{ maxHeight: '400px', objectFit: 'contain' }}
+                  />
+                </div>
+              )}
+
               {showTeamSelection ? (
                 renderTeamSelectionForm()
               ) : (
@@ -436,12 +520,12 @@ const UserStation = () => {
                     <div>
                       <h4 className="mb-1">
                         <i className="bi bi-people-fill me-2 text-primary"></i>
-                        Đội: {teamName}
+                        {t('team')}: {teamName}
                       </h4>
                       <p className="text-muted mb-0">
                         <small>
                           <i className="bi bi-clock me-1"></i>
-                          Số lần thử còn lại: {submissionResult?.remainingAttempts !== undefined ? 
+                          {t('remaining_attempts')} {submissionResult?.remainingAttempts !== undefined ? 
                             submissionResult.remainingAttempts : 
                             (station.maxAttempts - (submissionResult?.attemptCount || 0))}
                         </small>
@@ -453,7 +537,7 @@ const UserStation = () => {
                       onClick={handleLogoutClick}
                     >
                       <i className="bi bi-box-arrow-right me-1"></i>
-                      Đăng xuất
+                      {t('logout')}
                     </Button>
                   </div>
 
@@ -464,6 +548,7 @@ const UserStation = () => {
                     </Alert>
                   )}
 
+                  {/* Hiển thị nội dung trạm */}
                   <div className="station-content-wrapper mb-4">
                     <h5 className="fw-bold mb-3">
                       <i className="bi bi-file-text me-2 text-primary"></i>
@@ -471,7 +556,7 @@ const UserStation = () => {
                     </h5>
                     
                     {/* Nội dung văn bản */}
-                    {station.contentType === 'text' || (station.showText && station.contentType === 'both') ? (
+                    {(station.contentType === 'text' || (station.showText && station.contentType === 'both')) ? (
                       <Card className="station-content mb-3">
                         <Card.Body>
                           {(station.ottContent || station.nwContent) && (station.showOTT || station.showNW) ? (
@@ -479,7 +564,7 @@ const UserStation = () => {
                               {station.ottContent && station.showOTT && (
                                 <div className="mb-4">
                                   <h6 className="fw-bold d-inline-block bg-primary text-white px-3 py-1 rounded mb-3">OTT:</h6>
-                                  <div className="content-text">
+                                  <div className="content-text" style={{ whiteSpace: 'pre-wrap' }}>
                                     {station.ottContent}
                                   </div>
                                 </div>
@@ -487,7 +572,7 @@ const UserStation = () => {
                               {station.nwContent && station.showNW && (
                                 <div>
                                   <h6 className="fw-bold d-inline-block bg-primary text-white px-3 py-1 rounded mb-3">NW:</h6>
-                                  <div className="content-text">
+                                  <div className="content-text" style={{ whiteSpace: 'pre-wrap' }}>
                                     {station.nwContent}
                                     <span className="fw-bold">/AR</span>
                                   </div>
@@ -495,7 +580,7 @@ const UserStation = () => {
                               )}
                             </>
                           ) : (
-                            <div className="content-text">
+                            <div className="content-text" style={{ whiteSpace: 'pre-wrap' }}>
                               {station.content}
                             </div>
                           )}
@@ -523,64 +608,62 @@ const UserStation = () => {
                       </div>
                     ) : null}
                   </div>
+
+                  <Form onSubmit={handleSubmitAnswer}>
+                    <Form.Group className="mb-4">
+                      <Form.Label>Đáp án của bạn</Form.Label>
+                      <Form.Control
+                        type="text"
+                        value={answer}
+                        onChange={handleAnswerChange}
+                        placeholder="Nhập đáp án của bạn"
+                        disabled={nextAttemptTime !== null || submitting}
+                        ref={answerInputRef}
+                        className="form-control-lg"
+                      />
+                      {nextAttemptTime && (
+                        <div className="text-danger mt-2">
+                          <i className="bi bi-hourglass-split me-1"></i>
+                          Vui lòng đợi {timeLeft} để thử lại
+                        </div>
+                      )}
+                    </Form.Group>
+                    
+                    <div className="d-grid">
+                      <Button 
+                        variant="primary" 
+                        type="submit" 
+                        size="lg"
+                        disabled={nextAttemptTime !== null || submitting || !answer.trim()}
+                      >
+                        {submitting ? (
+                          <>
+                            <Spinner animation="border" size="sm" className="me-2" />
+                            Đang xử lý...
+                          </>
+                        ) : 'Gửi đáp án'}
+                      </Button>
+                    </div>
+                  </Form>
                   
-                  {error && <Alert variant="danger">{error}</Alert>}
-                  
-                  {submissionResult && submissionResult.isCorrect ? (
-                    <Alert variant="success" className="text-center p-4 success-animation">
-                      <div className="mb-3">
-                        <i className="bi bi-check-circle" style={{ fontSize: '3rem' }}></i>
-                      </div>
-                      <h4>Chúc mừng!</h4>
-                      <p className="mb-0"><TermReplacer>Bạn đã hoàn thành trạm này với {submissionResult.score} điểm.</TermReplacer></p>
-                    </Alert>
-                  ) : nextAttemptTime ? (
-                    <Alert variant="warning" className="text-center p-4">
-                      <div className="mb-3">
-                        <i className="bi bi-hourglass-split" style={{ fontSize: '3rem' }}></i>
-                      </div>
-                      <h4>Vui lòng đợi!</h4>
-                      <p className="mb-3">Bạn cần đợi trước khi thử lại.</p>
-                      <div className="d-inline-block bg-light px-4 py-2 rounded">
-                        <span className="fw-bold" style={{ fontSize: '1.5rem' }}>{timeLeft}</span>
-                      </div>
-                    </Alert>
-                  ) : (
-                    <Form onSubmit={handleSubmitAnswer}>
-                      <Form.Group className="mb-3">
-                        <Form.Control
-                          as="textarea"
-                          rows={4}
-                          type="text"
-                          value={answer}
-                          onChange={handleAnswerChange}
-                          placeholder="Nhập đáp án"
-                          disabled={!!timeLeft}
-                          ref={answerInputRef}
-                        />
-                      </Form.Group>
-                      
-                      <div className="d-grid gap-2">
-                        <Button 
-                          variant="primary" 
-                          type="submit" 
-                          size="lg"
-                          disabled={submitting || !answer.trim() || Boolean(nextAttemptTime)}
-                        >
-                          {submitting ? (
-                            <>
-                              <Spinner animation="border" size="sm" className="me-2" />
-                              Đang xử lý...
-                            </>
-                          ) : (
-                            <>
-                              <i className="bi bi-send me-2"></i>
-                              Gửi đáp án
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    </Form>
+                  {submissionResult && (
+                    <div className="mt-4">
+                      {submissionResult.isCorrect ? (
+                        <Alert variant="success" className="d-flex align-items-center">
+                          <i className="bi bi-check-circle-fill me-2" style={{ fontSize: '1.5rem' }}></i>
+                          <div>
+                            <strong>Chính xác!</strong> Chúc mừng, bạn đã hoàn thành <TermReplacer>{t('station_term')}</TermReplacer> này.
+                          </div>
+                        </Alert>
+                      ) : (
+                        <Alert variant="danger" className="d-flex align-items-center">
+                          <i className="bi bi-x-circle-fill me-2" style={{ fontSize: '1.5rem' }}></i>
+                          <div>
+                            <strong>Không chính xác!</strong> Hãy thử lại với một đáp án khác.
+                          </div>
+                        </Alert>
+                      )}
+                    </div>
                   )}
                 </>
               )}
@@ -590,7 +673,7 @@ const UserStation = () => {
           <div className="text-center text-muted">
             <small>
               <i className="bi bi-shield-lock me-1"></i>
-              Hệ thống trò chơi mật thư
+              Hệ thống quản lý <TermReplacer>{t('station_term')}</TermReplacer> của Giao Liên
             </small>
           </div>
         </Col>
@@ -601,8 +684,6 @@ const UserStation = () => {
         show={showSuccessModal} 
         onHide={() => setShowSuccessModal(false)}
         centered
-        size="md"
-        className="success-modal"
       >
         <Modal.Header closeButton className="bg-success text-white">
           <Modal.Title>
@@ -610,23 +691,18 @@ const UserStation = () => {
             Chúc mừng!
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body className="text-center py-5">
-          <div className="animate__animated animate__bounceIn mb-4">
-            <div className="success-icon-circle mb-3">
-              <i className="bi bi-check-lg" style={{ fontSize: '4rem', color: '#27ae60' }}></i>
-            </div>
-            <h3 className="mb-3">Xin chúc mừng!</h3>
-            <p className="mb-4 lead">
-              Đội <strong>{teamName}</strong> đã giải được mật thư và nhận được <span className="badge bg-success">{submissionResult?.score} điểm</span>
-            </p>
+        <Modal.Body className="text-center py-4">
+          <div className="mb-3">
+            <i className="bi bi-check-circle-fill text-success" style={{ fontSize: '4rem' }}></i>
           </div>
-          <div className="d-grid gap-2">
-            <Button onClick={() => setShowSuccessModal(false)} variant="success" size="lg">
-              <i className="bi bi-check2 me-2"></i>
-              Đóng
-            </Button>
-          </div>
+          <h4 className="mb-3">Bạn đã hoàn thành <TermReplacer>{t('station_term')}</TermReplacer> này!</h4>
+          <p>Đối với <TermReplacer>{t('station_term')}</TermReplacer> này, đội của bạn nhận được <strong className="text-success">{submissionResult?.submission?.score || 0} điểm</strong>.</p>
         </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowSuccessModal(false)}>
+            Đóng
+          </Button>
+        </Modal.Footer>
       </Modal>
       
       {/* Modal xác nhận đăng xuất */}

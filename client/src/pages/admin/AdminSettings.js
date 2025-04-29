@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Container, Card, Form, Button, Row, Col, Alert, Spinner } from 'react-bootstrap';
 import AdminNavbar from '../../components/Navbar';
 import { useSystemSettings } from '../../context/SystemSettingsContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 const AdminSettings = () => {
   const { settings: systemSettings, updateSettings, loading: apiLoading, error: apiError } = useSystemSettings();
+  const { language, changeLanguage, t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(null);
   const [error, setError] = useState(null);
@@ -13,7 +15,6 @@ const AdminSettings = () => {
     darkMode: localStorage.getItem('darkMode') === 'true',
     notifications: localStorage.getItem('notifications') === 'true',
     autoLogout: parseInt(localStorage.getItem('autoLogout')) || 60,
-    language: localStorage.getItem('language') || 'vi',
     termType: 'default',
     customTerm: ''
   });
@@ -53,6 +54,11 @@ const AdminSettings = () => {
     }));
   };
 
+  const handleLanguageChange = async (e) => {
+    const newLanguage = e.target.value;
+    await changeLanguage(newLanguage);
+  };
+
   const saveSettings = async (e) => {
     e.preventDefault();
     
@@ -65,7 +71,6 @@ const AdminSettings = () => {
       localStorage.setItem('darkMode', settings.darkMode);
       localStorage.setItem('notifications', settings.notifications);
       localStorage.setItem('autoLogout', settings.autoLogout);
-      localStorage.setItem('language', settings.language);
       
       // Cập nhật cài đặt thuật ngữ lên server
       await updateSettings({
@@ -74,9 +79,9 @@ const AdminSettings = () => {
       });
       
       // Hiển thị thông báo thành công
-      setSuccess('Cài đặt đã được lưu thành công');
+      setSuccess(t('settings_save_success'));
     } catch (err) {
-      setError('Không thể lưu cài đặt. Vui lòng thử lại.');
+      setError(t('settings_save_error'));
       console.error('Error saving settings:', err);
     } finally {
       setLoading(false);
@@ -91,14 +96,12 @@ const AdminSettings = () => {
       localStorage.removeItem('darkMode');
       localStorage.removeItem('notifications');
       localStorage.removeItem('autoLogout');
-      localStorage.removeItem('language');
       
       // Đặt lại trạng thái cài đặt
       setSettings({
         darkMode: false,
         notifications: true,
         autoLogout: 60,
-        language: 'vi',
         termType: 'default',
         customTerm: ''
       });
@@ -112,9 +115,9 @@ const AdminSettings = () => {
       // Xóa chế độ tối nếu đang được áp dụng
       document.body.classList.remove('dark-mode');
       
-      setSuccess('Đã khôi phục về cài đặt mặc định');
+      setSuccess(t('settings_reset_success'));
     } catch (err) {
-      setError('Không thể khôi phục cài đặt mặc định. Vui lòng thử lại.');
+      setError(t('settings_reset_error'));
       console.error('Error resetting settings:', err);
     } finally {
       setLoading(false);
@@ -125,7 +128,7 @@ const AdminSettings = () => {
     <>
       <AdminNavbar />
       <Container className="py-4">
-        <h1 className="mb-4">Cài đặt</h1>
+        <h1 className="mb-4">{t('settings_heading')}</h1>
         
         {(error || apiError) && <Alert variant="danger">{error || apiError}</Alert>}
         {success && <Alert variant="success">{success}</Alert>}
@@ -134,12 +137,12 @@ const AdminSettings = () => {
           <Col md={8}>
             <Card>
               <Card.Header>
-                <h5 className="mb-0">Tùy chỉnh hệ thống</h5>
+                <h5 className="mb-0">{t('system_customization')}</h5>
               </Card.Header>
               <Card.Body>
                 <Form onSubmit={saveSettings}>
                   <Form.Group className="mb-4">
-                    <Form.Label>Giao diện</Form.Label>
+                    <Form.Label>{t('theme')}</Form.Label>
                     <div className="d-flex flex-wrap gap-3">
                       <div className="form-check form-switch">
                         <input
@@ -150,14 +153,14 @@ const AdminSettings = () => {
                           onChange={() => handleToggleChange('darkMode')}
                         />
                         <label className="form-check-label" htmlFor="darkModeToggle">
-                          Chế độ tối
+                          {t('dark_mode')}
                         </label>
                       </div>
                     </div>
                   </Form.Group>
                   
                   <Form.Group className="mb-4">
-                    <Form.Label>Thông báo</Form.Label>
+                    <Form.Label>{t('notifications')}</Form.Label>
                     <div className="d-flex flex-wrap gap-3">
                       <div className="form-check form-switch">
                         <input
@@ -168,20 +171,20 @@ const AdminSettings = () => {
                           onChange={() => handleToggleChange('notifications')}
                         />
                         <label className="form-check-label" htmlFor="notificationsToggle">
-                          Bật thông báo
+                          {t('enable_notifications')}
                         </label>
                       </div>
                     </div>
                   </Form.Group>
                   
                   <Form.Group className="mb-4">
-                    <Form.Label>Đổi tên phương thức</Form.Label>
+                    <Form.Label>{t('term_rename')}</Form.Label>
                     <div className="mb-3">
                       <Form.Check
                         type="radio"
                         id="term-default"
                         name="termType"
-                        label="Mặc định (Trạm)"
+                        label={t('default_term_label')}
                         value="default"
                         checked={settings.termType === 'default'}
                         onChange={handleChange}
@@ -190,7 +193,7 @@ const AdminSettings = () => {
                         type="radio"
                         id="term-journey"
                         name="termType"
-                        label="Hành trình"
+                        label={t('journey_term_label')}
                         value="journey"
                         checked={settings.termType === 'journey'}
                         onChange={handleChange}
@@ -199,7 +202,7 @@ const AdminSettings = () => {
                         type="radio"
                         id="term-custom"
                         name="termType"
-                        label="Tùy chỉnh"
+                        label={t('custom_term_label')}
                         value="custom"
                         checked={settings.termType === 'custom'}
                         onChange={handleChange}
@@ -213,33 +216,31 @@ const AdminSettings = () => {
                           name="customTerm"
                           value={settings.customTerm}
                           onChange={handleChange}
-                          placeholder="Nhập tên thay thế cho 'Trạm'"
+                          placeholder={t('custom_term_placeholder')}
                           maxLength={20}
                         />
                         <Form.Text className="text-muted">
-                          Từ này sẽ thay thế cho "Trạm" trong toàn bộ hệ thống.
+                          {t('custom_term_note')}
                         </Form.Text>
                       </div>
                     )}
                     
                     <Alert variant="info">
                       <i className="bi bi-info-circle me-2"></i>
-                      Thay đổi thuật ngữ "Trạm" thành thuật ngữ khác trong toàn bộ hệ thống.
+                      {t('term_change_info')}
                       <div className="mt-2">
-                        <strong>Lưu ý: </strong>
-                        Thay đổi này sẽ được áp dụng cho tất cả người dùng và thiết bị trong hệ thống.
                       </div>
                       {settings.termType !== 'default' && (
                         <div className="mt-2">
-                          <strong>Xem trước: </strong>
-                          {settings.termType === 'journey' ? 'Hành trình' : settings.customTerm || '[Chưa nhập]'} 1, {settings.termType === 'journey' ? 'Hành trình' : settings.customTerm || '[Chưa nhập]'} 2, ...
+                          <strong>{t('preview_term')}</strong>
+                          {settings.termType === 'journey' ? t('journey_term_label') : settings.customTerm || '[Chưa nhập]'} 1, {settings.termType === 'journey' ? t('journey_term_label') : settings.customTerm || '[Chưa nhập]'} 2, ...
                         </div>
                       )}
                     </Alert>
                   </Form.Group>
                   
                   <Form.Group className="mb-4">
-                    <Form.Label>Thời gian tự động đăng xuất (phút)</Form.Label>
+                    <Form.Label>{t('auto_logout')}</Form.Label>
                     <Form.Control
                       type="number"
                       name="autoLogout"
@@ -249,16 +250,16 @@ const AdminSettings = () => {
                       onChange={handleChange}
                     />
                     <Form.Text className="text-muted">
-                      Thời gian không hoạt động trước khi hệ thống tự động đăng xuất
+                      {t('auto_logout_note')}
                     </Form.Text>
                   </Form.Group>
                   
                   <Form.Group className="mb-4">
-                    <Form.Label>Ngôn ngữ</Form.Label>
+                    <Form.Label>{t('language_label')}</Form.Label>
                     <Form.Select
                       name="language"
-                      value={settings.language}
-                      onChange={handleChange}
+                      value={language}
+                      onChange={handleLanguageChange}
                     >
                       <option value="vi">Tiếng Việt</option>
                       <option value="en">English</option>
@@ -274,10 +275,10 @@ const AdminSettings = () => {
                       {(loading || apiLoading) ? (
                         <>
                           <Spinner animation="border" size="sm" className="me-2" />
-                          Đang lưu...
+                          {t('saving_settings')}
                         </>
                       ) : (
-                        'Lưu cài đặt'
+                        t('save_settings')
                       )}
                     </Button>
                     <Button
@@ -286,7 +287,7 @@ const AdminSettings = () => {
                       onClick={resetSettings}
                       disabled={loading || apiLoading}
                     >
-                      Khôi phục mặc định
+                      {t('reset_defaults')}
                     </Button>
                   </div>
                 </Form>
@@ -297,17 +298,17 @@ const AdminSettings = () => {
           <Col md={4}>
             <Card>
               <Card.Header>
-                <h5 className="mb-0">Thông tin hệ thống</h5>
+                <h5 className="mb-0">{t('system_info')}</h5>
               </Card.Header>
               <Card.Body>
-                <p><strong>Phiên bản:</strong> 1.0.0</p>
-                <p><strong>Khung giao diện:</strong> React + Bootstrap 5</p>
-                <p><strong>Backend:</strong> Node.js + Express</p>
-                <p><strong>Cơ sở dữ liệu:</strong> MongoDB</p>
+                <p><strong>{t('app_version')}</strong> 1.0.3</p>
+                <p><strong>{t('app_framework')}</strong> React + Bootstrap 5</p>
+                <p><strong>{t('app_backend')}</strong> Node.js + Express</p>
+                <p><strong>{t('app_database')}</strong> MongoDB</p>
                 <hr />
                 <p className="text-muted small">
-                  © 2025 Hệ thống Giao Liên. <br />
-                  Phát triển bởi CuongCow
+                  {t('app_copyright')} <br />
+                  {t('app_developer')}
                 </p>
               </Card.Body>
             </Card>

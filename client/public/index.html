@@ -94,12 +94,27 @@
     <script>
       // Khởi tạo Mixpanel với token của bạn
       mixpanel.init("YOUR_MIXPANEL_TOKEN", {
-        debug: true,
-        track_pageview: true,
+        debug: false,
+        track_pageview: false,
         persistence: "localStorage"
       });
     </script>
     <!-- End Mixpanel -->
+    
+    <!-- Vô hiệu hóa các thông báo React DevTools -->
+    <script>
+      // Vô hiệu hóa thông báo console từ React DevTools
+      const originalConsoleError = console.error;
+      console.error = function() {
+        if (arguments[0] && typeof arguments[0] === 'string' && 
+            (arguments[0].includes('Download the React DevTools') || 
+             arguments[0].includes('react refresh') ||
+             arguments[0].includes('mixpanel'))) {
+          return;
+        }
+        originalConsoleError.apply(console, arguments);
+      };
+    </script>
   </head>
   <body>
     <noscript>Bạn cần bật JavaScript để chạy ứng dụng này.</noscript>

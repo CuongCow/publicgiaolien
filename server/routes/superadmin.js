@@ -673,7 +673,77 @@ router.get('/logs', auth, superAdminAuth, async (req, res) => {
   }
 });
 
-// Xóa nhật ký cũ
+// Xóa nhật ký cũ (POST method)
+router.post('/logs/cleanup', auth, superAdminAuth, async (req, res) => {
+  try {
+    const { olderThanDays } = req.body;
+    
+    if (!olderThanDays || olderThanDays < 1) {
+      return res.status(400).json({ message: 'Vui lòng cung cấp số ngày hợp lệ' });
+    }
+    
+    const date = new Date();
+    date.setDate(date.getDate() - olderThanDays);
+    
+    console.log(`Xóa nhật ký cũ hơn ngày: ${date.toISOString()}`);
+    
+    // Tìm bản ghi cũ nhất trước khi xóa để debug
+    const oldestLog = await SystemLog.findOne().sort({ createdAt: 1 });
+    console.log(`Bản ghi cũ nhất: ${oldestLog ? oldestLog.createdAt.toISOString() : 'Không có'}`);
+    
+    // Đếm số bản ghi cần xóa để debug
+    const countToDelete = await SystemLog.countDocuments({ createdAt: { $lt: date } });
+    console.log(`Số bản ghi cần xóa: ${countToDelete}`);
+    
+    // Sử dụng deleteMany với mongoose
+    const result = await SystemLog.deleteMany({ createdAt: { $lt: date } });
+    
+    // Kiểm tra nếu không xóa được bản ghi, thử xóa trực tiếp qua collection native
+    if (result.deletedCount === 0 && countToDelete > 0) {
+      console.log(`Thử xóa trực tiếp qua MongoDB driver`);
+      const nativeResult = await mongoose.connection.db.collection('systemlogs').deleteMany({ 
+        createdAt: { $lt: date } 
+      });
+      
+      console.log(`Kết quả xóa native: ${JSON.stringify(nativeResult)}`);
+      
+      if (nativeResult.deletedCount > 0) {
+        // Ghi nhật ký về việc xóa
+        await SystemLog.create({
+          adminId: req.admin.id,
+          action: 'delete',
+          target: 'systemLogs',
+          details: { deletedCount: nativeResult.deletedCount, olderThanDays, method: 'native' },
+          ipAddress: req.ip || req.connection.remoteAddress
+        });
+        
+        return res.json({
+          message: `Đã xóa ${nativeResult.deletedCount} bản ghi nhật ký cũ hơn ${olderThanDays} ngày`,
+          deletedCount: nativeResult.deletedCount
+        });
+      }
+    }
+    
+    // Ghi nhật ký về việc xóa
+    await SystemLog.create({
+      adminId: req.admin.id,
+      action: 'delete',
+      target: 'systemLogs',
+      details: { deletedCount: result.deletedCount, olderThanDays, logsToDelete: countToDelete },
+      ipAddress: req.ip || req.connection.remoteAddress
+    });
+    
+    res.json({
+      message: `Đã xóa ${result.deletedCount} bản ghi nhật ký cũ hơn ${olderThanDays} ngày`,
+      deletedCount: result.deletedCount
+    });
+  } catch (err) {
+    console.error('Error cleaning up system logs:', err);
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+});
+
+// Xóa nhật ký cũ (DELETE method)
 router.delete('/logs/cleanup', auth, superAdminAuth, async (req, res) => {
   try {
     const { olderThanDays } = req.body;
@@ -685,14 +755,51 @@ router.delete('/logs/cleanup', auth, superAdminAuth, async (req, res) => {
     const date = new Date();
     date.setDate(date.getDate() - olderThanDays);
     
+    console.log(`Xóa nhật ký cũ hơn ngày: ${date.toISOString()}`);
+    
+    // Tìm bản ghi cũ nhất trước khi xóa để debug
+    const oldestLog = await SystemLog.findOne().sort({ createdAt: 1 });
+    console.log(`Bản ghi cũ nhất: ${oldestLog ? oldestLog.createdAt.toISOString() : 'Không có'}`);
+    
+    // Đếm số bản ghi cần xóa để debug
+    const countToDelete = await SystemLog.countDocuments({ createdAt: { $lt: date } });
+    console.log(`Số bản ghi cần xóa: ${countToDelete}`);
+    
+    // Sử dụng deleteMany với mongoose
     const result = await SystemLog.deleteMany({ createdAt: { $lt: date } });
+    
+    // Kiểm tra nếu không xóa được bản ghi, thử xóa trực tiếp qua collection native
+    if (result.deletedCount === 0 && countToDelete > 0) {
+      console.log(`Thử xóa trực tiếp qua MongoDB driver`);
+      const nativeResult = await mongoose.connection.db.collection('systemlogs').deleteMany({ 
+        createdAt: { $lt: date } 
+      });
+      
+      console.log(`Kết quả xóa native: ${JSON.stringify(nativeResult)}`);
+      
+      if (nativeResult.deletedCount > 0) {
+        // Ghi nhật ký về việc xóa
+        await SystemLog.create({
+          adminId: req.admin.id,
+          action: 'delete',
+          target: 'systemLogs',
+          details: { deletedCount: nativeResult.deletedCount, olderThanDays, method: 'native' },
+          ipAddress: req.ip || req.connection.remoteAddress
+        });
+        
+        return res.json({
+          message: `Đã xóa ${nativeResult.deletedCount} bản ghi nhật ký cũ hơn ${olderThanDays} ngày`,
+          deletedCount: nativeResult.deletedCount
+        });
+      }
+    }
     
     // Ghi nhật ký về việc xóa
     await SystemLog.create({
       adminId: req.admin.id,
       action: 'delete',
       target: 'systemLogs',
-      details: { deletedCount: result.deletedCount, olderThanDays },
+      details: { deletedCount: result.deletedCount, olderThanDays, logsToDelete: countToDelete },
       ipAddress: req.ip || req.connection.remoteAddress
     });
     

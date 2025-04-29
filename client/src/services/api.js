@@ -27,6 +27,20 @@ axiosInstance.interceptors.response.use(
       console.error('Network error:', error);
       return Promise.reject(new Error('Không thể kết nối đến máy chủ. Vui lòng thử lại sau.'));
     }
+    
+    // Xử lý lỗi HTTP từ server
+    if (error.response) {
+      // Trích xuất message từ response API
+      const errorMessage = error.response.data && error.response.data.message 
+        ? error.response.data.message 
+        : 'Có lỗi xảy ra. Vui lòng thử lại sau.';
+        
+      // Nếu là lỗi status 400 Bad Request, gói message trong Error object
+      if (error.response.status === 400) {
+        return Promise.reject(new Error(errorMessage));
+      }
+    }
+    
     return Promise.reject(error);
   }
 );
@@ -94,7 +108,8 @@ export const teamApi = {
   verifyPassword: (data) => axiosInstance.post('/api/teams/verify', data),
   getRanking: () => axiosInstance.get('/api/teams'),
   delete: (id) => axiosInstance.delete(`/api/teams/${id}`),
-  logout: (data) => axiosInstance.post('/api/teams/logout', data)
+  logout: (data) => axiosInstance.post('/api/teams/logout', data),
+  forceLogout: (id) => axiosInstance.post(`/api/teams/force-logout/${id}`),
 };
 
 // API submission
@@ -142,7 +157,7 @@ export const superAdminApi = {
   // System logs
   getLogs: (page = 1, limit = 50) => 
     axiosInstance.get(`/api/superadmin/logs?page=${page}&limit=${limit}`),
-  cleanupLogs: (days) => axiosInstance.post('/api/superadmin/logs/cleanup', { days }),
+  cleanupLogs: (days) => axiosInstance.post('/api/superadmin/logs/cleanup', { olderThanDays: days }),
   
   // System settings
   getSystemSettings: () => axiosInstance.get('/api/superadmin/settings'),

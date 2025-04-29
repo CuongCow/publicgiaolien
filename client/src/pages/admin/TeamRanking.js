@@ -7,6 +7,7 @@ import { saveAs } from 'file-saver';
 import { stationApi } from '../../services/api';
 import { formatDateTime, replaceStationTerm } from '../../utils/helpers';
 import TermReplacer from '../../utils/TermReplacer';
+import { useLanguage } from '../../context/LanguageContext';
 
 const TeamRanking = () => {
   const [ranking, setRanking] = useState([]);
@@ -19,6 +20,7 @@ const TeamRanking = () => {
   const [showResetModal, setShowResetModal] = useState(false);
   const [showResetScoresModal, setShowResetScoresModal] = useState(false);
   const [gameName, setGameName] = useState('');
+  const { t } = useLanguage();
 
   useEffect(() => {
     fetchRanking();
@@ -48,7 +50,7 @@ const TeamRanking = () => {
       
       setError(null);
     } catch (err) {
-      setError('Không thể tải bảng xếp hạng. Vui lòng thử lại sau.');
+      setError(t('ranking_load_error'));
       console.error('Error fetching ranking:', err);
     } finally {
       setLoading(false);
@@ -68,15 +70,15 @@ const TeamRanking = () => {
       const workbook = new ExcelJS.Workbook();
       
       // Trang tính bảng xếp hạng chung
-      const rankingSheet = workbook.addWorksheet('Bảng xếp hạng');
+      const rankingSheet = workbook.addWorksheet(t('ranking_sheet_name'));
       
       // Thêm header
       rankingSheet.columns = [
-        { header: 'Hạng', key: 'Hạng', width: 10 },
-        { header: 'Tên đội', key: 'Tên đội', width: 30 },
-        { header: 'Tổng điểm', key: 'Tổng điểm', width: 15 },
-        { header: replaceStationTerm('Số trạm hoàn thành'), key: replaceStationTerm('Số trạm hoàn thành'), width: 20 },
-        { header: 'Thời gian tham gia', key: 'Thời gian tham gia', width: 25 }
+        { header: t('rank'), key: t('rank'), width: 10 },
+        { header: t('table_team_name'), key: t('table_team_name'), width: 30 },
+        { header: t('total_score'), key: t('total_score'), width: 15 },
+        { header: replaceStationTerm(t('table_completed_stations')), key: replaceStationTerm(t('table_completed_stations')), width: 20 },
+        { header: t('time_participated'), key: t('time_participated'), width: 25 }
       ];
       
       // Làm đậm header
@@ -86,7 +88,7 @@ const TeamRanking = () => {
       rankingSheet.addRows(data.ranking);
 
       // Trang tính chi tiết từng đội
-      const detailsSheet = workbook.addWorksheet('Chi tiết các đội');
+      const detailsSheet = workbook.addWorksheet(t('team_details_sheet_name'));
       
       // Thêm dữ liệu chi tiết
       let rowIndex = 1;
@@ -99,11 +101,11 @@ const TeamRanking = () => {
         } else if (keys.includes('Tên đội')) {
           // Header đội
           const headerRow = detailsSheet.addRow({
-            A: 'Tên đội',
+            A: t('table_team_name'),
             B: row['Tên đội'],
-            C: 'Tổng điểm',
+            C: t('total_score'),
             D: row['Tổng điểm'],
-            E: replaceStationTerm('Số trạm hoàn thành'),
+            E: replaceStationTerm(t('table_completed_stations')),
             F: row[replaceStationTerm('Số trạm hoàn thành')]
           });
           headerRow.font = { bold: true };
@@ -116,10 +118,10 @@ const TeamRanking = () => {
           
           // Header cho bảng chi tiết
           const subHeaderRow = detailsSheet.addRow({
-            A: 'STT',
-            B: 'Tên trạm',
-            C: 'Điểm',
-            D: 'Thời gian hoàn thành'
+            A: t('stt'),
+            B: t('station_name_label'),
+            C: t('score'),
+            D: t('completed_time')
           });
           subHeaderRow.font = { bold: true };
           rowIndex++;
@@ -148,15 +150,15 @@ const TeamRanking = () => {
       // Xuất file
       const buffer = await workbook.xlsx.writeBuffer();
       const fileName = data.gameName 
-        ? `Bảng xếp hạng ${data.gameName} ${new Date().toLocaleDateString('vi-VN')}.xlsx`
-        : `Bảng xếp hạng trò chơi ${new Date().toLocaleDateString('vi-VN')}.xlsx`;
+        ? `${t('ranking_file_prefix')} ${data.gameName} ${new Date().toLocaleDateString('vi-VN')}.xlsx`
+        : `${t('ranking_game_file_prefix')} ${new Date().toLocaleDateString('vi-VN')}.xlsx`;
       
       saveAs(new Blob([buffer]), fileName);
       
-      setSuccess('Xuất Excel thành công!');
+      setSuccess(t('excel_export_success'));
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      setError('Không thể xuất file Excel. Vui lòng thử lại sau.');
+      setError(t('excel_export_error'));
       console.error('Error exporting to Excel:', err);
     } finally {
       setExportLoading(false);
@@ -171,7 +173,7 @@ const TeamRanking = () => {
       await submissionApi.resetRanking();
       setShowResetModal(false);
       
-      setSuccess('Đã xóa bảng xếp hạng và tất cả đội chơi thành công!');
+      setSuccess(t('ranking_reset_success'));
       
       // Làm mới dữ liệu
       setRanking([]);
@@ -180,7 +182,7 @@ const TeamRanking = () => {
         setSuccess(null);
       }, 3000);
     } catch (err) {
-      setError('Không thể xóa bảng xếp hạng. Vui lòng thử lại sau.');
+      setError(t('ranking_reset_error'));
       console.error('Error resetting ranking:', err);
     } finally {
       setResetLoading(false);
@@ -195,7 +197,7 @@ const TeamRanking = () => {
       const response = await submissionApi.resetScores();
       setShowResetScoresModal(false);
       
-      setSuccess(`Đã xóa điểm số và thứ hạng thành công! (${response.data.teamsAffected || 0} đội đã được đặt lại điểm)`);
+      setSuccess(t('scores_reset_success', { count: response.data.teamsAffected || 0 }));
       
       // Làm mới dữ liệu
       await fetchRanking();
@@ -204,7 +206,7 @@ const TeamRanking = () => {
         setSuccess(null);
       }, 5000);
     } catch (err) {
-      setError('Không thể xóa điểm số. Vui lòng thử lại sau.');
+      setError(t('scores_reset_error'));
       console.error('Error resetting scores:', err);
     } finally {
       setResetScoresLoading(false);
@@ -216,7 +218,7 @@ const TeamRanking = () => {
       <AdminNavbar />
       <Container>
         <div className="d-flex justify-content-between align-items-center mb-4">
-          <h1>Bảng xếp hạng đội chơi</h1>
+          <h1>{t('team_ranking_title')}</h1>
           
           <div>
             <Button 
@@ -224,17 +226,17 @@ const TeamRanking = () => {
               className="me-2"
               onClick={() => setShowResetScoresModal(true)}
               disabled={resetScoresLoading || ranking.length === 0}
-              title="Xóa điểm số và thứ hạng, giữ lại đội chơi"
+              title={t('reset_scores_tooltip')}
             >
               {resetScoresLoading ? (
                 <>
                   <Spinner animation="border" size="sm" className="me-1" />
-                  Đang xóa...
+                  {t('deleting')}
                 </>
               ) : (
                 <>
                   <i className="bi bi-eraser me-1"></i>
-                  Xóa điểm số
+                  {t('reset_scores')}
                 </>
               )}
             </Button>
@@ -248,12 +250,12 @@ const TeamRanking = () => {
               {resetLoading ? (
                 <>
                   <Spinner animation="border" size="sm" className="me-1" />
-                  Đang xóa...
+                  {t('deleting')}
                 </>
               ) : (
                 <>
                   <i className="bi bi-trash me-1"></i>
-                  Xóa tất cả
+                  {t('delete_all')}
                 </>
               )}
             </Button>
@@ -266,12 +268,12 @@ const TeamRanking = () => {
               {exportLoading ? (
                 <>
                   <Spinner animation="border" size="sm" className="me-1" />
-                  Đang xuất...
+                  {t('exporting')}
                 </>
               ) : (
                 <>
                   <i className="bi bi-file-excel me-1"></i>
-                  Xuất Excel
+                  {t('export_excel')}
                 </>
               )}
             </Button>
@@ -290,14 +292,14 @@ const TeamRanking = () => {
         {loading ? (
           <div className="text-center my-5">
             <Spinner animation="border" variant="primary" />
-            <p className="mt-2">Đang tải...</p>
+            <p className="mt-2">{t('loading')}</p>
           </div>
         ) : ranking.length === 0 ? (
           <Card className="text-center p-5">
             <Card.Body>
-              <h3>Chưa có đội nào hoàn thành trạm</h3>
+              <h3>{t('no_team_completed_station')}</h3>
               <p className="text-muted">
-                Bảng xếp hạng sẽ hiển thị khi các đội bắt đầu hoàn thành các trạm
+                {t('ranking_will_show')}
               </p>
             </Card.Body>
           </Card>
@@ -305,55 +307,54 @@ const TeamRanking = () => {
           <>
             <Row className="mb-4">
               <Col>
-
-                    <Table striped bordered hover responsive>
-                      <thead>
-                        <tr>
-                          <th>Hạng</th>
-                          <th>Tên đội</th>
-                          <th>Tổng điểm</th>
-                          <th><TermReplacer>Trạm đã hoàn thành</TermReplacer></th>
-                          <th>Thời gian tham gia</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {ranking.map((team, index) => (
-                          <tr key={team._id}>
-                            <td>
-                              {index === 0 && <Badge bg="danger" className="rank-badge" style={{fontSize: '1.2rem', padding: '8px 12px', fontWeight: 'bold', boxShadow: '0 2px 5px rgba(192, 192, 192, 0.98)'}}>1</Badge>}
-                              {index === 1 && <Badge bg="warning" className="rank-badge" style={{fontSize: '1.1rem', padding: '7px 10px', fontWeight: 'bold', boxShadow: '0 2px 5px rgba(255, 215, 0, 0.5)', color: '#000'}}>2</Badge>}
-                              {index === 2 && <Badge bg="secondary" className="rank-badge" style={{fontSize: '1rem', padding: '6px 9px', fontWeight: 'bold', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.5)', color: '#FFE6CC'}}>3</Badge>}
-                              {index > 2 && <span className="text-muted">{index + 1}</span>}
-                            </td>
-                            <td><strong>{team.name}</strong></td>
-                            <td>{team.totalScore}</td>
-                            <td>{team.completedStations.length}</td>
-                            <td>{formatDateTime(team.createdAt)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </Table>
+                <Table striped bordered hover responsive>
+                  <thead>
+                    <tr>
+                      <th>{t('rank')}</th>
+                      <th>{t('table_team_name')}</th>
+                      <th>{t('total_score')}</th>
+                      <th><TermReplacer>{t('table_completed_stations')}</TermReplacer></th>
+                      <th>{t('time_participated')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ranking.map((team, index) => (
+                      <tr key={team._id}>
+                        <td>
+                          {index === 0 && <Badge bg="danger" className="rank-badge" style={{fontSize: '1.2rem', padding: '8px 12px', fontWeight: 'bold', boxShadow: '0 2px 5px rgba(192, 192, 192, 0.98)'}}>1</Badge>}
+                          {index === 1 && <Badge bg="warning" className="rank-badge" style={{fontSize: '1.1rem', padding: '7px 10px', fontWeight: 'bold', boxShadow: '0 2px 5px rgba(255, 215, 0, 0.5)', color: '#000'}}>2</Badge>}
+                          {index === 2 && <Badge bg="secondary" className="rank-badge" style={{fontSize: '1rem', padding: '6px 9px', fontWeight: 'bold', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.5)', color: '#FFE6CC'}}>3</Badge>}
+                          {index > 2 && <span className="text-muted">{index + 1}</span>}
+                        </td>
+                        <td><strong>{team.name}</strong></td>
+                        <td>{team.totalScore}</td>
+                        <td>{team.completedStations.length}</td>
+                        <td>{formatDateTime(team.createdAt)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
               </Col>
             </Row>
 
-            <h2 className="mb-4"><TermReplacer>Chi tiết trạm hoàn thành</TermReplacer></h2>
+            <h2 className="mb-4"><TermReplacer>{t('completed_stations_details')}</TermReplacer></h2>
             
             {ranking.map(team => (
               <Card key={team._id} className="shadow-sm mb-4">
                 <Card.Header>
-                  <h4>{team.name} - {team.totalScore} điểm</h4>
+                  <h4>{team.name} - {team.totalScore} {t('points')}</h4>
                 </Card.Header>
                 <Card.Body>
                   {team.completedStations.length === 0 ? (
-                    <p className="text-muted"><TermReplacer>Chưa hoàn thành trạm nào</TermReplacer></p>
+                    <p className="text-muted"><TermReplacer>{t('no_stations_completed')}</TermReplacer></p>
                   ) : (
                     <Table striped bordered responsive>
                       <thead>
                         <tr>
-                          <th>STT</th>
-                          <th><TermReplacer>Tên trạm</TermReplacer></th>
-                          <th>Điểm</th>
-                          <th>Thời gian hoàn thành</th>
+                          <th>{t('stt')}</th>
+                          <th><TermReplacer>{t('station_name_label')}</TermReplacer></th>
+                          <th>{t('score')}</th>
+                          <th>{t('completed_time')}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -377,28 +378,28 @@ const TeamRanking = () => {
         {/* Modal xác nhận xóa bảng xếp hạng */}
         <Modal show={showResetModal} onHide={() => setShowResetModal(false)}>
           <Modal.Header closeButton>
-            <Modal.Title>Xác nhận xóa tất cả</Modal.Title>
+            <Modal.Title>{t('confirm_delete_all')}</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            <p>Bạn có chắc chắn muốn xóa toàn bộ bảng xếp hạng không?</p>
-            <p className="text-danger fw-bold">Lưu ý: Hành động này sẽ xóa:</p>
+            <p>{t('confirm_delete_ranking_question')}</p>
+            <p className="text-danger fw-bold">{t('note_action_will_delete')}:</p>
             <ul className="text-danger">
-              <li><strong>Tất cả đội chơi</strong></li>
-              <li>Điểm số và trạm đã hoàn thành</li>
-              <li>Lịch sử nộp bài</li>
+              <li><strong>{t('all_teams')}</strong></li>
+              <li>{t('scores_and_completed_stations')}</li>
+              <li>{t('submission_history')}</li>
             </ul>
-            <p className="text-danger"><strong>Thao tác này không thể hoàn tác sau khi xác nhận!</strong></p>
+            <p className="text-danger"><strong>{t('action_cannot_be_undone')}</strong></p>
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={() => setShowResetModal(false)}>
-              Hủy
+              {t('cancel')}
             </Button>
             <Button 
               variant="danger" 
               onClick={handleResetRanking}
               disabled={resetLoading}
             >
-              {resetLoading ? 'Đang xóa...' : 'Xác nhận xóa'}
+              {resetLoading ? t('deleting') : t('confirm_delete')}
             </Button>
           </Modal.Footer>
         </Modal>
@@ -408,21 +409,21 @@ const TeamRanking = () => {
           <Modal.Header closeButton>
             <Modal.Title className="text-warning">
               <i className="bi bi-exclamation-triangle-fill me-2"></i>
-              Xóa điểm số
+              {t('reset_scores')}
             </Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            <p>Bạn có chắc chắn muốn xóa <strong>tất cả điểm số</strong> và <strong>thứ hạng</strong> không?</p>
-            <p><strong>Lưu ý:</strong></p>
+            <p>{t('confirm_reset_scores_question')}</p>
+            <p><strong>{t('note')}:</strong></p>
             <ul>
-              <li className="text-danger"><strong>Xóa:</strong> Điểm số và trạm đã hoàn thành</li>
-              <li className="text-danger"><strong>Xóa:</strong> Lịch sử nộp bài</li>
+              <li className="text-danger"><strong>{t('delete')}:</strong> {t('scores_and_completed_stations')}</li>
+              <li className="text-danger"><strong>{t('delete')}:</strong> {t('submission_history')}</li>
             </ul>
-            <p className="text-warning"><strong>Thao tác này không thể hoàn tác sau khi xác nhận!</strong></p>
+            <p className="text-warning"><strong>{t('action_cannot_be_undone')}</strong></p>
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={() => setShowResetScoresModal(false)} disabled={resetScoresLoading}>
-              Hủy
+              {t('cancel')}
             </Button>
             <Button 
               variant="warning" 
@@ -432,12 +433,12 @@ const TeamRanking = () => {
               {resetScoresLoading ? (
                 <>
                   <Spinner animation="border" size="sm" className="me-1" />
-                  Đang xóa...
+                  {t('deleting')}
                 </>
               ) : (
                 <>
                   <i className="bi bi-eraser me-1"></i>
-                  Xóa điểm số
+                  {t('reset_scores')}
                 </>
               )}
             </Button>

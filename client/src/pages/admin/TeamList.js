@@ -10,6 +10,7 @@ import { saveAs } from 'file-saver';
 import ErrorHandler from '../../components/ErrorHandler';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { handleApiError } from '../../utils/helpers';
+import { useLanguage } from '../../context/LanguageContext';
 
 // Khóa cho localStorage, đặt ở mức global để tránh xung đột
 const LOGS_STORAGE_KEY = 'tcl_team_status_logs_v1';
@@ -70,6 +71,8 @@ const TeamList = () => {
   const isFirstRender = useRef(true);
   const manualTeamUpdate = useRef(false);
   const logsInitialized = useRef(false);
+
+  const { t } = useLanguage();
 
   // Load logs from localStorage when component mounts
   useEffect(() => {
@@ -222,7 +225,7 @@ const TeamList = () => {
       });
       
       // Hiển thị thông báo tạm thời về thay đổi trạng thái
-      setSuccess(`Trạng thái của đội "${teamName}" đã thay đổi từ "${getStatusName(oldStatus)}" thành "${getStatusName(newStatus)}"`);
+      setSuccess(t('status_change_success').replace('{teamName}', teamName).replace('{oldStatus}', getStatusName(oldStatus)).replace('{newStatus}', getStatusName(newStatus)));
       setTimeout(() => setSuccess(null), 3000);
     }
   };
@@ -255,7 +258,7 @@ const TeamList = () => {
         return updatedLogs;
       });
       
-      setSuccess('Đã thêm bản ghi thử nghiệm vào nhật ký');
+      setSuccess(t('add_manual_log_success') || 'Đã thêm bản ghi thử nghiệm vào nhật ký');
       setTimeout(() => setSuccess(null), 3000);
     }
   };
@@ -280,10 +283,10 @@ const TeamList = () => {
       setTeams(prevTeams => [...prevTeams, newTeam.data]);
       setShowCreateModal(false);
       setFormData({ name: '', password: '' });
-      setSuccess('Đã tạo đội thành công');
+      setSuccess(t('create_team_success'));
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      setError('Không thể tạo đội. Vui lòng thử lại.');
+      setError(t('create_team_error'));
       console.error('Error creating team:', err);
     }
   };
@@ -298,25 +301,25 @@ const TeamList = () => {
       );
       setTeams(updatedTeams);
       setShowEditModal(false);
-      setSuccess('Đã cập nhật đội thành công');
+      setSuccess(t('update_team_success'));
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      setError('Không thể cập nhật đội. Vui lòng thử lại.');
+      setError(t('update_team_error'));
       console.error('Error updating team:', err);
     }
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa đội này?')) {
+    if (window.confirm(t('confirm_delete_team'))) {
       try {
         manualTeamUpdate.current = true;
         await teamApi.delete(id);
         const updatedTeams = teams.filter(team => team._id !== id);
         setTeams(updatedTeams);
-        setSuccess('Đã xóa đội thành công');
+        setSuccess(t('delete_team_success'));
         setTimeout(() => setSuccess(null), 3000);
       } catch (err) {
-        setError('Không thể xóa đội. Vui lòng thử lại.');
+        setError(t('delete_team_error'));
         console.error('Error deleting team:', err);
       }
     }
@@ -346,7 +349,7 @@ const TeamList = () => {
     if (window.confirm('Bạn có chắc chắn muốn xóa tất cả nhật ký thay đổi trạng thái?')) {
       setStatusLogs([]);
       localStorage.removeItem(LOGS_STORAGE_KEY);
-      setSuccess('Đã xóa tất cả nhật ký thay đổi trạng thái');
+      setSuccess(t('logs_deleted'));
       setTimeout(() => setSuccess(null), 3000);
     }
   };
@@ -356,10 +359,10 @@ const TeamList = () => {
     const savedLogs = getLogsFromStorage();
     if (savedLogs.length > 0) {
       setStatusLogs(savedLogs);
-      setSuccess(`Đã tải ${savedLogs.length} bản ghi nhật ký từ bộ nhớ cục bộ`);
+      setSuccess(t('logs_load_success').replace('{count}', savedLogs.length));
       setTimeout(() => setSuccess(null), 3000);
     } else {
-      setError('Không tìm thấy nhật ký trong bộ nhớ cục bộ');
+      setError(t('logs_load_error'));
       setTimeout(() => setError(null), 3000);
     }
   };
@@ -373,27 +376,27 @@ const TeamList = () => {
   const renderStatus = (status) => {
     switch(status) {
       case 'active':
-        return <Badge bg="success">Đang hoạt động</Badge>;
+        return <Badge bg="success">{t('team_status_active')}</Badge>;
       case 'hidden':
-        return <Badge bg="warning">Ẩn tab</Badge>;
+        return <Badge bg="warning">{t('team_status_hidden')}</Badge>;
       case 'copied':
-        return <Badge bg="danger">Đã sao chép</Badge>;
+        return <Badge bg="danger">{t('team_status_copied')}</Badge>;
       case 'exited':
-        return <Badge bg="secondary">Đã thoát</Badge>;
+        return <Badge bg="secondary">{t('team_status_exited')}</Badge>;
       default:
-        return <Badge bg="light" text="dark">Không hoạt động</Badge>;
+        return <Badge bg="light" text="dark">{t('team_status_inactive')}</Badge>;
     }
   };
   
   // Hiển thị tên trạng thái
   const getStatusName = (status) => {
     switch(status) {
-      case 'active': return 'Đang hoạt động';
-      case 'hidden': return 'Ẩn tab';
-      case 'copied': return 'Đã sao chép'; 
-      case 'exited': return 'Đã thoát';
-      case 'inactive': return 'Không hoạt động';
-      default: return 'Không hoạt động';
+      case 'active': return t('team_status_active');
+      case 'hidden': return t('team_status_hidden');
+      case 'copied': return t('team_status_copied'); 
+      case 'exited': return t('team_status_exited');
+      case 'inactive': return t('team_status_inactive');
+      default: return t('team_status_inactive');
     }
   };
 
@@ -417,34 +420,34 @@ const TeamList = () => {
       
       // Nội dung được sao chép mới
       const teamInfo = 
-`THÔNG TIN ĐĂNG NHẬP ${replaceStationTerm('TRẠM')}
+`${t('login_info')} ${replaceStationTerm(t('station_label')).toUpperCase()}
 ------------------------------------------
-Tên đội: ${teamName}
-Mật khẩu: ${teamPassword}
+${t('team_name_label')}: ${teamName}
+${t('password_label')}: ${teamPassword}
 ------------------------------------------
-HƯỚNG DẪN ĐĂNG NHẬP:
-1. Quét QR của ban tổ chức cung cấp để vào ${replaceStationTerm('trạm')}
-2. Nhập thông tin đăng nhập:
-   - Chọn đội: ${teamName}
-   - Mật khẩu: ${teamPassword}
-3. Nhấn nút "XÁC NHẬN"
-4. Giải mật thư và nhập đáp án vào ô trả lời
+${t('login_instructions')}:
+1. ${t('scan_qr')} ${replaceStationTerm(t('station_label').toLowerCase())}
+2. ${t('enter_login_info')}:
+   - ${t('select_team')}: ${teamName}
+   - ${t('password_label')}: ${teamPassword}
+3. ${t('press_confirm')}
+4. ${t('solve_cipher')}
 
-LƯU Ý:
-- Giữ kín Mật khẩu, không chia sẻ cho đội khác
-- Chỉ đăng nhập trên một thiết bị tại một thời điểm
-- Ban tổ chức có thể giới hạn số lần trả lời sai cho mỗi đội
-- Trả lời sai quá số lần sẽ bị khóa tùy vào thời gian của ban tổ chức chọn
-- Nếu gặp lỗi, hãy:
-  + Kiểm tra kết nối mạng
-  + Đảm bảo chọn đúng đội và nhập đúng mật khẩu
-  + Liên hệ ban tổ chức để được hỗ trợ`;
+${t('notes')}:
+- ${t('keep_password_secure')}
+- ${t('login_single_device')}
+- ${t('attempt_limit')}
+- ${t('attempt_lock')}
+- ${t('troubleshooting')}:
+  + ${t('check_connection')}
+  + ${t('verify_credentials')}
+  + ${t('contact_organizers')}`;
       
       // Phương pháp 1: Sử dụng Clipboard API (hiện đại hơn)
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(teamInfo)
           .then(() => {
-            setSuccess(`Đã sao chép thông tin đăng nhập của đội ${teamName}`);
+            setSuccess(t('copy_team_info_success').replace('{teamName}', teamName));
             setTimeout(() => setSuccess(null), 3000);
           })
           .catch(err => {
@@ -456,7 +459,7 @@ LƯU Ý:
         copyToClipboardFallback(teamInfo, teamName);
       }
     } catch (err) {
-      setError('Không thể sao chép thông tin. Vui lòng thử lại.');
+      setError(t('copy_error'));
       console.error('Error copying team info:', err);
     }
   };
@@ -482,16 +485,16 @@ LƯU Ý:
       document.body.removeChild(textArea);
       
       if (successful) {
-        setSuccess(`Đã sao chép thông tin của đội ${teamName} vào clipboard`);
+        setSuccess(t('copy_team_info_success').replace('{teamName}', teamName));
       } else {
-        setError('Không thể sao chép. Vui lòng thử lại hoặc sao chép thủ công.');
+        setError(t('copy_fallback_error'));
       }
       setTimeout(() => {
         setSuccess(null);
         setError(null);
       }, 3000);
     } catch (err) {
-      setError('Không thể sao chép thông tin. Vui lòng thử lại.');
+      setError(t('copy_error'));
       console.error('Error in copy fallback:', err);
       setTimeout(() => setError(null), 3000);
     }
@@ -506,15 +509,15 @@ LƯU Ý:
       const workbook = new ExcelJS.Workbook();
       
       // Tạo worksheet
-      const worksheet = workbook.addWorksheet('Nhật ký trạng thái');
+      const worksheet = workbook.addWorksheet(t('status_history'));
       
       // Đặt tiêu đề cho các cột
       worksheet.columns = [
-        { header: 'Thời gian', key: 'timestamp', width: 20 },
-        { header: 'Tên đội', key: 'teamName', width: 30 },
-        { header: 'ID đội', key: 'teamId', width: 25 },
-        { header: 'Trạng thái cũ', key: 'oldStatus', width: 15 },
-        { header: 'Trạng thái mới', key: 'newStatus', width: 15 },
+        { header: t('export_log_time'), key: 'timestamp', width: 20 },
+        { header: t('export_log_team_name'), key: 'teamName', width: 30 },
+        { header: t('export_log_team_id'), key: 'teamId', width: 25 },
+        { header: t('export_log_old_status'), key: 'oldStatus', width: 15 },
+        { header: t('export_log_new_status'), key: 'newStatus', width: 15 },
       ];
       
       // Làm đậm header
@@ -547,17 +550,52 @@ LƯU Ý:
       
       // Xuất file
       const buffer = await workbook.xlsx.writeBuffer();
-      const fileName = `Nhật_ký_trạng_thái_đội_${new Date().toLocaleDateString('vi-VN')}.xlsx`;
+      const fileName = `${t('status_log_export_filename')}_${new Date().toLocaleDateString()}.xlsx`;
       
       saveAs(new Blob([buffer]), fileName);
       
-      setSuccess('Xuất Excel thành công!');
+      setSuccess(t('logs_export_excel_success') || 'Xuất nhật ký thành công!');
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       setError('Không thể xuất file Excel. Vui lòng thử lại sau.');
       console.error('Error exporting logs to Excel:', err);
     } finally {
       setExportLoading(false);
+    }
+  };
+
+  // Buộc đăng xuất đội chơi
+  const handleForceLogout = async (teamId) => {
+    if (window.confirm('Bạn có chắc chắn muốn buộc đăng xuất đội này khỏi thiết bị của họ?')) {
+      try {
+        const response = await teamApi.forceLogout(teamId);
+        if (response.data.success) {
+          // Cập nhật danh sách đội
+          const updatedTeams = teams.map(team => 
+            team._id === teamId 
+              ? { ...team, status: 'inactive', sessionId: null, deviceInfo: null, lastActivity: new Date() } 
+              : team
+          );
+          setTeams(updatedTeams);
+          
+          // Cập nhật đội đang được xem chi tiết
+          if (selectedTeam && selectedTeam._id === teamId) {
+            setSelectedTeam({
+              ...selectedTeam,
+              status: 'inactive',
+              sessionId: null,
+              deviceInfo: null,
+              lastActivity: new Date()
+            });
+          }
+          
+          setSuccess(t('logout_device_success'));
+          setTimeout(() => setSuccess(null), 3000);
+        }
+      } catch (err) {
+        setError(t('logout_device_error'));
+        console.error('Error forcing team logout:', err);
+      }
     }
   };
 
@@ -569,15 +607,15 @@ LƯU Ý:
           <Col>
             <h1 className="mb-0 d-flex align-items-center">
               <i className="bi bi-people-fill me-3 text-primary" style={{ fontSize: '2rem' }}></i>
-              Quản lý đội chơi
+              {t('team_list_heading')}
             </h1>
-            <p className="text-muted mb-0 mt-2">Quản lý tất cả các đội chơi trong hệ thống.</p>
+            <p className="text-muted mb-0 mt-2">{t('manage_all_teams_note')}</p>
           </Col>
           <Col xs="auto">
             <div className="d-flex gap-2">
               <Button variant="primary" className="d-flex align-items-center" onClick={openCreateModal}>
                 <i className="bi bi-plus-circle me-2"></i>
-                Tạo đội mới
+                {t('create_team')}
               </Button>
             </div>
           </Col>
@@ -602,7 +640,7 @@ LƯU Ý:
                   </InputGroup.Text>
                   <Form.Control
                     type="text"
-                    placeholder="Tìm kiếm đội..."
+                    placeholder={t('search_teams_placeholder')}
                     value={searchQuery}
                     onChange={handleSearch}
                   />
@@ -610,31 +648,29 @@ LƯU Ý:
               </Form.Group>
               <Button variant="outline-primary" onClick={fetchTeamsBackground}>
                 <i className="bi bi-arrow-clockwise me-2"></i>
-                Làm mới
+                {t('refresh')}
               </Button>
             </div>
 
             {loading ? (
-              <LoadingSpinner text="Đang tải danh sách đội..." />
+              <LoadingSpinner text={t('loading_teams')} />
             ) : filteredTeams.length === 0 ? (
               <div className="text-center py-5">
                 <i className="bi bi-people text-muted" style={{ fontSize: '3rem' }}></i>
-                <p className="mt-2 text-muted">Chưa có đội nào trong hệ thống</p>
+                <p className="mt-2 text-muted">{t('no_teams')}</p>
               </div>
             ) : (
               <div className="table-responsive">
                 <Table hover>
                   <thead>
                     <tr>
-                      <th>Tên đội</th>
-                      <th>Mật khẩu</th>
-                      <th>Trạng thái</th>
-                      <th>Hoạt động gần nhất</th>
-                      <th>Điểm</th>
-                      <th>
-                        <TermReplacer>Trạm</TermReplacer>
-                      </th>
-                      <th>Thao tác</th>
+                      <th>{t('table_team_name')}</th>
+                      <th>{t('table_password')}</th>
+                      <th>{t('table_status')}</th>
+                      <th>{t('table_last_activity')}</th>
+                      <th>{t('table_score')}</th>
+                      <th><TermReplacer>{t('table_completed_stations')}</TermReplacer></th>
+                      <th>{t('table_actions')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -676,13 +712,13 @@ LƯU Ý:
                           <div className="d-flex gap-2">
                             <OverlayTrigger
                               placement="top"
-                              overlay={<Tooltip>Sao chép thông tin đội</Tooltip>}
+                              overlay={<Tooltip>{t('copy_team_info_tooltip')}</Tooltip>}
                             >
                               <Button
                                 variant="info"
                                 size="sm"
                                 onClick={(e) => copyTeamInfo(team, e)}
-                                title="Sao chép thông tin đội"
+                                title={t('copy_team_info_tooltip')}
                               >
                                 <i className="bi bi-clipboard"></i>
                               </Button>
@@ -691,7 +727,7 @@ LƯU Ý:
                               variant="warning"
                               size="sm"
                               onClick={() => showEdit(team)}
-                              title="Chỉnh sửa đội"
+                              title={t('edit_team')}
                             >
                               <i className="bi bi-pencil"></i>
                             </Button>
@@ -699,7 +735,7 @@ LƯU Ý:
                               variant="danger"
                               size="sm"
                               onClick={() => handleDelete(team._id)}
-                              title="Xóa đội"
+                              title={t('delete_team')}
                             >
                               <i className="bi bi-trash"></i>
                             </Button>
@@ -719,7 +755,7 @@ LƯU Ý:
           <Card.Header className="bg-light d-flex justify-content-between align-items-center">
             <h5 className="mb-0 d-flex align-items-center">
               <i className="bi bi-journals me-2 text-primary"></i>
-              Nhật ký thay đổi trạng thái
+              {t('status_history')}
               <Badge bg="info" className="ms-2">{statusLogs.length}</Badge>
             </h5>
             <div className="d-flex gap-2">
@@ -728,17 +764,17 @@ LƯU Ý:
                 size="sm"
                 onClick={exportLogsToExcel}
                 disabled={exportLoading || statusLogs.length === 0}
-                title="Xuất nhật ký ra Excel"
+                title={t('export_logs')}
               >
                 {exportLoading ? (
                   <>
                     <Spinner animation="border" size="sm" className="me-1" />
-                    <span className="d-none d-md-inline">Đang xuất...</span>
+                    {t('logs_exporting')}
                   </>
                 ) : (
                   <>
                     <i className="bi bi-file-excel me-1"></i>
-                    <span className="d-none d-md-inline">Xuất Excel</span>
+                    {t('logs_export_excel')}
                   </>
                 )}
               </Button>
@@ -746,34 +782,34 @@ LƯU Ý:
                 variant="outline-primary" 
                 size="sm" 
                 onClick={reloadLogsFromStorage}
-                title="Tải lại nhật ký từ bộ nhớ cục bộ"
+                title={t('reload_logs_from_storage')}
               >
                 <i className="bi bi-arrow-repeat me-1"></i>
-                <span className="d-none d-md-inline">Tải lại</span>
+                <span className="d-none d-md-inline">{t('reload')}</span>
               </Button>
               <Button 
                 variant="outline-danger" 
                 size="sm" 
                 onClick={clearLogs}
-                title="Xóa tất cả nhật ký"
+                title={t('delete_all_logs')}
               >
                 <i className="bi bi-trash me-1"></i>
-                <span className="d-none d-md-inline">Xóa</span>
+                <span className="d-none d-md-inline">{t('delete')}</span>
               </Button>
             </div>
           </Card.Header>
           <Card.Body>
             {statusLogs.length === 0 ? (
-              <p className="text-center text-muted py-3">Chưa có thay đổi trạng thái nào được ghi nhận</p>
+              <p className="text-center text-muted py-3">{t('no_status_changes_recorded')}</p>
             ) : (
               <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
                 <Table striped hover size="sm">
                   <thead>
                     <tr>
-                      <th>Thời gian</th>
-                      <th>Tên đội</th>
-                      <th>Trạng thái cũ</th>
-                      <th>Trạng thái mới</th>
+                      <th>{t('time')}</th>
+                      <th>{t('team_name')}</th>
+                      <th>{t('old_status')}</th>
+                      <th>{t('new_status')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -812,41 +848,41 @@ LƯU Ý:
       {/* Modal tạo đội mới */}
       <Modal show={showCreateModal} onHide={() => setShowCreateModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>Tạo đội mới</Modal.Title>
+          <Modal.Title>{t('create_team')}</Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleCreateSubmit}>
           <Modal.Body>
             <Form.Group className="mb-3">
-              <Form.Label>Tên đội</Form.Label>
+              <Form.Label>{t('team_name')}</Form.Label>
               <Form.Control
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
                 required
-                placeholder="Nhập tên đội"
+                placeholder={t('enter_team_name')}
               />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>Mật khẩu</Form.Label>
+              <Form.Label>{t('password')}</Form.Label>
               <Form.Control
                 type="text"
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                placeholder="Để trống để tạo mật khẩu tự động"
+                placeholder={t('leave_empty_for_auto_password')}
               />
               <Form.Text className="text-muted">
-                Mật khẩu sẽ được tạo tự động nếu bạn để trống
+                {t('password_auto_generated')}
               </Form.Text>
             </Form.Group>
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={() => setShowCreateModal(false)}>
-              Hủy
+              {t('cancel')}
             </Button>
             <Button variant="primary" type="submit">
-              Tạo đội
+              {t('create_team_button')}
             </Button>
           </Modal.Footer>
         </Form>
@@ -855,23 +891,23 @@ LƯU Ý:
       {/* Modal chỉnh sửa đội */}
       <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>Chỉnh sửa đội</Modal.Title>
+          <Modal.Title>{t('edit_team_title')}</Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleEditSubmit}>
           <Modal.Body>
             <Form.Group className="mb-3">
-              <Form.Label>Tên đội</Form.Label>
+              <Form.Label>{t('team_name')}</Form.Label>
               <Form.Control
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
                 required
-                placeholder="Nhập tên đội"
+                placeholder={t('enter_team_name')}
               />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>Mật khẩu</Form.Label>
+              <Form.Label>{t('password_label')}</Form.Label>
               <InputGroup>
                 <Form.Control
                   type={showPasswords.editForm ? "text" : "password"}
@@ -879,7 +915,7 @@ LƯU Ý:
                   value={formData.password}
                   onChange={handleChange}
                   required
-                  placeholder="Nhập mật khẩu"
+                  placeholder={t('enter_password')}
                 />
                 <Button 
                   variant="outline-secondary"
@@ -892,10 +928,10 @@ LƯU Ý:
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={() => setShowEditModal(false)}>
-              Hủy
+              {t('cancel')}
             </Button>
             <Button variant="primary" type="submit">
-              Lưu thay đổi
+              {t('save_changes')}
             </Button>
           </Modal.Footer>
         </Form>
@@ -910,7 +946,7 @@ LƯU Ý:
         <Modal.Header closeButton>
           <Modal.Title>
             <i className="bi bi-info-circle me-2 text-primary"></i>
-            Chi tiết đội: {selectedTeam?.name}
+            {t('team_detail')}: {selectedTeam?.name}
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -918,92 +954,82 @@ LƯU Ý:
             <div>
               <Row className="mb-4">
                 <Col md={6}>
-                  <h5 className="mb-3">Thông tin cơ bản</h5>
+                  <h5 className="mb-3">{t('basic_info')}</h5>
                   <Table bordered size="sm">
                     <tbody>
                       <tr>
-                        <td style={{width: '40%'}}><strong>ID đội</strong></td>
+                        <td style={{width: '40%'}}><strong>{t('team_id')}</strong></td>
                         <td>{selectedTeam._id}</td>
                       </tr>
                       <tr>
-                        <td><strong>Tên đội</strong></td>
+                        <td><strong>{t('team_name')}</strong></td>
                         <td>{selectedTeam.name}</td>
                       </tr>
                       <tr>
-                        <td><strong>Mật khẩu</strong></td>
+                        <td><strong>{t('password_label')}</strong></td>
                         <td>{selectedTeam.password}</td>
                       </tr>
                       <tr>
-                        <td><strong>Trạng thái hiện tại</strong></td>
+                        <td><strong>{t('current_status')}</strong></td>
                         <td>{renderStatus(selectedTeam.status)}</td>
                       </tr>
                       <tr>
-                        <td><strong>Hoạt động gần nhất</strong></td>
+                        <td><strong>{t('last_activity')}</strong></td>
                         <td>{formatDateTime(selectedTeam.lastActivity)}</td>
                       </tr>
                     </tbody>
                   </Table>
                 </Col>
                 <Col md={6}>
-                  <h5 className="mb-3">Thông tin trò chơi</h5>
+                  <h5 className="mb-3">{t('device_session_info')}</h5>
                   <Table bordered size="sm">
                     <tbody>
                       <tr>
-                        <td style={{width: '40%'}}><strong>Tổng điểm</strong></td>
-                        <td>{selectedTeam.totalScore || 0}</td>
+                        <td style={{width: '40%'}}><strong>{t('device_info')}</strong></td>
+                        <td>
+                          {selectedTeam.device ? (
+                            <>
+                              {selectedTeam.device.browser} / {selectedTeam.device.os}
+                              <div className="text-muted small">{selectedTeam.device.userAgent}</div>
+                            </>
+                          ) : '-'}
+                        </td>
                       </tr>
                       <tr>
-                        <td><strong><TermReplacer>Trạm đã hoàn thành</TermReplacer></strong></td>
-                        <td>{selectedTeam.completedStations?.length || 0}</td>
+                        <td><strong>IP</strong></td>
+                        <td>{selectedTeam.ip || '-'}</td>
+                      </tr>
+                      <tr>
+                        <td><strong>{t('login_session')}</strong></td>
+                        <td>
+                          {selectedTeam.loginTime ? formatDateTime(selectedTeam.loginTime) : '-'}
+                        </td>
                       </tr>
                     </tbody>
                   </Table>
                 </Col>
               </Row>
               
-              <h5 className="mb-3"><TermReplacer>Lịch sử hoàn thành trạm</TermReplacer></h5>
-              <div style={{maxHeight: '200px', overflowY: 'auto'}}>
-                <Table bordered size="sm">
-                  <thead>
-                    <tr className="table-light">
-                      <th>Thời gian</th>
-                      <th>Trạng thái cũ</th>
-                      <th>Trạng thái mới</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {statusLogs
-                      .filter(log => log.teamId === selectedTeam._id)
-                      .map(log => (
-                        <tr key={log.id}>
-                          <td>{formatDateTime(log.timestamp)}</td>
-                          <td>
-                            <Badge bg={log.oldStatus === 'active' ? 'success' : 
-                              log.oldStatus === 'hidden' ? 'warning' : 
-                              log.oldStatus === 'copied' ? 'danger' : 
-                              log.oldStatus === 'exited' ? 'secondary' : 'light'} 
-                              text={log.oldStatus === 'active' || log.oldStatus === 'hidden' || log.oldStatus === 'copied' || log.oldStatus === 'exited' ? 'white' : 'dark'}>
-                              {getStatusName(log.oldStatus)}
-                            </Badge>
-                          </td>
-                          <td>
-                            <Badge bg={log.newStatus === 'active' ? 'success' : 
-                              log.newStatus === 'hidden' ? 'warning' : 
-                              log.newStatus === 'copied' ? 'danger' : 
-                              log.newStatus === 'exited' ? 'secondary' : 'light'} 
-                              text={log.newStatus === 'active' || log.newStatus === 'hidden' || log.newStatus === 'copied' || log.newStatus === 'exited' ? 'white' : 'dark'}>
-                              {getStatusName(log.newStatus)}
-                            </Badge>
-                          </td>
-                        </tr>
-                      ))}
-                    {statusLogs.filter(log => log.teamId === selectedTeam._id).length === 0 && (
+              <Row className="mb-4">
+                <Col md={12}>
+                  <h5 className="mb-3">{t('game_info')}</h5>
+                  <Table bordered size="sm">
+                    <tbody>
                       <tr>
-                        <td colSpan="3" className="text-center text-muted py-3">Chưa có thay đổi trạng thái nào được ghi nhận</td>
+                        <td style={{width: '30%'}}><strong>{t('total_score')}</strong></td>
+                        <td>{selectedTeam.totalScore || 0}</td>
                       </tr>
-                    )}
-                  </tbody>
-                </Table>
+                      <tr>
+                        <td><strong><TermReplacer>{t('completed_stations')}</TermReplacer></strong></td>
+                        <td>{selectedTeam.completedStations?.length || 0}</td>
+                      </tr>
+                    </tbody>
+                  </Table>
+                </Col>
+              </Row>
+
+              <div className="mt-4 mb-2">
+                <h5>{t('status_history')}</h5>
               </div>
             </div>
           )}

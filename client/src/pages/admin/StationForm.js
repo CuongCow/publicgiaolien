@@ -5,9 +5,11 @@ import AdminNavbar from '../../components/Navbar';
 import { stationApi, teamApi } from '../../services/api';
 import { formatDateTime, replaceStationTerm } from '../../utils/helpers';
 import TermReplacer from '../../utils/TermReplacer';
+import { useLanguage } from '../../context/LanguageContext';
 
 const StationForm = () => {
   const { id } = useParams();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const isEditMode = Boolean(id);
 
@@ -15,7 +17,8 @@ const StationForm = () => {
   const [stations, setStations] = useState([]);
   const [commonTeams, setCommonTeams] = useState([]);
   const [gameName, setGameName] = useState('');
-  const [gameNote, setGameNote] = useState('Trung thành với bản mã');
+  const [gameNote, setGameNote] = useState('');
+  const [loadingGameData, setLoadingGameData] = useState(false);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -45,8 +48,48 @@ const StationForm = () => {
     } else {
       // Khởi tạo mặc định một trạm khi mới vào trang
       addNewStation();
+      
+      // Truy vấn thông tin của trạm đã có để lấy tên mật thư, ghi chú và danh sách đội
+      fetchExistingGameInfo();
     }
   }, [isEditMode, id]);
+  
+  // Hàm mới để truy vấn thông tin trò chơi đã có
+  const fetchExistingGameInfo = async () => {
+    try {
+      setLoadingGameData(true);
+      
+      // Truy vấn danh sách đội
+      const teamsResponse = await teamApi.getAll();
+      if (teamsResponse.data && teamsResponse.data.length > 0) {
+        // Chỉ lấy tên các đội
+        const teamNames = teamsResponse.data.map(team => team.name);
+        setCommonTeams(teamNames);
+      }
+      
+      // Truy vấn thông tin từ một trạm đã có (lấy trạm đầu tiên)
+      const stationsResponse = await stationApi.getAll();
+      if (stationsResponse.data && stationsResponse.data.length > 0) {
+        // Lấy thông tin từ trạm đầu tiên
+        const firstStation = stationsResponse.data[0];
+        
+        // Cập nhật tên mật thư nếu có
+        if (firstStation.gameName) {
+          setGameName(firstStation.gameName);
+        }
+        
+        // Cập nhật ghi chú nếu có
+        if (firstStation.gameNote) {
+          setGameNote(firstStation.gameNote);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching existing game info:', error);
+      // Không hiển thị lỗi này cho người dùng vì đây là tính năng bổ sung
+    } finally {
+      setLoadingGameData(false);
+    }
+  };
 
   const fetchStationData = async () => {
     try {
@@ -160,7 +203,7 @@ const StationForm = () => {
         setStations([stationToEdit]);
       }
     } catch (err) {
-      setError('Không thể tải thông tin danh mục. Vui lòng thử lại sau.');
+      setError(t('load_station_error'));
       console.error('Error fetching station data:', err);
     } finally {
       setLoading(false);
@@ -310,21 +353,27 @@ const StationForm = () => {
 
   // Thêm một trạm mới vào danh sách (cập nhật với mảng correctAnswer)
   const addNewStation = () => {
-    const newStation = {
-      name: '',
-      content: '',
-      contentType: 'text',
-      ottContent: '',
-      nwContent: '',
-      showText: true,
-      showImage: false,
-      showOTT: true,
-      showNW: true,
-      correctAnswer: [],
-      maxAttempts: 5,
-      lockTime: 0
-    };
-    setStations(prev => [...prev, newStation]);
+    // Thêm trạm mới vào danh sách
+    setStations(prev => [
+      ...prev,
+      {
+        name: '',
+        teams: commonTeams, // Tự động sử dụng danh sách đội chung
+        content: '',
+        contentType: 'text',
+        correctAnswer: [],
+        maxAttempts: 5,
+        lockTime: 0,
+        showText: true,
+        showImage: false,
+        showOTT: true,
+        showNW: true,
+        ottContent: '',
+        nwContent: '',
+        gameName: gameName, // Tự động sử dụng tên mật thư
+        gameNote: gameNote, // Tự động sử dụng ghi chú
+      }
+    ]);
   };
 
   // Xóa một trạm khỏi danh sách
@@ -339,13 +388,13 @@ const StationForm = () => {
     
     // Kiểm tra loại file
     if (!file.type.startsWith('image/')) {
-      setError('Chỉ cho phép tải lên hình ảnh');
+      setError(t('invalid_image'));
       return;
     }
     
     // Kiểm tra kích thước file (tối đa 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      setError('Kích thước hình ảnh không được vượt quá 5MB');
+      setError(t('image_size_limit'));
       return;
     }
     
@@ -390,7 +439,7 @@ const StationForm = () => {
         }));
       }
     } catch (err) {
-      setError('Không thể tải lên hình ảnh. Vui lòng thử lại.');
+      setError(t('image_upload_error'));
       console.error('Error uploading image:', err);
     } finally {
       setUploadLoading(false);
@@ -443,13 +492,13 @@ const StationForm = () => {
           {uploadLoading ? (
             <>
               <Spinner animation="border" size="sm" className="me-1" />
-              Đang tải...
+              {t('uploading')}
             </>
           ) : (
-            'Chọn hình ảnh'
+            t('choose_image')
           )}
         </Button>
-        <span className="text-muted">hoặc</span>
+        <span className="text-muted">{t('or')}</span>
       </div>
       
       <Form.Control
@@ -457,15 +506,15 @@ const StationForm = () => {
         name="content"
         value={formData.content}
         onChange={handleChange}
-        placeholder="Nhập URL hình ảnh"
+        placeholder={t('image_url_placeholder')}
       />
       <Form.Text className="text-muted">
-        Bạn có thể tải lên hình ảnh hoặc nhập URL hình ảnh có sẵn
+        {t('image_upload_help')}
       </Form.Text>
 
       {imagePreview && (
         <div className="mt-3 border rounded p-2 text-center">
-          <p className="mb-2">Xem trước:</p>
+          <p className="mb-2">{t('preview')}</p>
           <img 
             src={imagePreview} 
             alt="Preview" 
@@ -544,132 +593,123 @@ const StationForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
     
     try {
-      setLoading(true);
-      setError(null);
-      setSuccess(null);
-      
       if (isEditMode) {
-        // Xử lý nội dung dựa trên loại hiển thị
-        // Phần mã xử lý nội dung...
-        
-        // Đảm bảo correctAnswer là mảng và không trống
-        let correctAnswerArray = formData.correctAnswer;
-        if (!Array.isArray(correctAnswerArray)) {
-          correctAnswerArray = formData.correctAnswer ? [formData.correctAnswer] : [];
-        }
-        if (correctAnswerArray.length === 0) {
-          setError('Vui lòng nhập ít nhất một đáp án chính xác.');
-          setLoading(false);
-          return;
-        }
-        
         // Cập nhật trạm
-        const updatedStation = {
-          name: formData.name,
-          teams: commonTeams,
-          content: formData.content,
-          contentType: formData.contentType,
-          ottContent: formData.ottContent,
-          nwContent: formData.nwContent,
-          showText: formData.showText,
-          showImage: formData.showImage,
-          showOTT: formData.showOTT,
-          showNW: formData.showNW,
-          correctAnswer: correctAnswerArray,
-          maxAttempts: formData.maxAttempts,
-          lockTime: formData.lockTime,
-          gameName: gameName,
-          gameNote: gameNote
-        };
+        const station = stations[0];
         
-        await stationApi.update(id, updatedStation);
-        setSuccess(<TermReplacer>Cập nhật trạm thành công!</TermReplacer>);
-      } else {
-        // Kiểm tra đáp án trước khi tạo trạm
-        for (let i = 0; i < stations.length; i++) {
-          const station = stations[i];
-          let correctAnswerArray = station.correctAnswer;
-          if (!Array.isArray(correctAnswerArray)) {
-            correctAnswerArray = station.correctAnswer ? [station.correctAnswer] : [];
+        // Xây dựng nội dung dựa vào loại
+        let finalContent = '';
+        let finalContentType = '';
+        
+        if (station.showImage && !station.showText) {
+          // Chỉ ảnh
+          finalContent = imagePreview;
+          finalContentType = 'image';
+        } else if (station.showText && !station.showImage) {
+          // Chỉ văn bản
+          finalContentType = 'text';
+          
+          if (station.showOTT && station.showNW) {
+            finalContent = `OTT:\n${station.ottContent}\n\nNW:\n${station.nwContent}\n/AR`;
+          } else if (station.showOTT) {
+            finalContent = `OTT:\n${station.ottContent}`;
+          } else if (station.showNW) {
+            finalContent = `NW:\n${station.nwContent}\n/AR`;
           }
-          if (correctAnswerArray.length === 0) {
-            setError(`Danh mục "${station.name || `Danh mục ${i+1}`}" chưa có đáp án. Vui lòng thêm ít nhất một đáp án.`);
-            setLoading(false);
-            return;
+        } else if (station.showImage && station.showText) {
+          // Cả hai
+          finalContentType = 'both';
+          
+          if (station.imagePreview) {
+            finalContent = station.imagePreview;
           }
+        } else {
+          // Không có nội dung
+          finalContent = '';
+          finalContentType = 'text';
         }
         
-        // Tạo nhiều trạm
-        const stationsToCreate = stations.map(station => {
-          // Xác định contentType dựa trên checkbox
-          let contentType = 'text';
-          if (station.showText && station.showImage) {
-            contentType = 'both';
-          } else if (station.showImage) {
-            contentType = 'image';
-          }
-          
-          // Tổng hợp nội dung text nếu có
-          let content = '';
-          if (station.showText) {
-            // Kết hợp OTT và NW vào content để tương thích ngược
-            let ottPart = '';
-            let nwPart = '';
-            
-            if (station.showOTT && station.ottContent) {
-              ottPart = `OTT:\n${station.ottContent || ''}`;
-            }
-            
-            if (station.showNW && station.nwContent) {
-              nwPart = `NW:\n${station.nwContent || ''}/AR`;
-            }
-            
-            if (ottPart && nwPart) {
-              content = `${ottPart}\n\n${nwPart}`;
-            } else if (ottPart) {
-              content = ottPart;
-            } else if (nwPart) {
-              content = nwPart;
-            }
-          } else if (station.showImage) {
-            content = station.content;
-          }
-          
-          // Đảm bảo correctAnswer là mảng và không trống
-          let correctAnswerArray = station.correctAnswer;
-          if (!Array.isArray(correctAnswerArray)) {
-            correctAnswerArray = station.correctAnswer ? [station.correctAnswer] : [];
-          }
-          
-          return {
-            ...station,
-            contentType,
-            content,
-            correctAnswer: correctAnswerArray,
-            teams: commonTeams,
-            gameName: gameName,
-            gameNote: gameNote
-          };
+        // Sử dụng API để cập nhật
+        await stationApi.update(id, {
+          ...station,
+          content: finalContent,
+          contentType: finalContentType,
+          teams: commonTeams, // Sử dụng danh sách đội chung
+          gameName: gameName, // Sử dụng tên mật thư chung
+          gameNote: gameNote, // Sử dụng ghi chú chung
         });
+        
+        setSuccess(t('update_station_success'));
+      } else {
+        // Tạo mới nhiều trạm
+        // Xây dựng mảng các trạm để tạo
+        const stationsToCreate = [];
+        
+        for (let station of stations) {
+          // Xây dựng nội dung dựa vào loại
+          let finalContent = '';
+          let finalContentType = '';
+          
+          if (station.showImage && !station.showText) {
+            // Chỉ ảnh
+            finalContent = station.imagePreview || '';
+            finalContentType = 'image';
+          } else if (station.showText && !station.showImage) {
+            // Chỉ văn bản
+            finalContentType = 'text';
+            
+            if (station.showOTT && station.showNW) {
+              finalContent = `OTT:\n${station.ottContent || ''}\n\nNW:\n${station.nwContent || ''}\n/AR`;
+            } else if (station.showOTT) {
+              finalContent = `OTT:\n${station.ottContent || ''}`;
+            } else if (station.showNW) {
+              finalContent = `NW:\n${station.nwContent || ''}\n/AR`;
+            }
+          } else if (station.showImage && station.showText) {
+            // Cả hai
+            finalContentType = 'both';
+            
+            if (station.imagePreview) {
+              finalContent = station.imagePreview;
+            }
+          } else {
+            // Không có nội dung
+            finalContent = '';
+            finalContentType = 'text';
+          }
+          
+          // Thêm vào mảng các trạm để tạo
+          stationsToCreate.push({
+            ...station,
+            content: finalContent,
+            contentType: finalContentType,
+            teams: commonTeams, // Sử dụng danh sách đội chung
+            gameName: gameName, // Sử dụng tên mật thư chung
+            gameNote: gameNote, // Sử dụng ghi chú chung
+          });
+        }
 
         if (stationsToCreate.length > 0) {
           await stationApi.createMultiple(stationsToCreate);
-          setSuccess(`Đã tạo ${stations.length} danh mục thành công!`);
+          setSuccess(t('create_stations_success').replace('{count}', stations.length));
           
           // Reset form sau khi tạo mới
           setStations([]);
           setCommonTeams([]);
           setGameName('');
-          setGameNote('Trung thành với bản mã');
+          setGameNote('');
           
           // Khởi tạo một trạm mới
           setTimeout(() => {
             addNewStation();
           }, 100);
         } else {
-          setError('Vui lòng thêm ít nhất một danh mục để tạo.');
+          setError(t('at_least_one_station_error'));
           setLoading(false);
           return;
         }
@@ -680,10 +720,16 @@ const StationForm = () => {
         navigate('/admin/stations');
       }, 2000);
     } catch (err) {
-      setError('Có lỗi xảy ra. Vui lòng thử lại.');
+      setError(t('submit_station_error'));
       console.error('Error submitting station form:', err);
     } finally {
       setLoading(false);
+      
+      // Tự động xóa thông báo sau 3 giây
+      setTimeout(() => {
+        setSuccess(null);
+        setError(null);
+      }, 3000);
     }
   };
 
@@ -693,108 +739,111 @@ const StationForm = () => {
       {/* Thông tin chung cho trò chơi */}
       <Card className="mb-4">
         <Card.Header>
-          <h5 className="mb-0">Thông tin chung</h5>
+          <h5 className="mb-0">{t('common_info')}</h5>
         </Card.Header>
         <Card.Body>
-          <Row>
-            <Col md={6}>
-              <Form.Group className="mb-3">
-                <Form.Label>Tên mật thư hội trại</Form.Label>
-                <Form.Control
-                  type="text"
-                  value={gameName}
-                  onChange={(e) => setGameName(e.target.value)}
-                  placeholder="Nhập tên của mật thư hội trại"
-                />
-                <Form.Text className="text-muted">
-                  Tên này sẽ được hiển thị trong các màn hình người dùng, báo cáo và bảng xếp hạng
-                </Form.Text>
-              </Form.Group>
-            </Col>
-            <Col md={6}>
-              <Form.Group className="mb-3">
-                <Form.Label>Ghi chú cho các đội chơi</Form.Label>
-                <Form.Control
-                  type="text"
-                  value={gameNote}
-                  onChange={(e) => setGameNote(e.target.value)}
-                  placeholder="Nhập ghi chú cho các đội chơi"
-                />
-                <Form.Text className="text-muted">
-                  Ghi chú chung sẽ hiển thị cho tất cả đội chơi khi tham gia
-                </Form.Text>
-              </Form.Group>
-            </Col>
-          </Row>
+          {loadingGameData ? (
+            <div className="text-center py-3">
+              <Spinner animation="border" size="sm" className="me-2" />
+              <span>{t('loading_data')}</span>
+            </div>
+          ) : (
+            <>
+              <Row>
+                <Col md={6}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>{t('game_name')}</Form.Label>
+                    <Form.Control
+                      type="text"
+                      value={gameName}
+                      onChange={(e) => setGameName(e.target.value)}
+                      placeholder={t('game_name_placeholder')}
+                    />
+                    <Form.Text className="text-muted">{t('game_name_note')}</Form.Text>
+                  </Form.Group>
+                </Col>
+                <Col md={6}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>{t('game_note')}</Form.Label>
+                    <Form.Control
+                      type="text"
+                      value={gameNote}
+                      onChange={(e) => setGameNote(e.target.value)}
+                      placeholder={t('game_note_placeholder')}
+                    />
+                    <Form.Text className="text-muted">{t('game_note_note')}</Form.Text>
+                  </Form.Group>
+                </Col>
+              </Row>
 
-          <Row>
-            <Col>
-              <Form.Label>Tên các đội chơi</Form.Label>
-              <InputGroup className="mb-3">
-                <Form.Control
-                  type="text"
-                  value={teamsInput}
-                  onChange={handleTeamsInputChange}
-                  onKeyPress={handleTeamKeyPress}
-                  placeholder="Nhập tên đội"
-                />
-                <Button variant="outline-secondary" onClick={addTeam}>
-                  Thêm
-                </Button>
-                <Button variant="outline-primary" onClick={addMultipleTeams}>
-                  Thêm nhiều đội
-                </Button>
-              </InputGroup>
-              <Form.Text className="text-muted mb-2">
-                Nhập tên đội và nhấn "Thêm" hoặc nhập danh sách đội cách nhau bởi dấu phẩy
-              </Form.Text>
-            </Col>
-          </Row>
+              <Row>
+                <Col>
+                  <Form.Label>{t('teams_label')}</Form.Label>
+                  <InputGroup className="mb-3">
+                    <Form.Control
+                      type="text"
+                      value={teamsInput}
+                      onChange={handleTeamsInputChange}
+                      onKeyPress={handleTeamKeyPress}
+                      placeholder={t('teams_label')}
+                    />
+                    <Button variant="outline-secondary" onClick={addTeam}>
+                      {t('add_team')}
+                    </Button>
+                    <Button variant="outline-primary" onClick={addMultipleTeams}>
+                      {t('add_multiple_teams')}
+                    </Button>
+                  </InputGroup>
+                  <Form.Text className="text-muted mb-2">{t('teams_input_note')}</Form.Text>
+                </Col>
+              </Row>
 
-          {/* Hiển thị danh sách đội chung */}
-          {commonTeams.length > 0 && (
-            <Row>
-              <Col>
-                <h6>Danh sách đội ({commonTeams.length} đội)</h6>
-                <div className="border rounded p-2 mb-3" style={{ maxHeight: '150px', overflowY: 'auto' }}>
-                  <div className="d-flex flex-wrap">
-                    {commonTeams.map((team, index) => (
-                      <div key={index} className="me-2 mb-2">
-                        <Badge 
-                          bg="secondary" 
-                          className="d-flex align-items-center"
-                          style={{ fontSize: '14px', padding: '8px' }}
-                        >
-                          {team}
-                          <Button 
-                            variant="link" 
-                            className="p-0 ms-1 text-light" 
-                            size="sm"
-                            onClick={() => removeTeam(index)}
-                          >
-                            ×
-                          </Button>
-                        </Badge>
+              {/* Hiển thị danh sách đội chung */}
+              {commonTeams.length > 0 && (
+                <Row>
+                  <Col>
+                    <h6>{t('teams_list')} ({commonTeams.length} {t('team_count')})</h6>
+                    <div className="border rounded p-2 mb-3" style={{ maxHeight: '150px', overflowY: 'auto' }}>
+                      <div className="d-flex flex-wrap">
+                        {commonTeams.map((team, index) => (
+                          <div key={index} className="me-2 mb-2">
+                            <Badge 
+                              bg="secondary" 
+                              className="d-flex align-items-center"
+                              style={{ fontSize: '14px', padding: '8px' }}
+                            >
+                              {team}
+                              <Button 
+                                variant="link" 
+                                className="p-0 ms-1 text-light" 
+                                size="sm"
+                                onClick={() => removeTeam(index)}
+                              >
+                                ×
+                              </Button>
+                            </Badge>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                </div>
-              </Col>
-            </Row>
+                    </div>
+                  </Col>
+                </Row>
+              )}
+            </>
           )}
         </Card.Body>
       </Card>
 
       {/* Danh sách các trạm để tạo */}
       <div className="mb-3 d-flex justify-content-between align-items-center">
-        <h5><TermReplacer>Danh sách trạm</TermReplacer> ({stations.length})</h5>
+        <h5><TermReplacer>{t('stations_list')}</TermReplacer> ({stations.length})</h5>
         <Button 
           variant="success" 
           size="sm"
           onClick={addNewStation}
         >
           <i className="bi bi-plus-circle me-2"></i>
-          <TermReplacer>+ Thêm trạm mới</TermReplacer>
+          {t('add_new_station')}
         </Button>
       </div>
 
@@ -803,7 +852,7 @@ const StationForm = () => {
           <Accordion.Item eventKey="0">
             <Accordion.Header>
               <div className="d-flex justify-content-between w-100 align-items-center pe-4">
-                <span><TermReplacer>Trạm</TermReplacer> {index + 1}: {station.name || 'Chưa đặt tên'}</span>
+                <span><TermReplacer>{t('station_term')} {index + 1}: {station.name || t('station_name_placeholder')}</TermReplacer></span>
               </div>
             </Accordion.Header>
             <Accordion.Body>
@@ -814,18 +863,18 @@ const StationForm = () => {
                   onClick={() => removeStation(index)}
                 >
                   <i className="bi bi-trash me-1"></i>
-                  <TermReplacer>Xóa trạm</TermReplacer>
+                  {t('remove_station')}
                 </Button>
               </div>
               <Row>
                 <Col md={12}>
                   <Form.Group className="mb-3">
-                    <Form.Label><TermReplacer>Tên trạm</TermReplacer></Form.Label>
+                    <Form.Label>{t('station_name_label')}</Form.Label>
                     <Form.Control
                       type="text"
                       value={station.name}
                       onChange={(e) => handleStationChange(index, 'name', e.target.value)}
-                      placeholder={replaceStationTerm("Nhập tên trạm")}
+                      placeholder={t('station_name_placeholder')}
                       required
                     />
                   </Form.Group>
@@ -835,12 +884,12 @@ const StationForm = () => {
               <Row>
                 <Col md={12}>
                   <Form.Group className="mb-3">
-                    <Form.Label>Loại nội dung</Form.Label>
+                    <Form.Label>{t('content_type_label')}</Form.Label>
                     <div className="d-flex flex-wrap">
                       <Form.Check 
                         type="checkbox"
                         id={`showText-${index}`}
-                        label="Văn bản"
+                        label={t('content_text_label')}
                         className="me-3"
                         checked={station.showText}
                         onChange={(e) => handleStationChange(index, 'showText', e.target.checked)}
@@ -848,7 +897,7 @@ const StationForm = () => {
                       <Form.Check 
                         type="checkbox"
                         id={`showImage-${index}`}
-                        label="Hình ảnh"
+                        label={t('content_image_label')}
                         checked={station.showImage}
                         onChange={(e) => handleStationChange(index, 'showImage', e.target.checked)}
                       />
@@ -862,12 +911,12 @@ const StationForm = () => {
                   <Row className="mb-2">
                     <Col md={12}>
                       <Form.Group>
-                        <Form.Label>Định dạng văn bản</Form.Label>
+                        <Form.Label>{t('text_format_label')}</Form.Label>
                         <div className="d-flex">
                           <Form.Check 
                             type="checkbox"
                             id={`showOTT-${index}`}
-                            label="OTT"
+                            label={t('ott_content_label')}
                             className="me-4"
                             checked={station.showOTT}
                             onChange={(e) => handleStationChange(index, 'showOTT', e.target.checked)}
@@ -875,7 +924,7 @@ const StationForm = () => {
                           <Form.Check 
                             type="checkbox"
                             id={`showNW-${index}`}
-                            label="NW"
+                            label={t('nw_content_label')}
                             checked={station.showNW}
                             onChange={(e) => handleStationChange(index, 'showNW', e.target.checked)}
                           />
@@ -888,13 +937,13 @@ const StationForm = () => {
                     {station.showOTT && (
                       <Col md={12}>
                         <Form.Group className="mb-3">
-                          <Form.Label>Nội dung OTT</Form.Label>
+                          <Form.Label>{t('ott_content_label')}</Form.Label>
                           <Form.Control
                             as="textarea"
                             rows={4}
                             value={station.ottContent}
                             onChange={(e) => handleStationChange(index, 'ottContent', e.target.value)}
-                            placeholder="Nhập nội dung OTT"
+                            placeholder={t('enter_ott_content_placeholder')}
                           />
                         </Form.Group>
                       </Col>
@@ -903,14 +952,14 @@ const StationForm = () => {
                     {station.showNW && (
                       <Col md={12}>
                         <Form.Group className="mb-3">
-                          <Form.Label>Nội dung NW</Form.Label>
+                          <Form.Label>{t('nw_content_label')}</Form.Label>
                           <InputGroup>
                             <Form.Control
                               as="textarea"
                               rows={4}
                               value={station.nwContent}
                               onChange={(e) => handleStationChange(index, 'nwContent', e.target.value)}
-                              placeholder="Nhập nội dung NW"
+                              placeholder={t('enter_nw_content_placeholder')}
                             />
                             <InputGroup.Text>/AR</InputGroup.Text>
                           </InputGroup>
@@ -925,7 +974,7 @@ const StationForm = () => {
                 <Row>
                   <Col md={12}>
                     <Form.Group className="mb-3">
-                      <Form.Label>Hình ảnh mật thư</Form.Label>
+                      <Form.Label>{t('content_image_label')}</Form.Label>
                       {isEditMode && index === 0 ? (
                         <>
                           {renderImageUpload()}
@@ -943,30 +992,30 @@ const StationForm = () => {
               <Row>
                 <Col md={12}>
                   <Form.Group className="mb-3">
-                    <Form.Label>Đáp án chính xác</Form.Label>
+                    <Form.Label>{t('correct_answer_label')}</Form.Label>
                     <InputGroup className="mb-3">
                       <Form.Control
                         type="text"
                         value={answersInputMap[index] || ''}
                         onChange={(e) => handleAnswersInputChange(e, index)}
                         onKeyPress={(e) => handleAnswerKeyPress(e, index)}
-                        placeholder="Nhập đáp án"
+                        placeholder={t('enter_answer_placeholder')}
                       />
                       <Button variant="outline-secondary" onClick={() => addAnswer(index)}>
-                        Thêm
+                        {t('add_answer_button')}
                       </Button>
                       <Button variant="outline-primary" onClick={() => addMultipleAnswers(index)}>
-                        Thêm nhiều đáp án
+                        {t('add_multiple_answers_button')}
                       </Button>
                     </InputGroup>
                     <Form.Text className="text-muted mb-2">
-                      Nhập đáp án và nhấn "Thêm" hoặc nhập danh sách đáp án cách nhau bởi dấu phẩy
+                      {t('answers_input_note')}
                     </Form.Text>
                     
                     {/* Hiển thị danh sách đáp án */}
                     {Array.isArray(station.correctAnswer) && station.correctAnswer.length > 0 && (
                       <div>
-                        <h6>Danh sách đáp án ({station.correctAnswer.length} đáp án)</h6>
+                        <h6>{t('answers_list')} ({station.correctAnswer.length} {t('answers')})</h6>
                         <div className="border rounded p-2 mb-3" style={{ maxHeight: '150px', overflowY: 'auto' }}>
                           <div className="d-flex flex-wrap">
                             {station.correctAnswer.map((answer, answerIndex) => (
@@ -999,7 +1048,7 @@ const StationForm = () => {
               <Row>
                 <Col md={6}>
                   <Form.Group className="mb-3">
-                    <Form.Label>Số lần thử tối đa</Form.Label>
+                    <Form.Label>{t('max_attempts_label')}</Form.Label>
                     <Form.Control
                       type="number"
                       value={station.maxAttempts}
@@ -1013,7 +1062,7 @@ const StationForm = () => {
                 
                 <Col md={6}>
                   <Form.Group className="mb-3">
-                    <Form.Label>Thời gian khóa (phút)</Form.Label>
+                    <Form.Label>{t('lock_time_label')}</Form.Label>
                     <Form.Control
                       type="number"
                       value={station.lockTime}
@@ -1036,14 +1085,21 @@ const StationForm = () => {
           onClick={addNewStation}
         >
           <i className="bi bi-plus-circle me-2"></i>
-          <TermReplacer>+ Thêm trạm mới</TermReplacer>
+          {t('add_new_station')}
         </Button>
         <Button 
           variant="primary" 
           type="submit" 
           disabled={loading || stations.length === 0}
         >
-          {loading ? 'Đang xử lý...' : isEditMode ? <TermReplacer>Cập nhật trạm</TermReplacer> : <TermReplacer>Tạo tất cả trạm</TermReplacer>}
+          {loading ? (
+            <>
+              <Spinner animation="border" size="sm" className="me-2" />
+              {isEditMode ? t('updating') : t('creating')}
+            </>
+          ) : (
+            isEditMode ? t('state_update') : t('state_create')
+          )}
         </Button>
       </div>
     </Form>
@@ -1054,10 +1110,10 @@ const StationForm = () => {
       <AdminNavbar />
       <Container>
         <div className="d-flex justify-content-between align-items-center mb-4">
-          <h1><TermReplacer>{isEditMode ? 'Chỉnh sửa trạm' : 'Tạo trạm'}</TermReplacer></h1>
+          <h1><TermReplacer>{isEditMode ? t('edit_station') : t('create_station')}</TermReplacer></h1>
           <div>
             <Button variant="secondary" onClick={() => navigate('/admin/stations')}>
-              Quay lại
+              {t('go_back')}
             </Button>
           </div>
         </div>
@@ -1070,7 +1126,7 @@ const StationForm = () => {
             {loading ? (
               <div className="text-center py-5">
                 <Spinner animation="border" variant="primary" />
-                <p className="mt-2">Đang tải...</p>
+                <p className="mt-2">{t('loading_text')}</p>
               </div>
             ) : (
               renderMultipleStationsForm()

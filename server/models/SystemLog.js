@@ -29,9 +29,8 @@ const SystemLogSchema = new mongoose.Schema({
   }
 });
 
-// Tạo chỉ mục cho trường createdAt để tự động xóa
-SystemLogSchema.index({ createdAt: 1 }, { 
-  expireAfterSeconds: 30 * 24 * 60 * 60 // Mặc định xóa sau 30 ngày
-});
+// Tạo chỉ mục cho trường createdAt - nhưng không tự động xóa
+// Đã loại bỏ { expireAfterSeconds: 30 * 24 * 60 * 60 } để cho phép xóa thủ công
+SystemLogSchema.index({ createdAt: 1 });
 
 module.exports = mongoose.model('SystemLog', SystemLogSchema); 

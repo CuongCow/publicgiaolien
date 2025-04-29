@@ -1,7 +1,7 @@
 // Dịch vụ Mixpanel để quản lý phân tích người dùng
 const trackUserActivity = (teamId, teamName, action, data = {}) => {
   if (!window.mixpanel) {
-    console.warn('Mixpanel not available');
+    // Không hiển thị cảnh báo
     return;
   }
 
@@ -14,7 +14,7 @@ const trackUserActivity = (teamId, teamName, action, data = {}) => {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error('Error tracking Mixpanel event:', error);
+    // Bỏ qua lỗi
   }
 };
 
@@ -47,7 +47,7 @@ export const trackActivityStatus = (teamId, teamName, status) => {
 // Đăng ký người dùng với Mixpanel
 export const identifyUser = (teamId, teamName) => {
   if (!window.mixpanel) {
-    console.warn('Mixpanel not available');
+    // Không hiển thị cảnh báo
     return;
   }
 
@@ -62,7 +62,7 @@ export const identifyUser = (teamId, teamName) => {
       first_seen: new Date().toISOString()
     });
   } catch (error) {
-    console.error('Error identifying user in Mixpanel:', error);
+    // Bỏ qua lỗi
   }
 };
 

@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Navbar, Nav, Container, Button, Dropdown } from 'react-bootstrap';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { authApi } from '../services/api';
+import { useLanguage } from '../context/LanguageContext';
 
 const UserNavbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [admin, setAdmin] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { t } = useLanguage();
   
   useEffect(() => {
     const checkAuth = async () => {
@@ -18,7 +20,7 @@ const UserNavbar = () => {
           setAdmin(res.data);
         }
       } catch (error) {
-        console.error('Lỗi kiểm tra đăng nhập:', error);
+        // Xử lý lỗi im lặng
       } finally {
         setLoading(false);
       }
@@ -51,10 +53,10 @@ const UserNavbar = () => {
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
             <Nav.Link as={Link} to="/" className={isActive('/')}>
-              <i className="bi bi-house-door me-1"></i> Trang chủ
+              <i className="bi bi-house-door me-1"></i> {t('home')}
             </Nav.Link>
             <Nav.Link as={Link} to="/about" className={isActive('/about')}>
-              <i className="bi bi-info-circle me-1"></i> Về hệ thống
+              <i className="bi bi-info-circle me-1"></i> {t('about')}
             </Nav.Link>
           </Nav>
           
@@ -62,7 +64,7 @@ const UserNavbar = () => {
             {admin ? (
               <>
                 <Button as={Link} to="/admin" variant="outline-primary" className="me-2">
-                  <i className="bi bi-speedometer2 me-1"></i> Quản trị
+                  <i className="bi bi-speedometer2 me-1"></i> {t('admin_panel')}
                 </Button>
                 <Dropdown align="end">
                   <Dropdown.Toggle variant="light" id="dropdown-basic" className="d-flex align-items-center border-0">
@@ -77,14 +79,14 @@ const UserNavbar = () => {
 
                   <Dropdown.Menu>
                     <Dropdown.Item as={Link} to="/admin/profile">
-                      <i className="bi bi-person me-2"></i> Hồ sơ
+                      <i className="bi bi-person me-2"></i> {t('profile')}
                     </Dropdown.Item>
                     <Dropdown.Item as={Link} to="/admin/settings">
-                      <i className="bi bi-gear me-2"></i> Cài đặt
+                      <i className="bi bi-gear me-2"></i> {t('settings')}
                     </Dropdown.Item>
                     <Dropdown.Divider />
                     <Dropdown.Item onClick={handleLogout}>
-                      <i className="bi bi-box-arrow-right me-2"></i> Đăng xuất
+                      <i className="bi bi-box-arrow-right me-2"></i> {t('logout')}
                     </Dropdown.Item>
                   </Dropdown.Menu>
                 </Dropdown>
@@ -92,10 +94,10 @@ const UserNavbar = () => {
             ) : (
               <>
                 <Button as={Link} to="/login" variant="outline-primary" className="me-2">
-                  <i className="bi bi-box-arrow-in-right me-1"></i> Đăng nhập
+                  <i className="bi bi-box-arrow-in-right me-1"></i> {t('login')}
                 </Button>
                 <Button as={Link} to="/register" variant="primary">
-                  <i className="bi bi-person-plus me-1"></i> Đăng ký
+                  <i className="bi bi-person-plus me-1"></i> {t('register')}
                 </Button>
               </>
             )}

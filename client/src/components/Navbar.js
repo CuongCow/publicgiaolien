@@ -4,12 +4,14 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { authApi } from '../services/api';
 import TermReplacer from '../utils/TermReplacer';
 import NotificationBell from './NotificationBell';
+import { useLanguage } from '../context/LanguageContext';
 
 const AdminNavbar = () => {
   const [admin, setAdmin] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useLanguage();
   
   useEffect(() => {
     const fetchAdmin = async () => {
@@ -17,7 +19,6 @@ const AdminNavbar = () => {
         const res = await authApi.getMe();
         setAdmin(res.data);
       } catch (error) {
-        console.error('Failed to fetch admin data', error);
         localStorage.removeItem('token');
         navigate('/login');
       } finally {
@@ -62,23 +63,23 @@ const AdminNavbar = () => {
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="mx-auto">
             <Nav.Link as={Link} to="/admin/dashboard" className={`mx-md-1 px-md-3 px-2 rounded-pill ${isActive('/admin/dashboard')}`}>
-              <i className="bi bi-speedometer2 me-1"></i> <span className="d-inline d-md-inline">Tổng quan</span>
+              <i className="bi bi-speedometer2 me-1"></i> <span className="d-inline d-md-inline">{t('dashboard')}</span>
             </Nav.Link>
             <Nav.Link as={Link} to="/admin/stations" className={`mx-md-1 px-md-3 px-2 rounded-pill ${isActive('/admin/stations')}`}>
-              <i className="bi bi-geo-alt me-1"></i> <span className="d-inline d-md-inline"><TermReplacer>Trạm</TermReplacer></span>
+              <i className="bi bi-geo-alt me-1"></i> <span className="d-inline d-md-inline"><TermReplacer>{t('stations')}</TermReplacer></span>
             </Nav.Link>
             <Nav.Link as={Link} to="/admin/teams" className={`mx-md-1 px-md-3 px-2 rounded-pill ${isActive('/admin/teams')}`}>
-              <i className="bi bi-people-fill me-1"></i> <span className="d-inline d-md-inline">Đội chơi</span>
+              <i className="bi bi-people-fill me-1"></i> <span className="d-inline d-md-inline">{t('teams')}</span>
             </Nav.Link>
             <Nav.Link as={Link} to="/admin/ranking" className={`mx-md-1 px-md-3 px-2 rounded-pill ${isActive('/admin/ranking')}`}>
-              <i className="bi bi-trophy me-1"></i> <span className="d-inline d-md-inline">BXH</span>
+              <i className="bi bi-trophy me-1"></i> <span className="d-inline d-md-inline">{t('ranking')}</span>
             </Nav.Link>
             <Nav.Link as={Link} to="/admin/submissions" className={`mx-md-1 px-md-3 px-2 rounded-pill ${isActive('/admin/submissions')}`}>
-              <i className="bi bi-list-check me-1"></i> <span className="d-inline d-md-inline">Lịch sử</span>
+              <i className="bi bi-list-check me-1"></i> <span className="d-inline d-md-inline">{t('history')}</span>
             </Nav.Link>
             {isSuperAdmin && (
               <Nav.Link as={Link} to="/superadmin" className={`mx-md-1 px-md-3 px-2 rounded-pill ${isActive('/superadmin')}`}>
-                <i className="bi bi-shield me-1"></i> <span className="d-inline d-md-inline">Hệ thống</span>
+                <i className="bi bi-shield me-1"></i> <span className="d-inline d-md-inline">{t('system')}</span>
               </Nav.Link>
             )}
           </Nav>
@@ -103,14 +104,14 @@ const AdminNavbar = () => {
                   <strong>{admin?.username}</strong>
                 </div>
                 <Dropdown.Item as={Link} to="/admin/profile" className="py-2">
-                  <i className="bi bi-person me-2"></i> Hồ sơ
+                  <i className="bi bi-person me-2"></i> {t('profile')}
                 </Dropdown.Item>
                 <Dropdown.Item as={Link} to="/admin/settings" className="py-2">
-                  <i className="bi bi-gear me-2"></i> Cài đặt
+                  <i className="bi bi-gear me-2"></i> {t('settings')}
                 </Dropdown.Item>
                 <Dropdown.Divider />
                 <Dropdown.Item onClick={handleLogout} className="py-2 text-danger">
-                  <i className="bi bi-box-arrow-right me-2"></i> Đăng xuất
+                  <i className="bi bi-box-arrow-right me-2"></i> {t('logout')}
                 </Dropdown.Item>
               </Dropdown.Menu>
             </Dropdown>

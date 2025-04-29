@@ -7,6 +7,7 @@ import AdminNavbar from '../../components/Navbar';
 import { stationApi } from '../../services/api';
 import { formatDateTime, replaceStationTerm } from '../../utils/helpers';
 import TermReplacer from '../../utils/TermReplacer';
+import { useLanguage } from '../../context/LanguageContext';
 
 const StationList = () => {
   const [stations, setStations] = useState([]);
@@ -18,6 +19,7 @@ const StationList = () => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [filterText, setFilterText] = useState('');
   const [copied, setCopied] = useState(false);
+  const { t } = useLanguage();
 
   useEffect(() => {
     fetchStations();
@@ -30,7 +32,7 @@ const StationList = () => {
       setStations(response.data);
       setError(null);
     } catch (err) {
-      setError('Không thể tải danh sách. Vui lòng thử lại sau.');
+      setError(t('load_station_list_error'));
       console.error('Error fetching stations:', err);
     } finally {
       setLoading(false);
@@ -38,12 +40,12 @@ const StationList = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa danh mục này?')) {
+    if (window.confirm(t('delete_station_confirm'))) {
       try {
         await stationApi.delete(id);
         fetchStations();
       } catch (err) {
-        setError('Không thể xóa danh mục. Vui lòng thử lại sau.');
+        setError(t('delete_station_error'));
         console.error('Error deleting station:', err);
       }
     }
@@ -64,13 +66,13 @@ const StationList = () => {
       const imageDataUrl = canvas.toDataURL('image/png');
       
       const printWindow = window.open('', '_blank');
-      const stationName = selectedStation?.name || <TermReplacer>Trạm</TermReplacer>;
+      const stationName = selectedStation?.name || <TermReplacer>{t('station_label')}</TermReplacer>;
       const maxAttempts = selectedStation?.maxAttempts || '';
       
       printWindow.document.write(`
         <html>
           <head>
-            <title>In Mã QR - ${stationName}</title>
+            <title>${t('qr_print_title')} - ${stationName}</title>
             <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
             <style>
               body { 
@@ -150,16 +152,16 @@ const StationList = () => {
             <div class="container">
               <div class="station-name">${stationName}</div>
               <div class="station-info">
-                <span>Số lần thử tối đa: ${maxAttempts}</span>
+                <span>${t('max_attempts')}: ${maxAttempts}</span>
               </div>
               <img class="qr-image" src="${imageDataUrl}" />
             </div>
             <div class="no-print mt-4">
               <button onclick="window.print();" class="btn btn-primary">
-                <i class="bi bi-printer"></i> In Mã QR
+                <i class="bi bi-printer"></i> ${t('print_qr')}
               </button>
               <button onclick="window.close();" class="btn btn-secondary">
-                <i class="bi bi-x"></i> Đóng
+                <i class="bi bi-x"></i> ${t('close')}
               </button>
             </div>
           </body>
@@ -170,7 +172,7 @@ const StationList = () => {
       printWindow.focus();
     } catch (err) {
       console.error('Error preparing print:', err);
-      alert('Không thể chuẩn bị trang in. Vui lòng thử lại sau.');
+      alert(t('print_error'));
     }
   };
 
@@ -195,7 +197,7 @@ const StationList = () => {
         // Tạo thẻ a để tải xuống
         const link = document.createElement('a');
         link.href = url;
-        link.download = `QR_${selectedStation?.name || 'Tram'}.png`;
+        link.download = `QR_${selectedStation?.name || t('station_label')}.png`;
         
         // Kích hoạt sự kiện click để tải xuống
         document.body.appendChild(link);
@@ -210,7 +212,7 @@ const StationList = () => {
       }, 'image/png', 1.0);
     } catch (err) {
       console.error('Error saving image:', err);
-      alert('Không thể lưu hình ảnh. Vui lòng thử lại sau.');
+      alert(t('save_image_error'));
       setIsDownloading(false);
     }
   };
@@ -238,16 +240,16 @@ const StationList = () => {
           <Col>
             <h1 className="mb-0 d-flex align-items-center">
               <i className="bi bi-geo-alt-fill me-3 text-primary" style={{ fontSize: '2rem' }}></i>
-              <TermReplacer>Quản lý trạm</TermReplacer>
+              <TermReplacer>{t('station_management_title')}</TermReplacer>
             </h1>
             <p className="text-muted mb-0 mt-2">
-              <TermReplacer>Quản lý tất cả các trạm trong hệ thống</TermReplacer>
+              <TermReplacer>{t('manage_all_stations')}</TermReplacer>
             </p>
           </Col>
           <Col xs="auto">
             <Button as={Link} to="/admin/stations/new" variant="primary" className="d-flex align-items-center">
               <i className="bi bi-plus-circle me-2"></i>
-              <TermReplacer>Tạo trạm mới</TermReplacer>
+              {t('create_station')}
             </Button>
           </Col>
         </Row>
@@ -255,7 +257,7 @@ const StationList = () => {
         {error && (
           <Alert variant="danger" className="mb-4">
             <i className="bi bi-exclamation-triangle me-2"></i>
-            {error}
+            {t('load_stations_error') || error}
           </Alert>
         )}
         
@@ -266,7 +268,7 @@ const StationList = () => {
                 <div className="d-flex align-items-center">
                   <i className="bi bi-clipboard-data me-2 text-primary" style={{ fontSize: '1.2rem' }}></i>
                   <h5 className="mb-0">
-                    <TermReplacer>Tổng số trạm:</TermReplacer> <Badge bg="primary">{stations.length}</Badge>
+                    <TermReplacer>{t('total_stations')}:</TermReplacer> <Badge bg="primary">{stations.length}</Badge>
                   </h5>
                 </div>
               </Col>
@@ -277,7 +279,7 @@ const StationList = () => {
                   </InputGroup.Text>
                   <Form.Control
                     type="text"
-                    placeholder={replaceStationTerm("Tìm kiếm theo tên trạm hoặc đội...")}
+                    placeholder={t('search_placeholder')}
                     value={filterText}
                     onChange={(e) => setFilterText(e.target.value)}
                   />
@@ -293,7 +295,7 @@ const StationList = () => {
             {loading ? (
               <div className="text-center my-5 py-5">
                 <Spinner animation="border" variant="primary" />
-                <p className="mt-3 text-muted">Đang tải dữ liệu...</p>
+                <p className="mt-3 text-muted">{t('loading_data')}</p>
               </div>
             ) : filteredStations.length === 0 ? (
               <Card className="text-center p-5 bg-light border-0">
@@ -301,16 +303,16 @@ const StationList = () => {
                   <div className="mb-3">
                     <i className="bi bi-geo-alt text-muted" style={{ fontSize: '3rem' }}></i>
                   </div>
-                  <h3>{filterText ? <TermReplacer>Không tìm thấy trạm phù hợp</TermReplacer> : <TermReplacer>Chưa có trạm nào</TermReplacer>}</h3>
+                  <h3>{filterText ? <TermReplacer>{t('no_matching_station')}</TermReplacer> : <TermReplacer>{t('no_stations')}</TermReplacer>}</h3>
                   <p className="text-muted mb-4">
                     {filterText 
-                      ? <TermReplacer>Thử tìm kiếm với từ khóa khác hoặc tạo trạm mới</TermReplacer>
-                      : <TermReplacer>Hãy tạo trạm đầu tiên để bắt đầu</TermReplacer>
+                      ? <TermReplacer>{t('no_matching_station_note')}</TermReplacer>
+                      : <TermReplacer>{t('first_station_instruction')}</TermReplacer>
                     }
                   </p>
                   <Button as={Link} to="/admin/stations/new" variant="primary">
                     <i className="bi bi-plus-circle me-2"></i>
-                    <TermReplacer>Tạo trạm mới</TermReplacer>
+                    {t('create_station')}
                   </Button>
                 </Card.Body>
               </Card>
@@ -321,11 +323,11 @@ const StationList = () => {
                     <tr>
                       <th width="60" className="text-center">#</th>
                       <th>
-                        <TermReplacer>Trạm</TermReplacer>
+                        <TermReplacer>{t('station_label')}</TermReplacer>
                       </th>
-                      <th>Đội chơi</th>
-                      <th>Loại nội dung</th>
-                      <th width="200" className="text-center">Thao tác</th>
+                      <th>{t('teams')}</th>
+                      <th>{t('content_type')}</th>
+                      <th width="200" className="text-center">{t('actions')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -342,7 +344,7 @@ const StationList = () => {
                         <td>
                           <div className="d-flex flex-wrap" style={{ gap: '4px' }}>
                             {station.teams.length === 0 ? (
-                              <span className="text-muted">Chưa có đội</span>
+                              <span className="text-muted">{t('no_teams')}</span>
                             ) : station.teams.length <= 3 ? (
                               station.teams.map((team, idx) => (
                                 <Badge key={idx} bg="light" text="dark" className="me-1">
@@ -379,21 +381,21 @@ const StationList = () => {
                         </td>
                         <td>
                           {station.contentType === 'text' && (
-                            <Badge bg="info" className="me-1">Văn bản</Badge>
+                            <Badge bg="info" className="me-1">{t('content_text_label')}</Badge>
                           )}
                           {station.contentType === 'image' && (
-                            <Badge bg="success" className="me-1">Hình ảnh</Badge>
+                            <Badge bg="success" className="me-1">{t('content_image_label')}</Badge>
                           )}
                           {station.contentType === 'both' && (
                             <>
-                              <Badge bg="info" className="me-1">Văn bản</Badge>
-                              <Badge bg="success" className="me-1">Hình ảnh</Badge>
+                              <Badge bg="info" className="me-1">{t('content_text_label')}</Badge>
+                              <Badge bg="success" className="me-1">{t('content_image_label')}</Badge>
                             </>
                           )}
                           <div className="mt-1">
                             <small className="text-muted">
                               <i className="bi bi-repeat me-1"></i>
-                              {station.maxAttempts} lần thử
+                              {station.maxAttempts} {t('attempts')}
                             </small>
                           </div>
                         </td>
@@ -403,7 +405,7 @@ const StationList = () => {
                               variant="info" 
                               size="sm" 
                               onClick={() => showQRCode(station)}
-                              title="Xem mã QR"
+                              title={t('view_qr_code')}
                             >
                               <i className="bi bi-qr-code"></i>
                             </Button>
@@ -412,7 +414,7 @@ const StationList = () => {
                               to={`/admin/stations/edit/${station._id}`} 
                               variant="warning" 
                               size="sm"
-                              title="Chỉnh sửa danh mục"
+                              title={t('edit_category')}
                             >
                               <i className="bi bi-pencil"></i>
                             </Button>
@@ -420,7 +422,7 @@ const StationList = () => {
                               variant="danger" 
                               size="sm"
                               onClick={() => handleDelete(station._id)}
-                              title="Xóa danh mục"
+                              title={t('delete_category')}
                             >
                               <i className="bi bi-trash"></i>
                             </Button>
@@ -446,7 +448,7 @@ const StationList = () => {
         <Modal.Header closeButton>
           <Modal.Title>
             <i className="bi bi-qr-code me-2 text-primary"></i>
-            <TermReplacer>Mã QR Trạm</TermReplacer>: {selectedStation?.name}
+            <TermReplacer>{t('view_qr')}</TermReplacer>: {selectedStation?.name}
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="text-center">
@@ -481,11 +483,11 @@ const StationList = () => {
               </p>
               <p className="text-muted mt-2">
                 <i className="bi bi-repeat me-1"></i>
-                Số lần thử tối đa: {selectedStation?.maxAttempts}
+                {t('max_attempts_label')}: {selectedStation?.maxAttempts}
               </p>
-                            <p className="mt-4 text-muted">
+              <p className="mt-4 text-muted">
                 <i className="bi bi-info-circle me-1"></i>
-                <TermReplacer>In mã QR này và đặt tại các trạm để đội chơi quét mã truy cập</TermReplacer>
+                <TermReplacer>{t('qr_print_instruction')}</TermReplacer>
               </p>
             </div>
           </div>
@@ -497,7 +499,7 @@ const StationList = () => {
             className="flex-grow-1 flex-md-grow-0"
           >
             <i className="bi bi-x me-1"></i>
-            Đóng
+            {t('close')}
           </Button>
           <Button 
             variant="info" 
@@ -505,7 +507,7 @@ const StationList = () => {
             className="flex-grow-1 flex-md-grow-0"
           >
             <i className="bi bi-link-45deg me-1"></i>
-            {copied ? 'Đã sao chép!' : 'Sao chép link'}
+            {copied ? t('copied') : t('copy_link')}
           </Button>
           <Button 
             variant="primary" 
@@ -513,7 +515,7 @@ const StationList = () => {
             className="flex-grow-1 flex-md-grow-0"
           >
             <i className="bi bi-printer me-1"></i>
-            In
+            {t('print')}
           </Button>
           <Button 
             variant="success" 
@@ -524,12 +526,12 @@ const StationList = () => {
             {isDownloading ? (
               <>
                 <Spinner animation="border" size="sm" className="me-1" />
-                Đang tải...
+                {t('downloading')}
               </>
             ) : (
               <>
                 <i className="bi bi-download me-1"></i>
-                Tải ảnh
+                {t('download_image')}
               </>
             )}
           </Button>
