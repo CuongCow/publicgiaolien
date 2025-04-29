@@ -1157,7 +1157,7 @@ const StationForm = () => {
   return (
     <>
       <AdminNavbar />
-      <Container>
+      <Container className="py-4 pt-3 mt-2">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h1><TermReplacer>{isEditMode ? t('edit_station') : t('create_station')}</TermReplacer></h1>
           <div>
