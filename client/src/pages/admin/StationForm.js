@@ -2662,7 +2662,7 @@ const StationForm = () => {
                       <Form.Label>Đáp án của bạn</Form.Label>
                       <Form.Control
                         as="textarea"
-                        rows={4}
+                        rows={2}
                         placeholder="Nhập đáp án của bạn"
                         disabled
                         className="form-control-lg"
