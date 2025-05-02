@@ -6,6 +6,7 @@ import { stationApi, teamApi } from '../../services/api';
 import { formatDateTime, replaceStationTerm } from '../../utils/helpers';
 import TermReplacer from '../../utils/TermReplacer';
 import { useLanguage } from '../../context/LanguageContext';
+import './StationFormPreview.css'; // Import CSS mới cho tính năng xem trước
 
 const StationForm = () => {
   const { id } = useParams();
@@ -51,6 +52,15 @@ const StationForm = () => {
   const [teamContents, setTeamContents] = useState({});
   const [teamAnswersInputMap, setTeamAnswersInputMap] = useState({});
 
+  // State cho phần xem trước
+  const [previewStation, setPreviewStation] = useState(null);
+  const [previewTeam, setPreviewTeam] = useState('');
+  const [previewContent, setPreviewContent] = useState(null);
+  const [previewExpanded, setPreviewExpanded] = useState(true);
+  
+  // Thêm state theo dõi trạm đang chọn
+  const [selectedStationIndex, setSelectedStationIndex] = useState(0);
+  
   useEffect(() => {
     if (isEditMode) {
       fetchStationData();
@@ -482,36 +492,68 @@ const StationForm = () => {
 
   // Thêm một trạm mới vào danh sách (cập nhật với mảng correctAnswer)
   const addNewStation = () => {
-    setStations(prevStations => [
-      ...prevStations,
-      {
-        name: `${replaceStationTerm('Trạm')} ${prevStations.length + 1}`,
-        teams: commonTeams,
-        content: '',
-        contentType: 'text',
-        correctAnswer: [],
-        maxAttempts: 5,
-        lockTime: 0,
-        showText: true,
-        showImage: false,
-        showOTT: true,
-        showNW: true,
-        ottContent: '',
-        nwContent: '',
-        imagePreview: null,
-        gameName: gameName, // Tự động sử dụng tên mật thư
-        gameNote: gameNote, // Tự động sử dụng ghi chú
-        fontSize: '1.05rem', // Giá trị mặc định cho kích thước chữ
-        fontWeight: '500',    // Giá trị mặc định cho độ đậm chữ
-        lineHeight: '1.5',    // Giá trị mặc định cho khoảng cách dòng
-        paragraphSpacing: '0.8rem' // Giá trị mặc định cho khoảng cách đoạn
-      }
-    ]);
+    setStations(prevStations => {
+      const updatedStations = [
+        ...prevStations,
+        {
+          name: `${replaceStationTerm('Trạm')} ${prevStations.length + 1}`,
+          teams: commonTeams,
+          content: '',
+          contentType: 'text',
+          correctAnswer: [],
+          maxAttempts: 5,
+          lockTime: 0,
+          showText: true,
+          showImage: false,
+          showOTT: true,
+          showNW: true,
+          ottContent: '',
+          nwContent: '',
+          imagePreview: null,
+          gameName: gameName, // Tự động sử dụng tên mật thư
+          gameNote: gameNote, // Tự động sử dụng ghi chú
+          fontSize: '1.05rem', // Giá trị mặc định cho kích thước chữ
+          fontWeight: '500',    // Giá trị mặc định cho độ đậm chữ
+          lineHeight: '1.5',    // Giá trị mặc định cho khoảng cách dòng
+          paragraphSpacing: '0.8rem' // Giá trị mặc định cho khoảng cách đoạn
+        }
+      ];
+      
+      // Cập nhật trạm được chọn là trạm mới
+      setTimeout(() => {
+        setSelectedStationIndex(updatedStations.length - 1);
+        updatePreview();
+      }, 0);
+      
+      return updatedStations;
+    });
   };
 
   // Xóa một trạm khỏi danh sách
   const removeStation = (index) => {
-    setStations(prev => prev.filter((_, i) => i !== index));
+    setStations(prev => {
+      const updated = prev.filter((_, i) => i !== index);
+      
+      // Nếu xóa trạm đang được chọn hoặc trạm có index nhỏ hơn trạm đang chọn
+      if (index === selectedStationIndex) {
+        // Chọn trạm trước đó hoặc tiếp theo (nếu có)
+        const newSelectedIndex = Math.max(0, Math.min(selectedStationIndex - 1, updated.length - 1));
+        
+        // Cập nhật trạm đang chọn
+        setTimeout(() => {
+          setSelectedStationIndex(newSelectedIndex);
+          updatePreview();
+        }, 0);
+      } else if (index < selectedStationIndex) {
+        // Nếu xóa trạm phía trước trạm đang chọn, cập nhật index
+        setTimeout(() => {
+          setSelectedStationIndex(prev => prev - 1);
+          updatePreview();
+        }, 0);
+      }
+      
+      return updated;
+    });
   };
 
   // Sửa lại hàm xử lý tải lên hình ảnh
@@ -1623,7 +1665,12 @@ const StationForm = () => {
             {stations.length === 0 ? (
               <p className="text-center py-3">{t('no_stations')}</p>
             ) : (
-              <Accordion defaultActiveKey={['0']} alwaysOpen>
+              <Accordion 
+                defaultActiveKey={['0']} 
+                alwaysOpen
+                onSelect={handleAccordionSelect}
+                activeKey={selectedStationIndex.toString()}
+              >
                 {stations.map((station, index) => (
                   <Accordion.Item eventKey={index.toString()} key={index}>
                     <Accordion.Header>
@@ -2314,10 +2361,358 @@ const StationForm = () => {
     };
   };
 
+  // Cập nhật xem trước khi trạm hoặc đội được chọn thay đổi
+  useEffect(() => {
+    updatePreview();
+  }, [stations, teamContents, commonTeams, messageType, previewTeam]);
+  
+  // Hàm cập nhật nội dung xem trước
+  const updatePreview = () => {
+    if (stations.length === 0) return;
+    
+    // Lấy trạm đang chọn (sử dụng selectedStationIndex thay vì luôn lấy trạm đầu tiên)
+    const currentStation = stations[selectedStationIndex] || stations[0];
+    
+    // Nếu không có đội nào được chọn, sử dụng đội đầu tiên
+    const selectedTeam = previewTeam || (commonTeams.length > 0 ? commonTeams[0] : '');
+    
+    // Cập nhật đội đang xem trước nếu cần
+    if (selectedTeam && !previewTeam) {
+      setPreviewTeam(selectedTeam);
+    }
+    
+    // Xác định nội dung xem trước dựa trên loại mật thư
+    let previewContentData = null;
+    
+    if (messageType === 'individual' && selectedTeam) {
+      // Nếu là mật thư riêng, lấy nội dung cho đội đã chọn
+      const key = `${selectedStationIndex}_${selectedTeam}`;
+      const teamContent = teamContents[key];
+      
+      if (teamContent) {
+        previewContentData = {
+          ...teamContent,
+          // Đảm bảo các thuộc tính hiển thị
+          showText: teamContent.showText !== undefined ? teamContent.showText : true,
+          showImage: teamContent.showImage !== undefined ? teamContent.showImage : false,
+          showOTT: teamContent.showOTT !== undefined ? teamContent.showOTT : true,
+          showNW: teamContent.showNW !== undefined ? teamContent.showNW : true
+        };
+      } else {
+        // Nếu không tìm thấy nội dung cho đội đã chọn, sử dụng nội dung chung làm dự phòng
+        previewContentData = {
+          contentType: currentStation.contentType || 'text',
+          content: currentStation.content || '',
+          ottContent: currentStation.ottContent || '',
+          nwContent: currentStation.nwContent || '',
+          showText: currentStation.showText !== undefined ? currentStation.showText : true,
+          showImage: currentStation.showImage !== undefined ? currentStation.showImage : false,
+          showOTT: currentStation.showOTT !== undefined ? currentStation.showOTT : true,
+          showNW: currentStation.showNW !== undefined ? currentStation.showNW : true,
+          fontSize: currentStation.fontSize || '1.05rem',
+          fontWeight: currentStation.fontWeight || '500',
+          lineHeight: currentStation.lineHeight || '1.5',
+          paragraphSpacing: currentStation.paragraphSpacing || '0.8rem',
+          imageUrl: currentStation.imagePreview || currentStation.content || ''
+        };
+      }
+    } else {
+      // Nếu là mật thư chung, sử dụng nội dung của trạm
+      previewContentData = {
+        contentType: currentStation.contentType || 'text',
+        content: currentStation.content || '',
+        ottContent: currentStation.ottContent || '',
+        nwContent: currentStation.nwContent || '',
+        showText: currentStation.showText !== undefined ? currentStation.showText : true,
+        showImage: currentStation.showImage !== undefined ? currentStation.showImage : false,
+        showOTT: currentStation.showOTT !== undefined ? currentStation.showOTT : true,
+        showNW: currentStation.showNW !== undefined ? currentStation.showNW : true,
+        fontSize: currentStation.fontSize || '1.05rem',
+        fontWeight: currentStation.fontWeight || '500',
+        lineHeight: currentStation.lineHeight || '1.5',
+        paragraphSpacing: currentStation.paragraphSpacing || '0.8rem',
+        imageUrl: currentStation.imagePreview || currentStation.content || ''
+      };
+    }
+    
+    // Cập nhật trạm xem trước
+    const previewStationData = {
+      ...currentStation,
+      teams: commonTeams,
+      gameName: gameName,
+      gameNote: gameNote
+    };
+    
+    setPreviewStation(previewStationData);
+    setPreviewContent(previewContentData);
+  };
+  
+  // Hàm thay đổi đội được xem trước
+  const handlePreviewTeamChange = (team) => {
+    setPreviewTeam(team);
+  };
+  
+  // Hàm helper để lấy class CSS cho khoảng cách đoạn (phục vụ xem trước)
+  const getParagraphSpacingClass = (spacing) => {
+    if (!spacing || spacing === '0') return 'paragraph-spacing-none';
+    if (spacing === '0.5rem') return 'paragraph-spacing-small';
+    if (spacing === '0.8rem') return 'paragraph-spacing-medium';
+    if (spacing === '1.2rem') return 'paragraph-spacing-large';
+    if (spacing === '1.8rem') return 'paragraph-spacing-xlarge';
+    
+    // Fallback to medium spacing if unknown value
+    return 'paragraph-spacing-medium';
+  };
+  
+  // Hàm tạo các style cho nội dung xem trước
+  const getContentStyle = (content) => {
+    if (!content) return {};
+    
+    return {
+      fontSize: content.fontSize || '1.05rem',
+      fontWeight: content.fontWeight || '500',
+      lineHeight: content.lineHeight || '1.5',
+      letterSpacing: '0.01em'
+    };
+  };
+  
+  // Render thành phần xem trước
+  const renderPreview = () => {
+    if (!previewStation || !previewContent) return null;
+    
+    return (
+      <div 
+        className={`preview-container ${previewExpanded ? 'expanded' : 'collapsed'}`}
+        onClick={previewExpanded ? undefined : () => setPreviewExpanded(true)}
+      >
+        {previewExpanded ? (
+          <>
+            <div className="preview-header">
+              <h4>Xem trước</h4>
+              <div className="preview-controls">
+                <Button variant="light" size="sm" onClick={() => setPreviewExpanded(false)}>
+                  <i className="bi bi-x-lg"></i>
+                </Button>
+              </div>
+            </div>
+            
+            <div className="preview-content-container">
+              {/* Chọn đội để xem trước */}
+              {commonTeams.length > 0 && (
+                <div className="preview-team-selector">
+                  <Form.Select 
+                    value={previewTeam} 
+                    onChange={(e) => handlePreviewTeamChange(e.target.value)}
+                    size="sm"
+                  >
+                    {commonTeams.map((team, idx) => (
+                      <option key={idx} value={team}>{team}</option>
+                    ))}
+                  </Form.Select>
+                </div>
+              )}
+              
+              <Card className="preview-station-card">
+                <Card.Header className="bg-primary text-white py-3">
+                  <div className="d-flex align-items-center">
+                    <i className="bi bi-geo-alt-fill me-2" style={{ fontSize: '1.5rem' }}></i>
+                    <div>
+                      <h5 className="mb-0"><TermReplacer>{t('station_term')}</TermReplacer> {previewStation.name}</h5>
+                      {gameName && <p className="mb-0 mt-1 opacity-75 small">{gameName}</p>}
+                    </div>
+                  </div>
+                </Card.Header>
+                <Card.Body className="px-2 py-3">
+                  {/* Thông tin đội */}
+                  <div className="d-flex align-items-center justify-content-between mb-4">
+                    <div>
+                      <h6 className="mb-1">
+                        <i className="bi bi-people-fill me-2 text-primary"></i>
+                        Đội: {previewTeam || 'Chưa chọn đội'}
+                      </h6>
+                      <p className="text-muted mb-0">
+                        <small>
+                          <i className="bi bi-clock me-1"></i>
+                          Số lần thử còn lại: {previewStation.maxAttempts || 5}
+                        </small>
+                      </p>
+                    </div>
+                    <Button 
+                      variant="outline-danger" 
+                      size="sm"
+                      disabled
+                    >
+                      <i className="bi bi-box-arrow-right me-1"></i>
+                      Đăng xuất
+                    </Button>
+                  </div>
+                  
+                  {/* Hiển thị ghi chú trò chơi nếu có */}
+                  {gameNote && (
+                    <Alert variant="info" className="d-flex align-items-start mb-4">
+                      <i className="bi bi-info-circle-fill me-2 mt-1" style={{ fontSize: '1.2rem' }}></i>
+                      <div>{gameNote}</div>
+                    </Alert>
+                  )}
+                  
+                  {/* Hiển thị nội dung trạm */}
+                  <div className="station-content-wrapper mb-4">
+                    <h5 className="fw-bold mb-3">
+                      <i className="bi bi-file-text me-2 text-primary"></i>
+                      Mật thư:
+                    </h5>
+                    
+                    {/* Nội dung văn bản */}
+                    {previewContent && (previewContent.showText || previewContent.contentType === 'text' || previewContent.contentType === 'both') ? (
+                      <Card className="station-content mb-3 mx-0" style={{ 
+                        borderWidth: '1px',
+                        borderRadius: '4px',
+                        boxShadow: '0 3px 6px rgba(0,0,0,0.08)',
+                        padding: 0,
+                        width: '100%'
+                      }}>
+                        <Card.Body className="p-0">
+                          {(previewContent.ottContent || previewContent.nwContent) && (previewContent.showOTT || previewContent.showNW) ? (
+                            <>
+                              {previewContent.ottContent && previewContent.showOTT && (
+                                <div className="mb-2">
+                                  <h6 className="fw-bold d-inline-block bg-primary text-white px-3 py-1 rounded-0 mb-0 ms-0 mt-1">OTT:</h6>
+                                  <div className="content-text w-100 px-1">
+                                    {previewContent.ottContent.split('\n').map((line, idx) => (
+                                      <p 
+                                        key={idx} 
+                                        className={`content-line ${idx !== previewContent.ottContent.split('\n').length - 1 ? getParagraphSpacingClass(previewContent.paragraphSpacing) : ''}`}
+                                        style={{ 
+                                          ...getContentStyle(previewContent),
+                                          marginTop: idx === 0 ? '0' : null
+                                        }}
+                                      >
+                                        {line || ' '}
+                                      </p>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              {previewContent.nwContent && previewContent.showNW && (
+                                <div>
+                                  <h6 className="fw-bold d-inline-block bg-primary text-white px-3 py-1 rounded-0 mb-0 ms-0">NW:</h6>
+                                  <div className="content-text w-100 px-1">
+                                    {previewContent.nwContent.split('\n').map((line, idx) => (
+                                      <p 
+                                        key={idx} 
+                                        className={`content-line ${idx !== previewContent.nwContent.split('\n').length - 1 ? getParagraphSpacingClass(previewContent.paragraphSpacing) : ''}`}
+                                        style={{ 
+                                          ...getContentStyle(previewContent),
+                                          marginTop: idx === 0 ? '0' : null
+                                        }}
+                                      >
+                                        {line || ' '}
+                                        {idx === previewContent.nwContent.split('\n').length - 1 && <span className="fw-bold">/AR</span>}
+                                      </p>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </>
+                          ) : previewContent.showText ? (
+                            <div className="content-text w-100 px-1">
+                              <p className="text-muted text-center py-3 small">
+                                Nội dung văn bản sẽ xuất hiện ở đây
+                              </p>
+                            </div>
+                          ) : null}
+                        </Card.Body>
+                      </Card>
+                    ) : null}
+                    
+                    {/* Nội dung hình ảnh */}
+                    {previewContent && (previewContent.showImage || previewContent.contentType === 'image' || previewContent.contentType === 'both') ? (
+                      <div className="text-center mb-3">
+                        {previewContent.imagePreview || previewContent.content || previewContent.imageUrl ? (
+                          <img 
+                            src={previewContent.imagePreview || previewContent.imageUrl || previewContent.content || ''} 
+                            alt="Mật thư" 
+                            className="station-image img-fluid"
+                            style={{ 
+                              width: '100%', 
+                              maxHeight: '300px', 
+                              objectFit: 'contain',
+                              border: '1px solid #ddd', 
+                              borderRadius: '4px',
+                              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                            }}
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = 'https://via.placeholder.com/400x300?text=Không+thể+hiển+thị+hình+ảnh';
+                            }}
+                          />
+                        ) : (
+                          <div className="text-muted text-center py-3 border rounded">
+                            <i className="bi bi-image me-2"></i>
+                            Hình ảnh sẽ xuất hiện ở đây
+                          </div>
+                        )}
+                      </div>
+                    ) : null}
+                  </div>
+                  
+                  {/* Form nhập đáp án tượng trưng */}
+                  <Form className="preview-form">
+                    <Form.Group className="mb-4">
+                      <Form.Label>Đáp án của bạn</Form.Label>
+                      <Form.Control
+                        as="textarea"
+                        rows={4}
+                        placeholder="Nhập đáp án của bạn"
+                        disabled
+                        className="form-control-lg"
+                      />
+                    </Form.Group>
+                    
+                    <div className="d-grid">
+                      <Button 
+                        variant="primary" 
+                        disabled
+                        size="lg"
+                      >
+                        Gửi đáp án
+                      </Button>
+                    </div>
+                  </Form>
+                </Card.Body>
+              </Card>
+              
+              <div className="text-center text-muted mt-2">
+                <small>
+                  <i className="bi bi-shield-lock me-1"></i>
+                  Hệ thống quản lý <TermReplacer>{t('station_term')}</TermReplacer> của Giao Liên
+                </small>
+              </div>
+            </div>
+          </>
+        ) : (
+          <span className="preview-toggle-icon">
+            <i className="bi bi-eye-fill"></i>
+          </span>
+        )}
+      </div>
+    );
+  };
+
+  // Cập nhật hàm khi mở accordion item
+  const handleAccordionSelect = (eventKey) => {
+    const stationIndex = parseInt(eventKey);
+    if (!isNaN(stationIndex)) {
+      setSelectedStationIndex(stationIndex);
+      // Cập nhật ngay khi chuyển trạm
+      setTimeout(() => updatePreview(), 0);
+    }
+  };
+
   return (
     <>
       <AdminNavbar />
-      <Container className="py-4 pt-3 mt-2">
+      <Container fluid className="py-4 pt-3 mt-2">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h1><TermReplacer>{isEditMode ? t('edit_station') : t('create_station')}</TermReplacer></h1>
           <div>
@@ -2330,18 +2725,25 @@ const StationForm = () => {
         {error && <Alert variant="danger">{error}</Alert>}
         {success && <Alert variant="success">{success}</Alert>}
 
-        <Card className="shadow-sm">
-          <Card.Body>
-            {loading ? (
-              <div className="text-center py-5">
-                <Spinner animation="border" variant="primary" />
-                <p className="mt-2">{t('loading_text')}</p>
-              </div>
-            ) : (
-              renderMultipleStationsForm()
-            )}
-          </Card.Body>
-        </Card>
+        <div className="station-form-container">
+          <div className="station-form-main">
+            <Card className="shadow-sm">
+              <Card.Body>
+                {loading ? (
+                  <div className="text-center py-5">
+                    <Spinner animation="border" variant="primary" />
+                    <p className="mt-2">{t('loading_text')}</p>
+                  </div>
+                ) : (
+                  renderMultipleStationsForm()
+                )}
+              </Card.Body>
+            </Card>
+          </div>
+          
+          {/* Hiển thị xem trước */}
+          {renderPreview()}
+        </div>
       </Container>
     </>
   );
