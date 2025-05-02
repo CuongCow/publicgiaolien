@@ -19,7 +19,7 @@ const SuperAdminSidebar = ({ expanded, onLogout }) => {
     <div className={`sidebar ${expanded ? 'expanded' : 'collapsed'}`}>
       <div className="sidebar-header">
         {expanded ? (
-          <h3>TCL Admin</h3>
+          <h3>GL Admin</h3>
         ) : (
           <MdDashboard size={24} />
         )}

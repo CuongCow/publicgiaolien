@@ -301,8 +301,13 @@ const AdminSettings = () => {
                 <h5 className="mb-0">{t('system_info')}</h5>
               </Card.Header>
               <Card.Body>
-                <p><strong>{t('app_version')}</strong> 1.0.4</p>
-                <p><strong>{t('app_version_note')}</strong> {t('app_version_note_content')}</p>
+                <p><strong>{t('app_version')}</strong> 1.0.8</p>
+                <p>{t('app_version_note_content')}</p>
+                <p>1.0.4: Cho phép admin tạo mật thư chung cho tất cả đội hoặc mật thư riêng cho từng đội   </p>
+                <p>1.0.5: Trạng thái User và cập nhật Form tạo trạm   </p>
+                <p>1.0.7: Thêm Cài đặt phông chữ cho từng trạm</p>
+                <p>1.0.8: Sửa các lỗi trong form tạo trạm riêng cho từng đội</p>
+                <hr />
                 <p><strong>{t('app_framework')}</strong> React + Bootstrap 5</p>
                 <p><strong>{t('app_backend')}</strong> Node.js + Express</p>
                 <p><strong>{t('app_database')}</strong> MongoDB</p>

@@ -32,12 +32,9 @@ router.post('/', auth, async (req, res) => {
 });
 
 // Lấy một đội cụ thể
-router.get('/:id', auth, async (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
-    const team = await Team.findOne({
-      _id: req.params.id,
-      adminId: req.admin.id
-    });
+    const team = await Team.findById(req.params.id);
     
     if (!team) return res.status(404).json({ message: 'Không tìm thấy đội' });
     res.json(team);

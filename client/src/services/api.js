@@ -82,7 +82,27 @@ export const stationApi = {
   getByIdForAdmin: (id) => axiosInstance.get(`/api/stations/admin/${id}`),
   create: (data) => axiosInstance.post('/api/stations', data),
   createMultiple: (stationsArray) => axiosInstance.post('/api/stations', stationsArray),
-  update: (id, data) => axiosInstance.patch(`/api/stations/${id}`, data),
+  update: (id, data) => {
+    // Đảm bảo dữ liệu font và định dạng được gửi đi
+    const stationData = {
+      ...data,
+      fontSize: data.fontSize || '1.05rem',
+      fontWeight: data.fontWeight || '500',
+      lineHeight: data.lineHeight || '1.5',
+      paragraphSpacing: data.paragraphSpacing || '0.8rem'
+    };
+    
+    // Debug log để kiểm tra dữ liệu
+    console.debug('API update - station data:', {
+      fontSize: stationData.fontSize,
+      fontWeight: stationData.fontWeight,
+      lineHeight: stationData.lineHeight,
+      paragraphSpacing: stationData.paragraphSpacing,
+      originalParagraphSpacing: data.paragraphSpacing
+    });
+    
+    return axiosInstance.patch(`/api/stations/${id}`, stationData);
+  },
   delete: (id) => axiosInstance.delete(`/api/stations/${id}`),
   getQRCode: (id) => axiosInstance.get(`/api/stations/${id}/qrcode`),
   uploadImage: (imageFile) => {

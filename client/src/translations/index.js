@@ -1,6 +1,7 @@
 export const translations = {
   vi: {
     welcome: 'Chào mừng',
+    font_settings: 'Cài đặt phông chữ',
     settings: 'Cài đặt',
     system_overview: 'Tổng quan hệ thống',
     total_stations: 'Tổng số trạm',
@@ -251,7 +252,7 @@ export const translations = {
     ranking_load_error: 'Không thể tải bảng xếp hạng. Vui lòng thử lại sau.',
     ranking_reset_success: 'Đã xóa bảng xếp hạng và tất cả đội chơi thành công!',
     ranking_reset_error: 'Không thể xóa bảng xếp hạng. Vui lòng thử lại sau.',
-    scores_reset_success: 'Đã xóa điểm số và thứ hạng thành công! ({count} đội đã được đặt lại điểm)',
+    scores_reset_success: 'Đã xóa điểm số và thứ hạng thành công! Các đội đã được đặt lại điểm',
     scores_reset_error: 'Không thể xóa điểm số. Vui lòng thử lại sau.',
     loading: 'Đang tải...',
     no_team_completed_station: 'Chưa có đội nào hoàn thành trạm',
@@ -341,7 +342,7 @@ export const translations = {
     // Thông tin ứng dụng
     app_version: 'Phiên bản:',
     app_version_note: 'Sửa lỗi:',
-    app_version_note_content: 'Sửa các lỗi middleware hash',
+    app_version_note_content: '1.0.3: Sửa các lỗi middleware hash',
     app_framework: 'Khung giao diện:',
     app_backend: 'Backend:',
     app_database: 'Cơ sở dữ liệu:',
@@ -435,7 +436,7 @@ export const translations = {
     choose_image: 'Chọn hình ảnh',
     uploading: 'Đang tải...',
     image_url_placeholder: 'Nhập URL hình ảnh',
-    image_upload_help: 'Bạn có thể tải lên hình ảnh hoặc nhập URL hình ảnh có sẵn',
+    image_upload_help: '  Hãy nhập URL hình ảnh có sẵn nếu bạn đang chỉnh sửa lại trạm này  ',
     preview: 'Xem trước:',
     answers_list: 'Danh sách đáp án',
     answers: 'đáp án',
@@ -560,6 +561,7 @@ export const translations = {
     settings_save_success: 'Settings saved successfully',
     reset_defaults: 'Reset to Defaults',
     reset_success: 'Reset to default settings successfully',
+    font_settings: 'Font Settings',
 
     loading_station_info: 'Loading station info...',
     error_loading_station: 'Unable to load station',

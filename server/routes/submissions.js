@@ -46,16 +46,12 @@ router.get('/station/:stationId', auth, async (req, res) => {
   }
 });
 
-// Lấy các lần nộp theo đội (admin only)
-router.get('/team/:teamName', auth, async (req, res) => {
+// Lấy các lần nộp theo đội (user)
+router.get('/team/:teamName', async (req, res) => {
   try {
-    // Lấy danh sách trạm của admin
-    const stations = await Station.find({ adminId: req.admin.id });
-    const stationIds = stations.map(station => station._id);
-    
+    // Lấy tất cả submissions của đội này
     const submissions = await Submission.find({ 
-      teamName: req.params.teamName,
-      stationId: { $in: stationIds }
+      teamName: req.params.teamName
     }).sort({ timestamp: -1 });
     
     res.json(submissions);

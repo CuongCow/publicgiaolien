@@ -226,7 +226,6 @@ const AdminProfile = () => {
                     >
                       {updating ? (
                         <>
-                          <Spinner animation="border" size="sm" className="me-2" />
                           {t('updating_profile')}
                         </>
                       ) : (

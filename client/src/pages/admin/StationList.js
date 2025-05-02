@@ -66,13 +66,14 @@ const StationList = () => {
       const imageDataUrl = canvas.toDataURL('image/png');
       
       const printWindow = window.open('', '_blank');
-      const stationName = selectedStation?.name || <TermReplacer>{t('station_label')}</TermReplacer>;
+      const stationName = selectedStation?.name || replaceStationTerm(t('station_label'));
       const maxAttempts = selectedStation?.maxAttempts || '';
+      const stationIndex = filteredStations.findIndex(s => s._id === selectedStation?._id) + 1;
       
       printWindow.document.write(`
         <html>
           <head>
-            <title>${t('qr_print_title')} - ${stationName}</title>
+            <title>${t('qr_print_title')} - Trạm ${stationIndex}: ${stationName}</title>
             <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
             <style>
               body { 
@@ -150,26 +151,39 @@ const StationList = () => {
           </head>
           <body>
             <div class="container">
-              <div class="station-name">${stationName}</div>
-              <div class="station-info">
-                <span>${t('max_attempts')}: ${maxAttempts}</span>
+              <div class="station-name">
+                <i class="bi bi-geo-alt-fill me-2"></i>
+                Trạm ${stationIndex}: ${stationName}
               </div>
-              <img class="qr-image" src="${imageDataUrl}" />
-            </div>
-            <div class="no-print mt-4">
-              <button onclick="window.print();" class="btn btn-primary">
-                <i class="bi bi-printer"></i> ${t('print_qr')}
-              </button>
-              <button onclick="window.close();" class="btn btn-secondary">
-                <i class="bi bi-x"></i> ${t('close')}
-              </button>
+              <div class="station-info">
+                <div class="mt-3 mb-2">
+                  <span class="badge bg-primary p-2" style="font-size: 14px; width: 100%; display: block;">
+                    <i class="bi bi-repeat me-1"></i>${t('max_attempts_label')}: <strong>${maxAttempts}</strong>
+                  </span>
+                </div>
+                <div>
+                  <span class="badge bg-secondary p-2" style="font-size: 14px; width: 100%; display: block;">
+                    <i class="bi bi-fingerprint me-1"></i>ID: <small>${selectedStation?._id}</small>
+                  </span>
+                </div>
+              </div>
+              <div>
+                <img src="${imageDataUrl}" alt="QR Code" class="qr-image"/>
+              </div>
+              <div class="no-print" style="margin-top: 30px;">
+                <button class="btn btn-primary" onclick="window.print()">
+                  <i class="bi bi-printer me-2"></i>${t('print')}
+                </button>
+                <button class="btn btn-secondary" onclick="window.close()">
+                  <i class="bi bi-x-lg me-2"></i>${t('close')}
+                </button>
+              </div>
             </div>
           </body>
         </html>
       `);
       
       printWindow.document.close();
-      printWindow.focus();
     } catch (err) {
       console.error('Error preparing print:', err);
       alert(t('print_error'));
@@ -448,94 +462,90 @@ const StationList = () => {
         <Modal.Header closeButton>
           <Modal.Title>
             <i className="bi bi-qr-code me-2 text-primary"></i>
-            <TermReplacer>{t('view_qr')}</TermReplacer>: {selectedStation?.name}
+            <TermReplacer>{t('view_qr')}</TermReplacer>
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="text-center">
           <div className="d-flex flex-column align-items-center">
             <div 
               ref={qrCodeRef} 
-              className="mb-3 p-3 bg-white rounded shadow-sm"
+              className="mb-3 p-4 bg-white rounded shadow-sm"
               style={{ 
-                maxWidth: '300px',
+                maxWidth: '350px',
                 width: '100%',
-                aspectRatio: '1/1',
+                padding: '20px',
                 display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center'
               }}
             >
+              <div className="mb-3">
+                <h5 className="fw-bold mb-1">Trạm {filteredStations.findIndex(s => s._id === selectedStation?._id) + 1}: {selectedStation?.name}</h5>
+                <div className="d-flex flex-column align-items-center gap-2 mt-2">
+                  <Badge bg="primary" className="w-100 py-2">
+                    <i className="bi bi-repeat me-1"></i>
+                    {t('max_attempts_label')}: {selectedStation?.maxAttempts}
+                  </Badge>
+                  <Badge bg="secondary" className="w-100 py-2">
+                    <i className="bi bi-key me-1"></i>
+                    ID: {selectedStation?._id && selectedStation._id}
+                  </Badge>
+                </div>
+              </div>
+              
               {selectedStation && (
                 <QRCodeSVG 
                   value={`${window.location.origin}/station/${selectedStation._id}`}
-                  size={256}
+                  size={280}
                   level="H"
                   includeMargin={true}
                   renderAs="svg"
+                  imageSettings={{
+                    src: '/logo192.png',
+                    x: undefined,
+                    y: undefined,
+                    height: 60,
+                    width: 60,
+                    excavate: true,
+                  }}
                 />
               )}
             </div>
             
-            <div className="text-center">
-              <h5 className="mb-2">{selectedStation?.name}</h5>
-              <p className="text-muted mb-0">
-                <small>ID: {selectedStation?._id}</small>
-              </p>
-              <p className="text-muted mt-2">
-                <i className="bi bi-repeat me-1"></i>
-                {t('max_attempts_label')}: {selectedStation?.maxAttempts}
-              </p>
-                            <p className="mt-4 text-muted">
-                <i className="bi bi-info-circle me-1"></i>
-                <TermReplacer>{t('qr_print_instruction')}</TermReplacer>
-              </p>
+            <div className="d-flex flex-column gap-2 mb-3">
+              <div className="d-flex gap-2">
+                <Button 
+                  variant="outline-primary" 
+                  onClick={copyLink}
+                  className="d-flex align-items-center justify-content-center"
+                >
+                  <i className="bi bi-link-45deg me-2"></i>
+                  {copied ? t('copied') : t('copy_link')}
+                </Button>
+                
+                <Button 
+                  variant="outline-success" 
+                  onClick={handlePrintQR}
+                  className="d-flex align-items-center justify-content-center"
+                >
+                  <i className="bi bi-printer me-2"></i>
+                  {t('print')}
+                </Button>
+              </div>
+              
+              <Button 
+                variant="outline-primary" 
+                onClick={handleSaveQRImage}
+                disabled={isDownloading}
+                className="d-flex align-items-center justify-content-center"
+              >
+                <i className="bi bi-download me-2"></i>
+                {isDownloading ? t('downloading') : t('download_image')}
+              </Button>
             </div>
           </div>
         </Modal.Body>
-        <Modal.Footer className="d-flex flex-wrap justify-content-center gap-2">
-          <Button 
-            variant="outline-secondary" 
-            onClick={() => setShowQRModal(false)}
-            className="flex-grow-1 flex-md-grow-0"
-          >
-            <i className="bi bi-x me-1"></i>
-            {t('close')}
-          </Button>
-          <Button 
-            variant="info" 
-            onClick={copyLink}
-            className="flex-grow-1 flex-md-grow-0"
-          >
-            <i className="bi bi-link-45deg me-1"></i>
-            {copied ? t('copied') : t('copy_link')}
-          </Button>
-          <Button 
-            variant="primary" 
-            onClick={handlePrintQR}
-            className="flex-grow-1 flex-md-grow-0"
-          >
-            <i className="bi bi-printer me-1"></i>
-            {t('print')}
-          </Button>
-          <Button 
-            variant="success" 
-            onClick={handleSaveQRImage} 
-            disabled={isDownloading}
-            className="flex-grow-1 flex-md-grow-0"
-          >
-            {isDownloading ? (
-              <>
-                <Spinner animation="border" size="sm" className="me-1" />
-                {t('downloading')}
-              </>
-            ) : (
-              <>
-                <i className="bi bi-download me-1"></i>
-                {t('download_image')}
-              </>
-            )}
-          </Button>
-        </Modal.Footer>
       </Modal>
     </>
   );

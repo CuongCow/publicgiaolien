@@ -1030,6 +1030,18 @@ ${t('notes')}:
                       </tr>
                     </tbody>
                   </Table>
+          {selectedTeam && selectedTeam.status === 'active' && (
+            <Button 
+              variant="danger" 
+              onClick={() => {
+                handleForceLogout(selectedTeam._id);
+                setShowDetailModal(false);
+              }}
+            >
+              <i className="bi bi-box-arrow-right me-2"></i>
+              {t('logout')}
+            </Button>
+          )}
                 </Col>
               </Row>
               
@@ -1104,18 +1116,6 @@ ${t('notes')}:
           <Button variant="secondary" onClick={() => setShowDetailModal(false)}>
             Đóng
           </Button>
-          {selectedTeam && selectedTeam.status === 'active' && (
-            <Button 
-              variant="danger" 
-              onClick={() => {
-                handleForceLogout(selectedTeam._id);
-                setShowDetailModal(false);
-              }}
-            >
-              <i className="bi bi-box-arrow-right me-2"></i>
-              {t('logout')}
-            </Button>
-          )}
         </Modal.Footer>
       </Modal>
     </>

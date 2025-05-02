@@ -17,8 +17,28 @@ const TeamSpecificContentSchema = new mongoose.Schema({
     default: 'text'
   },
   correctAnswer: {
+    type: [String],
+    default: []
+  },
+  // Thêm trường cho kích thước chữ
+  fontSize: {
     type: String,
-    default: ''
+    default: '1.05rem'
+  },
+  // Thêm trường cho độ đậm chữ
+  fontWeight: {
+    type: String,
+    default: '500'
+  },
+  // Thêm trường cho khoảng cách dòng
+  lineHeight: {
+    type: String,
+    default: '1.5'
+  },
+  // Thêm trường cho khoảng cách đoạn văn
+  paragraphSpacing: {
+    type: String,
+    default: '0.8rem'
   }
 }, { _id: false });
 
@@ -86,6 +106,26 @@ const StationSchema = new mongoose.Schema({
   lockTime: {
     type: Number,
     default: 0, // Thời gian khóa tính bằng phút
+  },
+  // Thêm trường cho kích thước chữ
+  fontSize: {
+    type: String,
+    default: '1.05rem'
+  },
+  // Thêm trường cho độ đậm chữ
+  fontWeight: {
+    type: String,
+    default: '500'
+  },
+  // Thêm trường cho khoảng cách dòng
+  lineHeight: {
+    type: String,
+    default: '1.5'
+  },
+  // Thêm trường cho khoảng cách đoạn văn
+  paragraphSpacing: {
+    type: String,
+    default: '0.8rem'
   },
   qrCode: {
     type: String
