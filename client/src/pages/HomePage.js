@@ -6,6 +6,7 @@ import '../styles/HomePage.css';
 import { authApi } from '../services/api';
 import { replaceStationTerm } from '../utils/helpers';
 import TermReplacer from '../utils/TermReplacer';
+import SEOHelmet from '../components/SEOHelmet';
 
 const HomePage = () => {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -31,6 +32,12 @@ const HomePage = () => {
 
   return (
     <>
+      <SEOHelmet 
+        title="Trang Chủ"
+        description="Hệ thống Giao Liên - Nền tảng quản lý trò chơi mật thư, quản lý trạm, đội chơi và bảng xếp hạng. Tạo và tham gia các hoạt động giải mật thư, trò chơi nhóm."
+        pageName="home"
+      />
+      
       <UserNavbar />
       <div className="video-background">
         <video autoPlay loop muted className="video-bg">
