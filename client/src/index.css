@@ -259,15 +259,46 @@ code {
 
 /* Links styling */
 .auth-link {
-  color: #0d6efd;
-  text-decoration: none;
   font-weight: 500;
-  transition: all 0.3s ease;
+  color: #0d6efd;
+  transition: all 0.2s ease;
+  text-decoration: none;
 }
 
 .auth-link:hover {
-  color: #0b5ed7;
+  color: #0a58ca;
   text-decoration: underline;
+}
+
+/* Contact Info */
+.contact-info {
+  font-size: 0.9rem;
+}
+
+.contact-divider {
+  margin: 1rem auto;
+  width: 60%;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.contact-link {
+  color: #6c757d;
+  text-decoration: none;
+  transition: color 0.2s ease;
+  font-size: 0.85rem;
+}
+
+.contact-link:hover {
+  color: #0d6efd;
+  text-decoration: none;
+}
+
+.contact-item {
+  margin-bottom: 0.25rem;
+}
+
+.contact-item i {
+  font-size: 0.9rem;
 }
 
 /* Alert styling */

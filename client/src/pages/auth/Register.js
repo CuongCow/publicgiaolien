@@ -536,6 +536,26 @@ const Register = () => {
                   <p className="mb-0">
                     Đã có tài khoản? <Link to="/login" className="auth-link">Đăng nhập</Link>
                   </p>
+                  
+                  <div className="contact-info mt-4 pt-3">
+                    <hr className="contact-divider" />
+                    <h6 className="small text-muted mb-2">Liên hệ hỗ trợ</h6>
+                    <div className="contact-item d-flex align-items-center justify-content-center mb-1">
+                      <a href="https://www.facebook.com/cuongcowk" target="_blank" rel="noopener noreferrer" className="contact-link">
+                        <i className="bi bi-facebook me-1"></i> facebook.com/cuongcowk
+                      </a>
+                    </div>
+                    <div className="contact-item d-flex align-items-center justify-content-center mb-1">
+                      <a href="mailto:cuong.dn@pctu.edu.vn" className="contact-link">
+                        <i className="bi bi-envelope me-1"></i> cuong.dn@pctu.edu.vn
+                      </a>
+                    </div>
+                    <div className="contact-item d-flex align-items-center justify-content-center">
+                      <a href="tel:0369225402" className="contact-link">
+                        <i className="bi bi-telephone me-1"></i> 0369 225 402
+                      </a>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
