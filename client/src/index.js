@@ -7,6 +7,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import { LanguageProvider } from './context/LanguageContext';
+import { BrowserRouter as Router } from 'react-router-dom';
 
 // Khởi tạo thư viện AOS cho hiệu ứng cuộn
 AOS.init({
@@ -19,13 +20,22 @@ AOS.init({
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <LanguageProvider>
-      <App />
-    </LanguageProvider>
+    <Router>
+      <LanguageProvider>
+        <App />
+      </LanguageProvider>
+    </Router>
   </React.StrictMode>
 );
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
+// Gửi dữ liệu web vitals đến Google Analytics
+reportWebVitals(({ name, delta, value, id }) => {
+  // Thay YOUR_MEASUREMENT_ID bằng ID đo lường thực tế của bạn
+  window.gtag && window.gtag('event', name, {
+    value: delta,
+    metric_id: id,
+    metric_value: value,
+    metric_delta: delta,
+    metric_category: 'Web Vitals'
+  });
+});

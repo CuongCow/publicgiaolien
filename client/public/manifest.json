@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Giao Liên",
+  "name": "Hệ thống Giao Liên",
   "icons": [
     {
       "src": "favicon.ico",
@@ -20,6 +20,10 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "theme_color": "#3498db",
+  "background_color": "#ffffff",
+  "description": "Hệ thống trò chơi mật thư - Quản lý trạm, đội chơi và bảng xếp hạng",
+  "lang": "vi-VN",
+  "orientation": "portrait-primary",
+  "categories": ["games", "education", "entertainment"]
 }
