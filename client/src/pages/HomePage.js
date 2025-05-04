@@ -36,6 +36,15 @@ const HomePage = () => {
         title="Trang Chủ"
         description="Hệ thống Giao Liên - Nền tảng quản lý trò chơi mật thư, quản lý trạm, đội chơi và bảng xếp hạng. Tạo và tham gia các hoạt động giải mật thư, trò chơi nhóm."
         pageName="home"
+        additionalKeywords={[
+          'hệ thống quản lý mật thư trực tuyến',
+          'phần mềm tổ chức hoạt động ngoài trời',
+          'quản lý hoạt động teambuilding',
+          'tổ chức trò chơi nhóm',
+          'giải đố mật thư Việt Nam'
+        ]}
+        seasonType="schoolYear"
+        industryType="education"
       />
       
       <UserNavbar />
