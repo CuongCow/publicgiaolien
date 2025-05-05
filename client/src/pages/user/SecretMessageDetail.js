@@ -439,14 +439,6 @@ const SecretMessageDetail = () => {
                       >
                         {checkingAnswer ? (
                           <>
-                            <Spinner
-                              as="span"
-                              animation="border"
-                              size="sm"
-                              role="status"
-                              aria-hidden="true"
-                              className="me-2"
-                            />
                             Đang kiểm tra...
                           </>
                         ) : (

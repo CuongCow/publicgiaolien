@@ -1028,7 +1028,6 @@ const UserStation = () => {
           >
             {submitting ? (
               <>
-                <Spinner animation="border" size="sm" className="me-2" />
                 {t('processing')}
               </>
             ) : t('confirm')}
@@ -1314,7 +1313,6 @@ const UserStation = () => {
                       >
                         {submitting ? (
                           <>
-                            <Spinner animation="border" size="sm" className="me-2" />
                             Đang xử lý...
                           </>
                         ) : 'Gửi đáp án'}

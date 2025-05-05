@@ -341,7 +341,6 @@ const AdminSettings = () => {
                     >
                       {(loading || apiLoading) ? (
                         <>
-                          <Spinner animation="border" size="sm" className="me-2" />
                           {t('saving_settings')}
                         </>
                       ) : (
