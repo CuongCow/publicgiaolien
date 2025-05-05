@@ -165,13 +165,19 @@ const SecretMessageList = () => {
       setSelectedMessage(message);
       setShowQRModal(true);
       
-      // Sau đó gọi API để lấy QR code mới với URL thực tế
-      const response = await secretMessageApi.getQRCode(message._id);
+      // Thay vì gọi API, tạo QR code ở client với URL thực tế
+      // QR code này sẽ hiển thị trong Modal thay vì ảnh base64 từ server
+      const baseUrl = window.location.origin;
+      const url = `${baseUrl}/secret-message/${message._id}`;
+      console.log('Đã tạo QR code với URL:', url);
       
-      if (response && response.data && response.data.qrCode) {
-        // Cập nhật QR code mới khi API trả về
-        setQrCode(response.data.qrCode);
-      }
+      // Không cần gọi API nữa vì chúng ta sẽ hiển thị QRCodeSVG trực tiếp
+      // const response = await secretMessageApi.getQRCode(message._id);
+      // 
+      // if (response && response.data && response.data.qrCode) {
+      //   // Cập nhật QR code mới khi API trả về
+      //   setQrCode(response.data.qrCode);
+      // }
     } catch (error) {
       console.error('Error generating QR code:', error);
       // Không hiển thị toast lỗi vì đã hiển thị QR code từ model
@@ -180,12 +186,58 @@ const SecretMessageList = () => {
 
   // Tải mã QR
   const handleDownloadQR = () => {
-    const link = document.createElement('a');
-    link.href = qrCode;
-    link.download = 'mathu-qrcode.png';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    if (!selectedMessage) return;
+    
+    try {
+      // Tìm SVG element từ DOM
+      const svg = document.querySelector('.qr-code-container svg');
+      if (!svg) {
+        toast.error('Không thể tạo hình ảnh QR code');
+        return;
+      }
+      
+      // Tạo canvas để chuyển đổi SVG thành hình ảnh
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      // Thiết lập kích thước canvas
+      canvas.width = 300;
+      canvas.height = 300;
+      
+      // Tạo đối tượng Image từ SVG
+      const image = new Image();
+      const svgData = new XMLSerializer().serializeToString(svg);
+      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+      const svgUrl = URL.createObjectURL(svgBlob);
+      
+      image.onload = () => {
+        // Vẽ background trắng
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Vẽ SVG lên canvas
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+        
+        // Chuyển đổi canvas thành data URL
+        const dataUrl = canvas.toDataURL('image/png');
+        
+        // Tạo link để tải xuống
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = `mathu-qrcode-${selectedMessage._id}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Giải phóng URL
+        URL.revokeObjectURL(svgUrl);
+      };
+      
+      image.src = svgUrl;
+    } catch (err) {
+      console.error('Lỗi khi tạo file tải xuống:', err);
+      toast.error('Không thể tải xuống QR code');
+    }
   };
   
   // Sao chép link mật thư
@@ -590,37 +642,21 @@ const SecretMessageList = () => {
           <Modal.Title>Mã QR</Modal.Title>
         </Modal.Header>
         <Modal.Body className="text-center">
-          {qrCode && (
+          {selectedMessage && (
             <>
-              <div className="position-relative" style={{ width: '100%', maxWidth: '300px', margin: '0 auto' }}>
-                <img src={qrCode} alt="QR Code" style={{ width: '100%' }} />
-                <div 
-                  className="position-absolute" 
-                  style={{ 
-                    top: '50%', 
-                    left: '50%', 
-                    transform: 'translate(-50%, -50%)',
-                    width: '20%',
-                    height: '20%',
-                    overflow: 'hidden',
-                    borderRadius: '50%',
-                    backgroundColor: 'white',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    boxShadow: '0 0 5px rgba(0,0,0,0.2)'
+              <div className="position-relative qr-code-container" style={{ width: '100%', maxWidth: '300px', margin: '0 auto' }}>
+                <QRCodeSVG
+                  value={`${window.location.origin}/secret-message/${selectedMessage._id}`}
+                  size={300}
+                  level="H"
+                  includeMargin={true}
+                  imageSettings={{
+                    src: "/logo192.png",
+                    height: 60,
+                    width: 60,
+                    excavate: true
                   }}
-                >
-                  <img 
-                    src="/logo192.png" 
-                    alt="Logo" 
-                    style={{ 
-                      width: '80%', 
-                      height: '80%', 
-                      objectFit: 'contain' 
-                    }} 
-                  />
-                </div>
+                />
               </div>
               <p className="mt-3">Quét mã QR để xem mật thư</p>
               
