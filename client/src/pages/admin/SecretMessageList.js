@@ -158,10 +158,26 @@ const SecretMessageList = () => {
   };
 
   // Hiển thị mã QR
-  const handleShowQR = (message) => {
-    setQrCode(message.qrCode);
-    setSelectedMessage(message);
-    setShowQRModal(true);
+  const handleShowQR = async (message) => {
+    try {
+      // Gọi API để tạo QR code với URL thực tế
+      const response = await secretMessageApi.getQRCode(message._id);
+      
+      if (response && response.data && response.data.qrCode) {
+        setQrCode(response.data.qrCode);
+        setSelectedMessage(message);
+        setShowQRModal(true);
+      } else {
+        toast.error('Không thể tạo mã QR');
+      }
+    } catch (error) {
+      console.error('Error generating QR code:', error);
+      toast.error('Đã xảy ra lỗi khi tạo mã QR');
+      // Fallback sử dụng QR code đã lưu trong database
+      setQrCode(message.qrCode);
+      setSelectedMessage(message);
+      setShowQRModal(true);
+    }
   };
 
   // Tải mã QR

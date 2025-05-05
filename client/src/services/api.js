@@ -246,6 +246,10 @@ export const secretMessageApi = {
         throw error;
       });
   },
+  // Phương thức mới để lấy QR code với URL thực tế
+  getQRCode: (id) => {
+    return axiosInstance.get(`/api/secret-messages/${id}/qrcode`);
+  },
   // Phương thức mới cho phản hồi mật thư
   submitAnswer: (secretMessageId, answer) => {
     return axiosInstance.post('/api/secret-messages/response/submit-answer', {

@@ -363,11 +363,21 @@ router.get('/:id/qrcode', auth, async (req, res) => {
     
     if (!station) return res.status(404).json({ message: 'Không tìm thấy trạm' });
 
-    // Tạo URL cho trạm
-    const url = `${process.env.CLIENT_URL || 'http://localhost:3000'}/station/${station._id}`;
+    // Lấy origin URL từ request header hoặc sử dụng CLIENT_URL từ biến môi trường
+    const origin = req.headers.origin || process.env.CLIENT_URL || 'http://localhost:3000';
     
-    // Tạo QR code
-    const qrCodeDataUrl = await qrcode.toDataURL(url);
+    // Tạo URL cho trạm
+    const url = `${origin}/station/${station._id}`;
+    
+    // Tạo QR code với mức sửa lỗi cao để hỗ trợ thêm logo sau này
+    const qrCodeDataUrl = await qrcode.toDataURL(url, {
+      errorCorrectionLevel: 'H',
+      margin: 4,
+      color: {
+        dark: '#000000',
+        light: '#ffffff'
+      }
+    });
     
     res.json({ qrCode: qrCodeDataUrl });
   } catch (err) {
