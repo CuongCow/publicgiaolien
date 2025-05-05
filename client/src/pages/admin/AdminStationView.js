@@ -339,6 +339,12 @@ const AdminStationView = () => {
                     size={200}
                     level="H"
                     includeMargin={true}
+                    imageSettings={{
+                      src: "/logo192.png",
+                      height: 40,
+                      width: 40,
+                      excavate: true
+                    }}
                   />
                 </div>
               </Col>

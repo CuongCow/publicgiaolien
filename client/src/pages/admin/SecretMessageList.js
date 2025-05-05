@@ -7,6 +7,7 @@ import { secretMessageApi } from '../../services/api';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import * as XLSX from 'xlsx';
+import { QRCodeSVG } from 'qrcode.react';
 
 const SecretMessageList = () => {
   const [secretMessages, setSecretMessages] = useState([]);
@@ -577,7 +578,36 @@ const SecretMessageList = () => {
         <Modal.Body className="text-center">
           {qrCode && (
             <>
-              <img src={qrCode} alt="QR Code" style={{ width: '100%', maxWidth: '300px' }} />
+              <div className="position-relative" style={{ width: '100%', maxWidth: '300px', margin: '0 auto' }}>
+                <img src={qrCode} alt="QR Code" style={{ width: '100%' }} />
+                <div 
+                  className="position-absolute" 
+                  style={{ 
+                    top: '50%', 
+                    left: '50%', 
+                    transform: 'translate(-50%, -50%)',
+                    width: '20%',
+                    height: '20%',
+                    overflow: 'hidden',
+                    borderRadius: '50%',
+                    backgroundColor: 'white',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    boxShadow: '0 0 5px rgba(0,0,0,0.2)'
+                  }}
+                >
+                  <img 
+                    src="/logo192.png" 
+                    alt="Logo" 
+                    style={{ 
+                      width: '80%', 
+                      height: '80%', 
+                      objectFit: 'contain' 
+                    }} 
+                  />
+                </div>
+              </div>
               <p className="mt-3">Quét mã QR để xem mật thư</p>
               
               {showCopiedAlert && (

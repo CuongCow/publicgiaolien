@@ -196,7 +196,25 @@ StationSchema.pre('save', async function(next) {
       // Sử dụng CLIENT_URL từ biến môi trường hoặc REACT_APP_BASE_URL nếu có,
       // chỉ fallback sang localhost khi không có lựa chọn nào khác
       const url = `${process.env.CLIENT_URL || process.env.REACT_APP_BASE_URL || 'http://localhost:3000'}/station/${this._id}`;
-      this.qrCode = await require('qrcode').toDataURL(url);
+      
+      // Tạo QR code với các tùy chọn nâng cao
+      const qrcode = require('qrcode');
+      
+      // Tạo QR code cơ bản
+      this.qrCode = await qrcode.toDataURL(url, {
+        errorCorrectionLevel: 'H',
+        margin: 4,
+        color: {
+          dark: '#000000',
+          light: '#ffffff'
+        }
+      });
+      
+      // Lưu ý: Để thêm logo vào QR code ở phía server cần sử dụng canvas
+      // và xử lý hình ảnh riêng. Quá trình này phức tạp hơn so với ở client
+      // Trong môi trường production, bạn có thể cần thêm thư viện xử lý hình ảnh
+      // như sharp hoặc jimp để thực hiện điều này
+      
     } catch (error) {
       console.error('QR Code generation error:', error);
     }
