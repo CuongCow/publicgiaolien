@@ -193,15 +193,9 @@ const StationSchema = new mongoose.Schema({
 StationSchema.pre('save', async function(next) {
   if (this.isNew || this.isModified('_id')) {
     try {
-      // Đảm bảo sử dụng URL đúng cho môi trường triển khai
-      // Ưu tiên sử dụng CLIENT_URL từ biến môi trường
-      const baseUrl = process.env.CLIENT_URL || process.env.REACT_APP_BASE_URL || 'http://localhost:3000';
-      
-      // Loại bỏ dấu / cuối cùng nếu có để tránh URL dạng domain.com//station
-      const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
-      
-      const url = `${normalizedBaseUrl}/station/${this._id}`;
-      console.log('Creating Station QR Code with URL:', url); // Log để debug
+      // Sử dụng CLIENT_URL từ biến môi trường hoặc REACT_APP_BASE_URL nếu có,
+      // chỉ fallback sang localhost khi không có lựa chọn nào khác
+      const url = `${process.env.CLIENT_URL || process.env.REACT_APP_BASE_URL || 'http://localhost:3000'}/station/${this._id}`;
       
       // Tạo QR code với các tùy chọn nâng cao
       const qrcode = require('qrcode');

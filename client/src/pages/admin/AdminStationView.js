@@ -8,7 +8,6 @@ import TermReplacer from '../../utils/TermReplacer';
 import AdminNavbar from '../../components/Navbar';
 import { useSystemSettings } from '../../context/SystemSettingsContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { useConfig } from '../../context/ConfigContext';
 import '../user/UserStation.css';
 
 const AdminStationView = () => {
@@ -16,7 +15,6 @@ const AdminStationView = () => {
   const navigate = useNavigate();
   const { getAdminSettings } = useSystemSettings();
   const { t } = useLanguage();
-  const { baseUrl } = useConfig();
 
   const [stations, setStations] = useState([]);
   const [activeStation, setActiveStation] = useState(null);
@@ -311,13 +309,13 @@ const AdminStationView = () => {
                     <input 
                       type="text" 
                       className="form-control" 
-                      value={`${baseUrl}/station/team/${adminId}`} 
+                      value={`${window.location.origin}/station/team/${adminId}`} 
                       readOnly
                     />
                     <Button 
                       variant="outline-primary" 
                       onClick={() => {
-                        navigator.clipboard.writeText(`${baseUrl}/station/team/${adminId}`);
+                        navigator.clipboard.writeText(`${window.location.origin}/station/team/${adminId}`);
                         alert('Đã sao chép liên kết vào clipboard!');
                       }}
                     >
@@ -337,7 +335,7 @@ const AdminStationView = () => {
               <Col md={6} className="text-center">
                 <div className="bg-white rounded p-4 d-inline-block shadow-sm">
                   <QRCodeSVG 
-                    value={`${baseUrl}/station/team/${adminId}`}
+                    value={`${window.location.origin}/station/team/${adminId}`}
                     size={200}
                     level="H"
                     includeMargin={true}
