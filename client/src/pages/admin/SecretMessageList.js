@@ -176,8 +176,11 @@ const SecretMessageList = () => {
   
   // Sao chép link mật thư
   const handleCopyLink = () => {
-    const baseUrl = window.location.origin;
+    // Sử dụng trang web triển khai thay vì window.location.origin
+    const baseUrl = process.env.REACT_APP_BASE_URL || window.location.origin;
     const link = `${baseUrl}/secret-message/${selectedMessage._id}`;
+    
+    console.log('Copying link:', link);
     
     navigator.clipboard.writeText(link)
       .then(() => {

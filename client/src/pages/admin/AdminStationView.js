@@ -309,13 +309,13 @@ const AdminStationView = () => {
                     <input 
                       type="text" 
                       className="form-control" 
-                      value={`${window.location.origin}/station/team/${adminId}`} 
+                      value={`${process.env.REACT_APP_BASE_URL || window.location.origin}/station/team/${adminId}`} 
                       readOnly
                     />
                     <Button 
                       variant="outline-primary" 
                       onClick={() => {
-                        navigator.clipboard.writeText(`${window.location.origin}/station/team/${adminId}`);
+                        navigator.clipboard.writeText(`${process.env.REACT_APP_BASE_URL || window.location.origin}/station/team/${adminId}`);
                         alert('Đã sao chép liên kết vào clipboard!');
                       }}
                     >
@@ -335,7 +335,7 @@ const AdminStationView = () => {
               <Col md={6} className="text-center">
                 <div className="bg-white rounded p-4 d-inline-block shadow-sm">
                   <QRCodeSVG 
-                    value={`${window.location.origin}/station/team/${adminId}`}
+                    value={`${process.env.REACT_APP_BASE_URL || window.location.origin}/station/team/${adminId}`}
                     size={200}
                     level="H"
                     includeMargin={true}
