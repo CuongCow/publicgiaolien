@@ -270,4 +270,9 @@ export const secretMessageApi = {
   }
 };
 
+// Thêm configApi để lấy thông tin cấu hình từ server
+export const configApi = {
+  getConfig: () => axiosInstance.get('/api/config')
+};
+
 export default axiosInstance; 

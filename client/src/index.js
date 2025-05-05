@@ -8,6 +8,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import { LanguageProvider } from './context/LanguageContext';
+import { ConfigProvider } from './context/ConfigContext';
 
 // Khởi tạo thư viện AOS cho hiệu ứng cuộn
 AOS.init({
@@ -20,9 +21,11 @@ AOS.init({
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <LanguageProvider>
-      <App />
-    </LanguageProvider>
+    <ConfigProvider>
+      <LanguageProvider>
+        <App />
+      </LanguageProvider>
+    </ConfigProvider>
   </React.StrictMode>
 );
 

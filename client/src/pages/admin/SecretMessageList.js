@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import * as XLSX from 'xlsx';
 import { QRCodeSVG } from 'qrcode.react';
+import { useConfig } from '../../context/ConfigContext';
 
 const SecretMessageList = () => {
   const [secretMessages, setSecretMessages] = useState([]);
@@ -176,11 +177,8 @@ const SecretMessageList = () => {
   
   // Sao chép link mật thư
   const handleCopyLink = () => {
-    // Sử dụng trang web triển khai thay vì window.location.origin
-    const baseUrl = process.env.REACT_APP_BASE_URL || window.location.origin;
+    const { baseUrl } = useConfig();
     const link = `${baseUrl}/secret-message/${selectedMessage._id}`;
-    
-    console.log('Copying link:', link);
     
     navigator.clipboard.writeText(link)
       .then(() => {
