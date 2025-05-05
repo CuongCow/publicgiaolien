@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Accordion } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import UserNavbar from '../components/UserNavbar';
 import '../styles/HomePage.css';
@@ -140,6 +140,132 @@ const AboutPage = () => {
                     )
                   )}
                 </div>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+
+        <Row className="mb-5">
+          <Col lg={12}>
+            <Card className="content-card">
+              <Card.Header>
+                <h2 className="section-title">Tính Năng Hệ Thống</h2>
+              </Card.Header>
+              <Card.Body>
+                <Accordion defaultActiveKey="0" className="feature-accordion">
+                  <Accordion.Item eventKey="0">
+                    <Accordion.Header>
+                      <i className="bi bi-speedometer2 me-2"></i> Tổng quan
+                    </Accordion.Header>
+                    <Accordion.Body>
+                      <p>Trang Tổng quan cung cấp cái nhìn tổng thể về hệ thống và hoạt động trò chơi hiện tại:</p>
+                      <ul>
+                        <li><strong>Thống kê tổng quan:</strong> Hiển thị số lượng trạm, đội chơi và lượt trả lời</li>
+                        <li><strong>Truy cập nhanh:</strong> Các liên kết nhanh đến các chức năng quản lý quan trọng</li>
+                        <li><strong>Thông báo hệ thống:</strong> Hiển thị các thông báo quan trọng và cập nhật mới nhất</li>
+                      </ul>
+                      <p>Đây là điểm xuất phát lý tưởng cho Ban tổ chức để kiểm soát và điều hành toàn bộ hoạt động.</p>
+                    </Accordion.Body>
+                  </Accordion.Item>
+
+                  <Accordion.Item eventKey="1">
+                    <Accordion.Header>
+                      <i className="bi bi-geo-alt me-2"></i> Trạm
+                    </Accordion.Header>
+                    <Accordion.Body>
+                      <p>Phần Quản lý Trạm cho phép tạo và quản lý các trạm trong hoạt động:</p>
+                      <ul>
+                        <li><strong>Tạo trạm mới:</strong> Thiết lập trạm với tên, mô tả và hình ảnh</li>
+                        <li><strong>Soạn nội dung:</strong> Tạo nội dung trạm với định dạng phong phú (văn bản, hình ảnh)</li>
+                        <li><strong>Thiết lập đáp án:</strong> Cấu hình đáp án chính xác và gợi ý</li>
+                        <li><strong>Tạo mã QR:</strong> Tự động tạo mã QR cho mỗi trạm để dễ dàng truy cập</li>
+                        <li><strong>Tùy chỉnh giao diện:</strong> Điều chỉnh phông chữ, kích thước và giao diện hiển thị</li>
+                        <li><strong>Kiểm soát truy cập:</strong> Quản lý quyền truy cập vào từng trạm</li>
+                        <li><strong>Theo dõi tiến độ:</strong> Xem số lượt truy cập và tỷ lệ trả lời đúng của từng trạm</li>
+                      </ul>
+                      <p>Chức năng này giúp Ban tổ chức dễ dàng thiết kế và điều chỉnh trải nghiệm chơi game theo nhiều chủ đề khác nhau.</p>
+                    </Accordion.Body>
+                  </Accordion.Item>
+
+                  <Accordion.Item eventKey="2">
+                    <Accordion.Header>
+                      <i className="bi bi-people-fill me-2"></i> Đội chơi
+                    </Accordion.Header>
+                    <Accordion.Body>
+                      <p>Phần Quản lý Đội chơi cho phép Ban tổ chức điều hành và giám sát các đội tham gia:</p>
+                      <ul>
+                        <li><strong>Đăng ký đội:</strong> Tạo đội mới với thông tin chi tiết (tên đội, thành viên, liên hệ)</li>
+                        <li><strong>Quản lý mật khẩu:</strong> Cấp phát và đặt lại mật khẩu cho đội</li>
+                        <li><strong>Phân quyền:</strong> Thiết lập quyền truy cập cho từng đội</li>
+                        <li><strong>Theo dõi hoạt động:</strong> Giám sát lịch sử tương tác và thời gian hoạt động</li>
+                        <li><strong>Điều chỉnh điểm số:</strong> Thêm/trừ điểm thủ công khi cần thiết</li>
+                        <li><strong>Gửi thông báo:</strong> Gửi thông báo trực tiếp đến các đội</li>
+                        <li><strong>Tạm khóa/mở khóa:</strong> Quản lý trạng thái hoạt động của đội</li>
+                        <li><strong>Xuất dữ liệu:</strong> Xuất thông tin đội để báo cáo và phân tích</li>
+                      </ul>
+                      <p>Chức năng này cung cấp công cụ mạnh mẽ để quản lý người tham gia, đảm bảo trải nghiệm chơi game công bằng và hiệu quả.</p>
+                    </Accordion.Body>
+                  </Accordion.Item>
+
+                  <Accordion.Item eventKey="3">
+                    <Accordion.Header>
+                      <i className="bi bi-file-earmark-lock me-2"></i> Mật thư
+                    </Accordion.Header>
+                    <Accordion.Body>
+                      <p>Phần Quản lý Mật thư cho phép tạo và điều hành các thử thách mật thư độc lập:</p>
+                      <ul>
+                        <li><strong>Tạo mật thư:</strong> Soạn mật thư với nhiều loại nội dung (văn bản, hình ảnh, kết hợp)</li>
+                        <li><strong>Cấu hình đáp án:</strong> Thiết lập nhiều đáp án chính xác và giới hạn số lần thử</li>
+                        <li><strong>Thu thập thông tin:</strong> Tùy chỉnh các trường thông tin cần thu thập từ người chơi</li>
+                        <li><strong>Tùy chỉnh phông chữ:</strong> Thiết lập kiểu chữ, kích thước và định dạng nội dung</li>
+                        <li><strong>Xuất mã QR:</strong> Tạo và tải xuống mã QR cho mật thư để dễ dàng chia sẻ</li>
+                        <li><strong>Theo dõi người dùng:</strong> Giám sát ai đã xem và trả lời mật thư</li>
+                        <li><strong>Ghi chú cho đội chơi:</strong> Thêm hướng dẫn và thông tin hỗ trợ đội chơi</li>
+                        <li><strong>Xuất báo cáo:</strong> Xuất dữ liệu phản hồi sang Excel để phân tích</li>
+                      </ul>
+                      <p>Tính năng này hoạt động độc lập với hệ thống trạm, cho phép tổ chức các hoạt động mật thư linh hoạt hơn và thu thập thông tin từ người chơi.</p>
+                    </Accordion.Body>
+                  </Accordion.Item>
+
+                  <Accordion.Item eventKey="4">
+                    <Accordion.Header>
+                      <i className="bi bi-trophy me-2"></i> Bảng xếp hạng
+                    </Accordion.Header>
+                    <Accordion.Body>
+                      <p>Phần Bảng xếp hạng hiển thị thành tích của các đội tham gia:</p>
+                      <ul>
+                        <li><strong>Xếp hạng thời gian thực:</strong> Cập nhật điểm số và thứ hạng tự động</li>
+                        <li><strong>Nhiều chế độ sắp xếp:</strong> Sắp xếp theo điểm số, thời gian hoàn thành, số trạm đã ghé qua</li>
+                        <li><strong>Hiệu ứng trực quan:</strong> Đánh dấu thay đổi thứ hạng với hiệu ứng trực quan</li>
+                        <li><strong>Lọc và tìm kiếm:</strong> Tìm kiếm đội cụ thể hoặc lọc theo tiêu chí</li>
+                        <li><strong>Hiển thị chi tiết:</strong> Xem thông tin chi tiết về tiến độ của từng đội</li>
+                        <li><strong>Chế độ hiển thị công khai:</strong> Chọn hiển thị/ẩn bảng xếp hạng với người chơi</li>
+                        <li><strong>Xuất dữ liệu:</strong> Tải xuống bảng xếp hạng dưới nhiều định dạng</li>
+                        <li><strong>Đặt lại xếp hạng:</strong> Tùy chọn đặt lại bảng xếp hạng khi cần</li>
+                      </ul>
+                      <p>Tính năng này tạo không khí cạnh tranh lành mạnh và động lực cho người chơi, đồng thời cung cấp công cụ để Ban tổ chức theo dõi tiến trình của trò chơi.</p>
+                    </Accordion.Body>
+                  </Accordion.Item>
+
+                  <Accordion.Item eventKey="5">
+                    <Accordion.Header>
+                      <i className="bi bi-list-check me-2"></i> Lịch sử
+                    </Accordion.Header>
+                    <Accordion.Body>
+                      <p>Phần Lịch sử cung cấp thông tin chi tiết về tất cả các hoạt động trong hệ thống:</p>
+                      <ul>
+                        <li><strong>Theo dõi lượt trả lời:</strong> Xem tất cả lượt trả lời của các đội</li>
+                        <li><strong>Lọc theo nhiều tiêu chí:</strong> Lọc theo đội, trạm, thời gian, kết quả</li>
+                        <li><strong>Xem chi tiết:</strong> Kiểm tra nội dung đáp án và thời gian phản hồi</li>
+                        <li><strong>Thống kê:</strong> Xem số liệu thống kê về tỷ lệ trả lời đúng/sai</li>
+                        <li><strong>Xuất báo cáo:</strong> Tạo báo cáo chi tiết về hoạt động của cả hệ thống</li>
+                        <li><strong>Tìm kiếm nâng cao:</strong> Tìm kiếm thông tin cụ thể trong lịch sử hoạt động</li>
+                        <li><strong>Xóa lịch sử:</strong> Tùy chọn xóa lịch sử để bắt đầu lại (chỉ dành cho admin)</li>
+                      </ul>
+                      <p>Chức năng này cung cấp khả năng theo dõi toàn diện tình hình hoạt động, giúp Ban tổ chức đánh giá hiệu quả của trò chơi và phân tích hành vi người chơi.</p>
+                    </Accordion.Body>
+                  </Accordion.Item>
+                </Accordion>
               </Card.Body>
             </Card>
           </Col>

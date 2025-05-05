@@ -72,7 +72,8 @@ export const authApi = {
     axiosInstance.post('/api/auth/reset-password', { email, code, password: newPassword }),
   requestPasswordReset: (email) => axiosInstance.post('/api/auth/request-reset', { email }),
   verifyInviteCode: (code) => axiosInstance.post('/api/auth/verify-invite-code', { code }),
-  getNotifications: () => axiosInstance.get('/api/auth/notifications')
+  getNotifications: () => axiosInstance.get('/api/auth/notifications'),
+  getAllAdmins: () => axiosInstance.get('/api/auth/admins')
 };
 
 // API trạm
@@ -80,6 +81,7 @@ export const stationApi = {
   getAll: () => axiosInstance.get('/api/stations'),
   getById: (id) => axiosInstance.get(`/api/stations/${id}`),
   getByIdForAdmin: (id) => axiosInstance.get(`/api/stations/admin/${id}`),
+  getActiveStationByAdmin: (adminId) => axiosInstance.get(`/api/stations/active/${adminId}`),
   create: (data) => axiosInstance.post('/api/stations', data),
   createMultiple: (stationsArray) => axiosInstance.post('/api/stations', stationsArray),
   update: (id, data) => {
@@ -103,6 +105,8 @@ export const stationApi = {
     
     return axiosInstance.patch(`/api/stations/${id}`, stationData);
   },
+  setStationActive: (id) => axiosInstance.patch(`/api/stations/${id}/activate`, {}),
+  setStationInactive: (id) => axiosInstance.patch(`/api/stations/${id}/deactivate`, {}),
   delete: (id) => axiosInstance.delete(`/api/stations/${id}`),
   getQRCode: (id) => axiosInstance.get(`/api/stations/${id}/qrcode`),
   uploadImage: (imageFile) => {
@@ -189,6 +193,16 @@ export const superAdminApi = {
   
   // Database management
   getDatabaseStats: () => axiosInstance.get('/api/superadmin/database/stats'),
+  getCollectionDetails: (collectionName, page = 1, limit = 50, adminFilter = null, idFilter = null) => {
+    let url = `/api/superadmin/database/collections/${collectionName}?page=${page}&limit=${limit}`;
+    if (adminFilter) url += `&adminFilter=${encodeURIComponent(adminFilter)}`;
+    if (idFilter) url += `&idFilter=${encodeURIComponent(idFilter)}`;
+    return axiosInstance.get(url);
+  },
+  deleteCollection: (collectionName) => axiosInstance.delete(`/api/superadmin/database/collections/${collectionName}`),
+  clearCollection: (collectionName) => axiosInstance.post(`/api/superadmin/database/collections/${collectionName}/clear`),
+  deleteDocument: (collectionName, documentId) => axiosInstance.delete(`/api/superadmin/database/collections/${collectionName}/documents/${documentId}`),
+  deleteAllCollections: () => axiosInstance.delete('/api/superadmin/database/collections'),
   createDatabaseBackup: () => axiosInstance.post('/api/superadmin/database/backup'),
   getBackups: () => axiosInstance.get('/api/superadmin/database/backups'),
   downloadBackup: (filename) => axiosInstance.get(`/api/superadmin/database/backups/${filename}`, {
@@ -202,6 +216,57 @@ export const superAdminApi = {
   // Thêm phương thức mới
   sendNotificationEmails: () => {
     return axiosInstance.post('/api/superadmin/notifications/send-emails');
+  }
+};
+
+// API service cho SecretMessage
+export const secretMessageApi = {
+  create: (data) => {
+    return axiosInstance.post('/api/secret-messages/create', data);
+  },
+  getAllByAdmin: () => {
+    return axiosInstance.get('/api/secret-messages/admin');
+  },
+  getById: (id) => {
+    return axiosInstance.get(`/api/secret-messages/${id}`);
+  },
+  update: (id, data) => {
+    console.log('Đang cập nhật mật thư ID:', id, 'với dữ liệu:', data);
+    return axiosInstance.put(`/api/secret-messages/${id}`, data)
+      .catch(error => {
+        console.error('Error updating secret message:', error);
+        throw error;
+      });
+  },
+  delete: (id) => {
+    console.log('Đang xóa mật thư ID:', id);
+    return axiosInstance.delete(`/api/secret-messages/${id}`)
+      .catch(error => {
+        console.error('Error deleting secret message:', error);
+        throw error;
+      });
+  },
+  // Phương thức mới cho phản hồi mật thư
+  submitAnswer: (secretMessageId, answer) => {
+    return axiosInstance.post('/api/secret-messages/response/submit-answer', {
+      secretMessageId,
+      answer
+    });
+  },
+  submitUserInfo: (secretMessageId, userInfo) => {
+    return axiosInstance.post('/api/secret-messages/response/submit-user-info', {
+      secretMessageId,
+      userInfo
+    });
+  },
+  getMessageResponses: () => {
+    return axiosInstance.get('/api/secret-messages/response/admin');
+  },
+  getRemainingAttempts: (secretMessageId) => {
+    return axiosInstance.get(`/api/secret-messages/response/remaining-attempts/${secretMessageId}`);
+  },
+  deleteMessageResponse: (responseId) => {
+    return axiosInstance.delete(`/api/secret-messages/response/${responseId}`);
   }
 };
 

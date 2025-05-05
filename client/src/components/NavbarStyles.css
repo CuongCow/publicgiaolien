@@ -1,0 +1,114 @@
+/* Styles for icon-only navbar */
+.icon-only-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 70px; /* Đảm bảo chiều cao tối thiểu khi loading */
+}
+
+.nav-icon-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 60px;
+  height: 60px;
+  margin: 0 5px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.nav-icon-link i {
+  font-size: 1.6rem;
+  transition: transform 0.2s;
+}
+
+.nav-icon-link:hover i,
+.nav-icon-link.active i {
+  transform: translateY(-5px);
+}
+
+.nav-icon-link.active {
+  background-color: rgba(13, 110, 253, 0.1);
+  color: #0d6efd;
+}
+
+.nav-icon-link:hover {
+  background-color: rgba(13, 110, 253, 0.05);
+}
+
+/* Hide text by default */
+.nav-icon-link .nav-text {
+  position: absolute;
+  opacity: 0;
+  visibility: hidden;
+  bottom: 5px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  transform: translateY(5px);
+}
+
+/* Show text on hover */
+.nav-icon-link:hover .nav-text {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* Fixed navbar height to prevent jumping */
+.navbar {
+  min-height: 70px; /* Đảm bảo chiều cao tối thiểu */
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1030;
+}
+
+.navbar-collapse {
+  transition: none !important; /* Ngăn hiệu ứng collapse gây giật */
+}
+
+/* Thêm khoảng cách phía trên cho nội dung chính để không bị che bởi navbar cố định */
+body {
+  padding-top: 70px;
+}
+
+/* Mobile responsive */
+@media (max-width: 992px) {
+  .icon-only-nav {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+  
+  .nav-icon-link {
+    flex-direction: row;
+    width: auto;
+    height: auto;
+    padding: 10px 15px;
+    margin: 5px;
+    border-radius: 10px;
+  }
+  
+  .nav-icon-link i {
+    font-size: 1.2rem;
+    margin-right: 10px;
+  }
+  
+  .nav-icon-link .nav-text {
+    position: static;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    font-size: 0.9rem;
+  }
+  
+  .nav-icon-link:hover i,
+  .nav-icon-link.active i {
+    transform: none;
+  }
+} 

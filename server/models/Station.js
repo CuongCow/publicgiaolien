@@ -39,6 +39,34 @@ const TeamSpecificContentSchema = new mongoose.Schema({
   paragraphSpacing: {
     type: String,
     default: '0.8rem'
+  },
+  // Nội dung dạng OTT (nếu có)
+  ottContent: {
+    type: String,
+    default: ''
+  },
+  // Nội dung dạng NW (nếu có)
+  nwContent: {
+    type: String,
+    default: ''
+  },
+  // Cho phép hiển thị loại nội dung nào
+  showText: {
+    type: Boolean,
+    default: true
+  },
+  showImage: {
+    type: Boolean,
+    default: false
+  },
+  // Cho phép hiển thị OTT và NW
+  showOTT: {
+    type: Boolean,
+    default: true
+  },
+  showNW: {
+    type: Boolean,
+    default: true
   }
 }, { _id: false });
 
@@ -138,6 +166,11 @@ const StationSchema = new mongoose.Schema({
   gameNote: {
     type: String,
     default: 'Trung thành với bản mã'
+  },
+  // Trường để xác định trạm đang hoạt động
+  isActive: {
+    type: Boolean,
+    default: false
   },
   // Trường mới để xác định loại mật thư
   messageType: {

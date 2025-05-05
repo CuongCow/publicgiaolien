@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Container, Table, Button, Card, Modal, Spinner, Row, Col, Badge, InputGroup, Form, Alert, OverlayTrigger, Tooltip } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import html2canvas from 'html2canvas';
 import AdminNavbar from '../../components/Navbar';
@@ -19,6 +19,7 @@ const StationList = () => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [filterText, setFilterText] = useState('');
   const [copied, setCopied] = useState(false);
+  const navigate = useNavigate();
   const { t } = useLanguage();
 
   useEffect(() => {
@@ -260,7 +261,43 @@ const StationList = () => {
               <TermReplacer>{t('manage_all_stations')}</TermReplacer>
             </p>
           </Col>
-          <Col xs="auto">
+          <Col xs="auto" className="d-flex gap-2">
+            <Button 
+              as={Link} 
+              to="/station/admin" 
+              variant="info" 
+              className="d-flex align-items-center me-2" 
+              onClick={(e) => {
+                e.preventDefault();
+                // Lấy adminId từ localStorage
+                const adminData = localStorage.getItem('admin');
+                let adminId = null;
+                
+                if (adminData) {
+                  try {
+                    const admin = JSON.parse(adminData);
+                    // ID có thể là id hoặc _id
+                    adminId = admin.id || admin._id;
+                    
+                    if (!adminId) {
+                      console.error('Admin object found but no ID property:', admin);
+                      return;
+                    }
+                    
+                    // Chuyển đến trang quản lý trạm trực tiếp
+                    navigate(`/station/admin/${adminId}`);
+                  } catch (err) {
+                    console.error('Error parsing admin data:', err);
+                  }
+                } else {
+                  console.error('Admin data not found in localStorage');
+                  alert('Không tìm thấy thông tin đăng nhập admin. Vui lòng đăng nhập lại.');
+                }
+              }}
+            >
+              <i className="bi bi-display me-2"></i>
+              Quản lý trạm trực tiếp
+            </Button>
             <Button as={Link} to="/admin/stations/new" variant="primary" className="d-flex align-items-center">
               <i className="bi bi-plus-circle me-2"></i>
               {t('create_station')}
@@ -341,7 +378,7 @@ const StationList = () => {
                       </th>
                       <th>{t('teams')}</th>
                       <th>{t('content_type')}</th>
-                      <th width="200" className="text-center">{t('actions')}</th>
+                      <th width="180" className="text-center">{t('actions')}</th>
                     </tr>
                   </thead>
                   <tbody>

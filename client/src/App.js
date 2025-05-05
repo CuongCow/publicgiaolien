@@ -19,6 +19,8 @@ import TeamRanking from './pages/admin/TeamRanking';
 import AdminProfile from './pages/admin/AdminProfile';
 import AdminSettings from './pages/admin/AdminSettings';
 import UserStation from './pages/user/UserStation';
+import AdminStationView from './pages/admin/AdminStationView';
+import TeamWaitingPage from './pages/user/TeamWaitingPage';
 import NotFound from './pages/NotFound';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
@@ -26,6 +28,11 @@ import ForgotPassword from './pages/auth/ForgotPassword';
 import TeamList from './pages/admin/TeamList';
 import SubmissionsHistory from './pages/admin/SubmissionsHistory';
 import { authApi } from './services/api';
+
+// Import trang Secret Message
+import SecretMessageList from './pages/admin/SecretMessageList';
+import SecretMessageForm from './pages/admin/SecretMessageForm';
+import SecretMessageDetail from './pages/user/SecretMessageDetail';
 
 // Import trang Super Admin
 import SuperAdminDashboard from './pages/superadmin/SuperAdminDashboard';
@@ -230,6 +237,23 @@ function App() {
               </ProtectedRoute>
             } />
             
+            {/* Secret Message routes */}
+            <Route path="/admin/secret-messages" element={
+              <ProtectedRoute>
+                <SecretMessageList />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/secret-messages/new" element={
+              <ProtectedRoute>
+                <SecretMessageForm />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/secret-messages/edit/:id" element={
+              <ProtectedRoute>
+                <SecretMessageForm />
+              </ProtectedRoute>
+            } />
+            
             {/* Super Admin routes */}
             <Route path="/superadmin" element={
               <SuperAdminRoute>
@@ -274,6 +298,9 @@ function App() {
             
             {/* User routes */}
             <Route path="/station/:stationId" element={<UserStation />} />
+            <Route path="/station/admin/:adminId" element={<AdminStationView />} />
+            <Route path="/station/team/:adminId" element={<TeamWaitingPage />} />
+            <Route path="/secret-message/:id" element={<SecretMessageDetail />} />
             
             {/* Default routes */}
             <Route path="*" element={<NotFound />} />

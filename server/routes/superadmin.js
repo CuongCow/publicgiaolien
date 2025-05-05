@@ -818,16 +818,33 @@ router.delete('/logs/cleanup', auth, superAdminAuth, async (req, res) => {
 // Lấy thông tin tổng quan về database
 router.get('/database/stats', auth, superAdminAuth, async (req, res) => {
   try {
-    const collections = {
-      admins: await Admin.countDocuments(),
-      teams: await mongoose.connection.db.collection('teams').countDocuments(),
-      stations: await mongoose.connection.db.collection('stations').countDocuments(),
-      submissions: await mongoose.connection.db.collection('submissions').countDocuments(),
-      systemLogs: await SystemLog.countDocuments(),
-      inviteCodes: await InvitationCode.countDocuments(),
-      notifications: await Notification.countDocuments(),
-      loginHistory: await mongoose.connection.db.collection('loginhistories').countDocuments()
-    };
+    // Lấy danh sách các collection
+    const collectionList = await mongoose.connection.db.listCollections().toArray();
+    const collectionNames = collectionList.map(c => c.name);
+    
+    const collections = {};
+    
+    // Lấy thông tin số lượng và kích thước của từng collection
+    for (const collName of collectionNames) {
+      try {
+        const stats = await mongoose.connection.db.collection(collName).stats();
+        collections[collName.toLowerCase()] = {
+          count: stats.count || 0,
+          sizeInBytes: stats.size || 0,
+          storageSize: stats.storageSize || 0,
+          indexSize: stats.totalIndexSize || 0
+        };
+      } catch (err) {
+        console.error(`Error getting stats for collection ${collName}:`, err);
+        collections[collName.toLowerCase()] = {
+          count: 0, 
+          sizeInBytes: 0,
+          storageSize: 0,
+          indexSize: 0,
+          error: true
+        };
+      }
+    }
     
     // Lấy kích thước database
     const stats = await mongoose.connection.db.stats();
@@ -1034,6 +1051,416 @@ router.post('/database/backup', auth, superAdminAuth, async (req, res) => {
   } catch (err) {
     console.error('Error creating database backup:', err);
     res.status(500).json({ message: 'Lỗi khi tạo bản sao lưu dữ liệu' });
+  }
+});
+
+// Lấy thông tin chi tiết về một collection cụ thể
+router.get('/database/collections/:collectionName', auth, superAdminAuth, async (req, res) => {
+  try {
+    const { collectionName } = req.params;
+    const limit = parseInt(req.query.limit) || 50;  // Tăng số documents tối đa trả về lên 50
+    const page = parseInt(req.query.page) || 1;   // Thêm tham số page cho phân trang
+    const skip = (page - 1) * limit;               // Tính toán vị trí bắt đầu
+    const adminFilter = req.query.adminFilter || null; // Lọc theo adminId
+    const idFilter = req.query.idFilter || null;       // Lọc theo _id
+    
+    // Định nghĩa các alias cho collection (để xử lý tên gọi khác nhau cho cùng một collection)
+    const collectionAliases = {
+      'invitecodes': 'invitationcodes',
+      'invitationcode': 'invitationcodes',
+      'invitecode': 'invitationcodes',
+      'systemlog': 'systemlogs',
+      'systemslog': 'systemlogs',
+      'systemlogs': 'systemlogs',
+      'loginhistory': 'loginhistories',
+      'secretmessage': 'secretmessages',
+      'secretmessageresponse': 'secretmessageresponses'
+    };
+    
+    // Kiểm tra nếu tên collection có alias
+    const normalizedName = collectionName.toLowerCase();
+    const aliasedName = collectionAliases[normalizedName] || normalizedName;
+    
+    // Kiểm tra collection có tồn tại không
+    const collections = await mongoose.connection.db.listCollections().toArray();
+    const collectionNames = collections.map(coll => coll.name.toLowerCase());
+    
+    // Tìm tên collection chính xác (không phân biệt hoa thường) 
+    // Ưu tiên tìm tên gốc, nếu không có thì tìm tên alias
+    const normalizedCollectionName = normalizedName;
+    const normalizedAliasedName = aliasedName;
+    
+    let collectionExists = collectionNames.includes(normalizedCollectionName);
+    let exactCollectionName;
+    
+    if (collectionExists) {
+      // Nếu tên gốc tồn tại, sử dụng tên gốc
+      exactCollectionName = collections.find(
+        coll => coll.name.toLowerCase() === normalizedCollectionName
+      )?.name || collectionName;
+    } else if (collectionNames.includes(normalizedAliasedName)) {
+      // Nếu tên gốc không tồn tại nhưng tên alias tồn tại, sử dụng tên alias
+      collectionExists = true;
+      exactCollectionName = collections.find(
+        coll => coll.name.toLowerCase() === normalizedAliasedName
+      )?.name || aliasedName;
+    } else {
+      // Không tìm thấy cả tên gốc và tên alias
+      collectionExists = false;
+    }
+    
+    // Nếu collection không tồn tại, trả về thông tin rỗng nhưng không báo lỗi
+    if (!collectionExists) {
+      console.log(`Collection không tồn tại: ${collectionName} (kiểm tra cả alias: ${aliasedName})`);
+      return res.json({
+        name: collectionName,
+        count: 0,
+        sizeInBytes: 0,
+        sizeInMB: 0,
+        storageSize: 0,
+        storageSizeInMB: 0,
+        nindexes: 0,
+        indexSize: 0,
+        indexSizeInMB: 0,
+        latestDocument: null,
+        indexDetails: [],
+        documents: [],
+        exists: false,
+        error: true,
+        errorMessage: err.message,
+        suggestedCollection: collectionNames.length > 0 ? findSimilarCollection(normalizedName, collectionNames) : null
+      });
+    }
+    
+    // Lấy thông tin chi tiết của collection
+    const stats = await mongoose.connection.db.collection(exactCollectionName).stats();
+    
+    // Lấy danh sách indexes
+    const indexes = await mongoose.connection.db.collection(exactCollectionName).indexes();
+    
+    // Lấy document mới nhất (nếu có)
+    const latestDocument = await mongoose.connection.db.collection(exactCollectionName)
+      .find({})
+      .sort({ _id: -1 })
+      .limit(1)
+      .toArray();
+    
+    // Tạo query dựa trên các bộ lọc được cung cấp
+    const query = {};
+    
+    // Lọc theo adminId
+    if (adminFilter) {
+      // Thử các trường phổ biến liên quan đến admin
+      query.$or = [
+        { adminId: { $regex: adminFilter, $options: 'i' } },
+        { 'adminId.username': { $regex: adminFilter, $options: 'i' } },
+        { 'adminId.name': { $regex: adminFilter, $options: 'i' } },
+        { createdBy: { $regex: adminFilter, $options: 'i' } },
+        { 'createdBy.username': { $regex: adminFilter, $options: 'i' } },
+        { 'createdBy.name': { $regex: adminFilter, $options: 'i' } },
+        { admin: { $regex: adminFilter, $options: 'i' } },
+        { 'admin.username': { $regex: adminFilter, $options: 'i' } },
+        { 'admin.name': { $regex: adminFilter, $options: 'i' } }
+      ];
+      
+      // Thử kiểm tra nếu chuỗi có thể là ObjectId
+      if (adminFilter.match(/^[0-9a-fA-F]{24}$/)) {
+        query.$or.push({ adminId: adminFilter });
+        query.$or.push({ createdBy: adminFilter });
+      }
+    }
+    
+    // Lọc theo _id
+    if (idFilter) {
+      if (idFilter.match(/^[0-9a-fA-F]{24}$/)) {
+        // Nếu là ObjectId hợp lệ
+        if (query.$or) {
+          query.$and = [{ _id: new mongoose.Types.ObjectId(idFilter) }];
+        } else {
+          query._id = new mongoose.Types.ObjectId(idFilter);
+        }
+      } else {
+        // Nếu không phải ObjectId, tìm theo chuỗi regex
+        if (query.$or) {
+          query.$and = [{ _id: { $regex: idFilter, $options: 'i' } }];
+        } else {
+          query._id = { $regex: idFilter, $options: 'i' };
+        }
+      }
+    }
+    
+    // Đếm tổng số documents đáp ứng điều kiện lọc
+    const filteredCount = adminFilter || idFilter
+      ? await mongoose.connection.db.collection(exactCollectionName).countDocuments(query)
+      : stats.count;
+    
+    // Lấy một số documents để hiển thị
+    const documents = await mongoose.connection.db.collection(exactCollectionName)
+      .find(query)
+      .sort({ _id: -1 })
+      .skip(skip)
+      .limit(limit)
+      .toArray();
+      
+    // Chuyển đổi ObjectId thành string để có thể trả về qua JSON
+    const processedDocuments = documents.map(doc => {
+      const processedDoc = { ...doc };
+      if (doc._id) {
+        processedDoc._id = doc._id.toString();
+      }
+      return processedDoc;
+    });
+    
+    // Chuẩn bị dữ liệu trả về
+    const result = {
+      name: exactCollectionName,
+      count: stats.count || 0,
+      filteredCount,
+      sizeInBytes: stats.size || 0,
+      sizeInMB: parseFloat((stats.size / (1024 * 1024)).toFixed(2)),
+      storageSize: stats.storageSize || 0,
+      storageSizeInMB: parseFloat((stats.storageSize / (1024 * 1024)).toFixed(2)),
+      nindexes: stats.nindexes || 0,
+      indexSize: stats.totalIndexSize || 0,
+      indexSizeInMB: parseFloat((stats.totalIndexSize / (1024 * 1024)).toFixed(2)),
+      latestDocument: latestDocument.length > 0 ? latestDocument[0] : null,
+      indexDetails: indexes.map(index => ({
+        name: index.name,
+        key: Object.entries(index.key).map(([k, v]) => `${k}:${v}`).join(', '),
+        unique: !!index.unique
+      })),
+      exists: true,
+      documents: processedDocuments,
+      hasFilters: !!(adminFilter || idFilter)
+    };
+    
+    // Ghi log
+    await SystemLog.create({
+      adminId: req.admin.id,
+      action: 'other',
+      target: 'collection_details',
+      details: { collectionName: exactCollectionName },
+      ipAddress: req.ip || req.connection.remoteAddress
+    });
+    
+    res.json(result);
+  } catch (err) {
+    console.error(`Error getting collection details for ${req.params.collectionName}:`, err);
+    // Trả về thông tin rỗng thay vì báo lỗi 500
+    const collections = await mongoose.connection.db.listCollections().toArray().catch(() => []);
+    const collectionNames = collections.map(coll => coll.name.toLowerCase());
+    const normalizedName = req.params.collectionName.toLowerCase();
+    
+    res.json({
+      name: req.params.collectionName,
+      count: 0,
+      sizeInBytes: 0,
+      sizeInMB: 0,
+      storageSize: 0,
+      storageSizeInMB: 0,
+      nindexes: 0,
+      indexSize: 0,
+      indexSizeInMB: 0,
+      latestDocument: null,
+      indexDetails: [],
+      documents: [],
+      exists: false,
+      error: true,
+      errorMessage: err.message,
+      suggestedCollection: collectionNames.length > 0 ? findSimilarCollection(normalizedName, collectionNames) : null
+    });
+  }
+});
+
+// Xóa tất cả documents trong collection
+router.post('/database/collections/:collectionName/clear', auth, superAdminAuth, async (req, res) => {
+  try {
+    const { collectionName } = req.params;
+    
+    // Kiểm tra collection có tồn tại không
+    const collections = await mongoose.connection.db.listCollections().toArray();
+    const collectionExists = collections.some(coll => coll.name.toLowerCase() === collectionName.toLowerCase());
+    
+    if (!collectionExists) {
+      return res.status(404).json({ message: 'Collection không tồn tại' });
+    }
+    
+    // Lấy số lượng documents trước khi xóa
+    const countBefore = await mongoose.connection.db.collection(collectionName).countDocuments();
+    
+    // Xóa tất cả documents
+    const result = await mongoose.connection.db.collection(collectionName).deleteMany({});
+    
+    // Ghi log
+    await SystemLog.create({
+      adminId: req.admin.id,
+      action: 'delete',
+      target: 'collection_documents',
+      details: { collectionName, deletedCount: result.deletedCount },
+      ipAddress: req.ip || req.connection.remoteAddress
+    });
+    
+    res.json({ 
+      message: `Đã xóa ${result.deletedCount} documents trong collection ${collectionName}`,
+      deletedCount: result.deletedCount,
+      countBefore
+    });
+  } catch (err) {
+    console.error(`Error clearing collection ${req.params.collectionName}:`, err);
+    res.status(500).json({ message: 'Lỗi server khi xóa dữ liệu' });
+  }
+});
+
+// Xóa tất cả documents trong tất cả collections
+router.delete('/database/collections', auth, superAdminAuth, async (req, res) => {
+  try {
+    // Lấy danh sách tất cả collections
+    const collections = await mongoose.connection.db.listCollections().toArray();
+    const collectionNames = collections.map(c => c.name);
+    
+    let results = {};
+    let totalDeleted = 0;
+    
+    // Xóa documents trong từng collection
+    for (const collName of collectionNames) {
+      try {
+        // Bỏ qua một số collection hệ thống nếu cần
+        if (collName.startsWith('system.')) continue;
+        
+        const countBefore = await mongoose.connection.db.collection(collName).countDocuments();
+        const result = await mongoose.connection.db.collection(collName).deleteMany({});
+        
+        results[collName] = {
+          deletedCount: result.deletedCount,
+          countBefore
+        };
+        
+        totalDeleted += result.deletedCount;
+      } catch (collErr) {
+        console.error(`Error clearing collection ${collName}:`, collErr);
+        results[collName] = { error: collErr.message };
+      }
+    }
+    
+    // Ghi log
+    await SystemLog.create({
+      adminId: req.admin.id,
+      action: 'delete',
+      target: 'all_collections',
+      details: { totalDeleted, collectionCount: collectionNames.length },
+      ipAddress: req.ip || req.connection.remoteAddress
+    });
+    
+    res.json({
+      message: `Đã xóa tổng cộng ${totalDeleted} documents từ ${collectionNames.length} collections`,
+      results,
+      totalDeleted
+    });
+  } catch (err) {
+    console.error('Error clearing all collections:', err);
+    res.status(500).json({ message: 'Lỗi server khi xóa dữ liệu' });
+  }
+});
+
+// Hàm tìm collection tương tự dựa trên tên
+function findSimilarCollection(name, collectionNames) {
+  // Nếu tên quá ngắn, không tìm kiếm
+  if (name.length < 3) return null;
+  
+  let bestMatch = null;
+  let highestScore = 0;
+  
+  for (const colName of collectionNames) {
+    // Tính điểm tương đồng dựa trên số ký tự xuất hiện chung
+    let score = 0;
+    
+    // Tính điểm dựa trên prefix matching
+    if (colName.startsWith(name)) {
+      score += name.length * 3; // Trọng số cao hơn khi bắt đầu giống nhau
+    } else if (name.startsWith(colName)) {
+      score += colName.length * 2; 
+    }
+    
+    // Tính thêm điểm cho các ký tự chung
+    const nameSet = new Set(name.split(''));
+    for (const char of colName) {
+      if (nameSet.has(char)) {
+        score += 1;
+      }
+    }
+    
+    // Nếu có ít nhất 60% độ dài tương tự
+    if (Math.abs(name.length - colName.length) <= Math.max(name.length, colName.length) * 0.4) {
+      score += 5;
+    }
+    
+    // Thêm điểm cho các chuỗi con chung
+    for (let i = 3; i <= Math.min(name.length, colName.length); i++) {
+      for (let j = 0; j <= name.length - i; j++) {
+        const subName = name.substring(j, j + i);
+        if (colName.includes(subName)) {
+          score += i * 2; // Điểm dựa trên độ dài chuỗi con
+          break;
+        }
+      }
+    }
+    
+    if (score > highestScore) {
+      highestScore = score;
+      bestMatch = colName;
+    }
+  }
+  
+  // Chỉ trả về kết quả nếu điểm đủ cao
+  return highestScore >= 5 ? bestMatch : null;
+}
+
+// Xóa một document cụ thể từ collection
+router.delete('/database/collections/:collectionName/documents/:documentId', auth, superAdminAuth, async (req, res) => {
+  try {
+    const { collectionName, documentId } = req.params;
+    
+    // Kiểm tra collection có tồn tại không
+    const collections = await mongoose.connection.db.listCollections().toArray();
+    const collectionExists = collections.some(coll => coll.name.toLowerCase() === collectionName.toLowerCase());
+    
+    if (!collectionExists) {
+      return res.status(404).json({ message: 'Collection không tồn tại' });
+    }
+    
+    // Tìm tên collection chính xác (phân biệt hoa thường)
+    const exactCollectionName = collections.find(
+      coll => coll.name.toLowerCase() === collectionName.toLowerCase()
+    )?.name || collectionName;
+    
+    // Kiểm tra document có tồn tại không
+    const document = await mongoose.connection.db.collection(exactCollectionName)
+      .findOne({ _id: new mongoose.Types.ObjectId(documentId) });
+    
+    if (!document) {
+      return res.status(404).json({ message: 'Document không tồn tại' });
+    }
+    
+    // Xóa document
+    const result = await mongoose.connection.db.collection(exactCollectionName)
+      .deleteOne({ _id: new mongoose.Types.ObjectId(documentId) });
+    
+    // Ghi log
+    await SystemLog.create({
+      adminId: req.admin.id,
+      action: 'delete',
+      target: 'document',
+      details: { collectionName: exactCollectionName, documentId },
+      ipAddress: req.ip || req.connection.remoteAddress
+    });
+    
+    res.json({
+      message: `Đã xóa document khỏi collection ${exactCollectionName}`,
+      deletedCount: result.deletedCount
+    });
+  } catch (err) {
+    console.error(`Error deleting document from ${req.params.collectionName}:`, err);
+    res.status(500).json({ message: 'Lỗi server khi xóa document' });
   }
 });
 

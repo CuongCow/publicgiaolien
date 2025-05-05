@@ -73,7 +73,7 @@ router.delete('/:id', auth, async (req, res) => {
     
     if (!team) return res.status(404).json({ message: 'Không tìm thấy đội' });
 
-    await team.remove();
+    await Team.deleteOne({ _id: req.params.id });
     res.json({ message: 'Đã xóa đội' });
   } catch (err) {
     res.status(500).json({ message: err.message });

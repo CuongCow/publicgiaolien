@@ -71,6 +71,7 @@ const createOrUpdateTeams = async (teamNames, adminId) => {
 router.get('/', auth, async (req, res) => {
   try {
     const stations = await Station.find({ adminId: req.admin.id }).sort({ createdAt: -1 });
+    console.log(`Tìm thấy ${stations.length} trạm cho admin ID: ${req.admin.id}`);
     res.json(stations);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -167,7 +168,40 @@ router.get('/:id', async (req, res) => {
   try {
     const station = await Station.findById(req.params.id);
     if (!station) return res.status(404).json({ message: 'Không tìm thấy trạm' });
+    
+    // Nếu có thông tin user/admin từ middleware auth và id khác với adminId của trạm
+    if (req.admin && req.admin.id !== station.adminId.toString()) {
+      return res.status(403).json({ message: 'Không có quyền truy cập trạm này' });
+    }
+    
     res.json(station);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Lấy trạm đang hoạt động của admin (endpoint công khai cho trang chờ đội)
+router.get('/active/:adminId', async (req, res) => {
+  try {
+    const adminId = req.params.adminId;
+    if (!adminId) {
+      return res.status(400).json({ message: 'Thiếu adminId' });
+    }
+
+    // Kiểm tra xem có trạm đang hoạt động không dựa vào thời gian bắt đầu gần nhất
+    // Lưu ý: Cần phải có thêm trường isActive trong model Station để làm việc này tốt hơn
+    // Đây là giải pháp tạm thời
+    const activeStation = await Station.findOne({ 
+      adminId: adminId,
+      isActive: true
+    });
+
+    if (!activeStation) {
+      // Trả về null để client biết không có trạm nào đang hoạt động
+      return res.json(null);
+    }
+
+    res.json(activeStation);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -249,100 +283,56 @@ router.patch('/:id', auth, async (req, res) => {
     if (req.body.fontSize) station.fontSize = req.body.fontSize;
     if (req.body.fontWeight) station.fontWeight = req.body.fontWeight;
     if (req.body.lineHeight) station.lineHeight = req.body.lineHeight;
-    if (req.body.paragraphSpacing !== undefined) {
-      station.paragraphSpacing = req.body.paragraphSpacing;
-      console.log('Updated paragraphSpacing value:', station.paragraphSpacing);
-    }
-    
-    // Cập nhật loại mật thư (chung/riêng)
-    if (req.body.messageType !== undefined) {
-      station.messageType = req.body.messageType;
-      console.log('Updated messageType:', station.messageType);
-    }
-    
-    // Cập nhật nội dung riêng cho từng đội nếu có
-    if (req.body.teamSpecificContents && Array.isArray(req.body.teamSpecificContents)) {
-      // In ra thông tin chi tiết để debug
-      console.log('Updating teamSpecificContents with:', {
-        count: req.body.teamSpecificContents.length,
-        firstTeam: req.body.teamSpecificContents[0]?.team,
-        firstCorrectAnswer: req.body.teamSpecificContents[0]?.correctAnswer,
-        firstContentType: req.body.teamSpecificContents[0]?.contentType,
-        firstShowText: req.body.teamSpecificContents[0]?.showText,
-        firstShowImage: req.body.teamSpecificContents[0]?.showImage
-      });
-      
-      // Đảm bảo mỗi đội đều có correctAnswer là một mảng và các trường hiển thị
-      const validatedContents = req.body.teamSpecificContents.map(content => {
-        // Xử lý trường hợp correctAnswer là string hoặc thiếu
-        if (!content.correctAnswer) {
-          content.correctAnswer = [];
-        } else if (!Array.isArray(content.correctAnswer)) {
-          content.correctAnswer = [content.correctAnswer];
-        }
-        
-        // Đảm bảo các trường hiển thị có giá trị mặc định
-        if (content.showText === undefined) {
-          content.showText = content.contentType === 'text' || content.contentType === 'both';
-        }
-        
-        if (content.showImage === undefined) {
-          content.showImage = content.contentType === 'image' || content.contentType === 'both';
-        }
-        
-        if (content.showOTT === undefined) {
-          content.showOTT = true;
-        }
-        
-        if (content.showNW === undefined) {
-          content.showNW = true;
-        }
-        
-        // Đảm bảo các thông tin font được thiết lập
-        if (!content.fontSize) content.fontSize = station.fontSize || '1.05rem';
-        if (!content.fontWeight) content.fontWeight = station.fontWeight || '500';
-        if (!content.lineHeight) content.lineHeight = station.lineHeight || '1.5';
-        if (!content.paragraphSpacing) content.paragraphSpacing = station.paragraphSpacing || '0.8rem';
-        
-        return content;
-      });
-      
-      // Cập nhật mảng nội dung của từng đội
-      station.teamSpecificContents = validatedContents;
-    } else if (station.messageType === 'individual') {
-      // Lặp qua và cập nhật các thuộc tính font cho từng đội
-      if (station.teamSpecificContents && station.teamSpecificContents.length > 0) {
-        station.teamSpecificContents.forEach((content) => {
-          if (!content.fontSize) content.fontSize = station.fontSize || '1.05rem';
-          if (!content.fontWeight) content.fontWeight = station.fontWeight || '500';
-          if (!content.lineHeight) content.lineHeight = station.lineHeight || '1.5';
-          if (!content.paragraphSpacing) content.paragraphSpacing = station.paragraphSpacing || '0.8rem';
-          // Đảm bảo correctAnswer luôn là mảng
-          if (!content.correctAnswer) {
-            content.correctAnswer = [];
-          } else if (!Array.isArray(content.correctAnswer)) {
-            content.correctAnswer = [content.correctAnswer];
-          }
-        });
-      }
-    }
+    if (req.body.paragraphSpacing) station.paragraphSpacing = req.body.paragraphSpacing;
+    if (req.body.messageType) station.messageType = req.body.messageType;
+    if (req.body.teamSpecificContents) station.teamSpecificContents = req.body.teamSpecificContents;
+    if (req.body.isActive !== undefined) station.isActive = req.body.isActive;
 
     const updatedStation = await station.save();
-    
-    // Log trạm đã cập nhật
-    console.log('Station after update:', {
-      fontSize: updatedStation.fontSize,
-      fontWeight: updatedStation.fontWeight,
-      lineHeight: updatedStation.lineHeight,
-      paragraphSpacing: updatedStation.paragraphSpacing,
-      messageType: updatedStation.messageType,
-      teamContentCount: updatedStation.teamSpecificContents ? updatedStation.teamSpecificContents.length : 0
-    });
-    
     res.json(updatedStation);
   } catch (err) {
-    console.error('Error updating station:', err);
     res.status(400).json({ message: err.message });
+  }
+});
+
+// Kích hoạt trạm
+router.patch('/:id/activate', auth, async (req, res) => {
+  try {
+    // Trước tiên, hủy kích hoạt tất cả các trạm khác của admin này
+    await Station.updateMany(
+      { adminId: req.admin.id, isActive: true },
+      { isActive: false }
+    );
+    
+    // Sau đó, kích hoạt trạm được chỉ định
+    const station = await Station.findOneAndUpdate(
+      { _id: req.params.id, adminId: req.admin.id },
+      { isActive: true },
+      { new: true }
+    );
+    
+    if (!station) return res.status(404).json({ message: 'Không tìm thấy trạm' });
+    
+    res.json(station);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Vô hiệu hóa trạm
+router.patch('/:id/deactivate', auth, async (req, res) => {
+  try {
+    const station = await Station.findOneAndUpdate(
+      { _id: req.params.id, adminId: req.admin.id },
+      { isActive: false },
+      { new: true }
+    );
+    
+    if (!station) return res.status(404).json({ message: 'Không tìm thấy trạm' });
+    
+    res.json(station);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 });
 
@@ -356,7 +346,7 @@ router.delete('/:id', auth, async (req, res) => {
     
     if (!station) return res.status(404).json({ message: 'Không tìm thấy trạm' });
 
-    await station.remove();
+    await Station.deleteOne({ _id: req.params.id });
     res.json({ message: 'Đã xóa trạm' });
   } catch (err) {
     res.status(500).json({ message: err.message });
