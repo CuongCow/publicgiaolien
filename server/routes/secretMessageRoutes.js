@@ -23,19 +23,9 @@ const debugAuth = (req, res, next) => {
 // Routes cho mật thư
 router.post('/create', debugAuth, secretMessageController.create);
 router.get('/admin', debugAuth, secretMessageController.getAllByAdmin);
-router.get('/:id', secretMessageController.getById);
-router.put('/:id', debugAuth, secretMessageController.update);
-router.delete('/:id', debugAuth, secretMessageController.delete);
 
-// Routes mới cho phản hồi mật thư
-router.post('/response/submit-answer', secretMessageResponseController.submitAnswer);
-router.post('/response/submit-user-info', secretMessageResponseController.submitUserInfo);
-router.get('/response/admin', debugAuth, secretMessageResponseController.getAllByAdmin);
-router.get('/response/remaining-attempts/:secretMessageId', secretMessageResponseController.getRemainingAttempts);
-router.delete('/response/:responseId', debugAuth, secretMessageResponseController.deleteResponse);
-
-// Endpoint mới: Tạo QR code cho mật thư
-router.get('/:id/qrcode', auth, async (req, res) => {
+// Endpoint mới: Tạo QR code cho mật thư (đặt trước /:id)
+router.get('/:id/qrcode', debugAuth, async (req, res) => {
   try {
     const secretMessage = await SecretMessage.findOne({
       _id: req.params.id,
@@ -62,8 +52,20 @@ router.get('/:id/qrcode', auth, async (req, res) => {
     
     res.json({ qrCode: qrCodeDataUrl });
   } catch (err) {
+    console.error('QR Code generation error:', err);
     res.status(500).json({ message: err.message });
   }
 });
+
+router.get('/:id', secretMessageController.getById);
+router.put('/:id', debugAuth, secretMessageController.update);
+router.delete('/:id', debugAuth, secretMessageController.delete);
+
+// Routes mới cho phản hồi mật thư
+router.post('/response/submit-answer', secretMessageResponseController.submitAnswer);
+router.post('/response/submit-user-info', secretMessageResponseController.submitUserInfo);
+router.get('/response/admin', debugAuth, secretMessageResponseController.getAllByAdmin);
+router.get('/response/remaining-attempts/:secretMessageId', secretMessageResponseController.getRemainingAttempts);
+router.delete('/response/:responseId', debugAuth, secretMessageResponseController.deleteResponse);
 
 module.exports = router; 
