@@ -28,6 +28,9 @@ export const SystemSettingsProvider = ({ children }) => {
           const response = await settingsApi.getSettings();
           setSettings(response.data);
           updateSystemSettings(response.data);
+          
+          // Lưu cài đặt vào localStorage để các component khác có thể sử dụng
+          localStorage.setItem('systemSettings', JSON.stringify(response.data));
         } else {
           // Nếu không có token (người dùng thông thường), sử dụng cài đặt mặc định
           setSettings({
@@ -38,6 +41,9 @@ export const SystemSettingsProvider = ({ children }) => {
             termType: 'default',
             customTerm: ''
           });
+          
+          // Xóa cài đặt khỏi localStorage khi đăng xuất
+          localStorage.removeItem('systemSettings');
         }
         
         setError(null);
@@ -67,6 +73,9 @@ export const SystemSettingsProvider = ({ children }) => {
       
       // Cập nhật cài đặt trong utils/helpers.js
       updateSystemSettings(response.data);
+      
+      // Lưu cài đặt vào localStorage để các component khác có thể sử dụng
+      localStorage.setItem('systemSettings', JSON.stringify(response.data));
       
       setError(null);
       return response.data;

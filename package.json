@@ -29,7 +29,9 @@
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
     "react-qr-barcode-scanner": "2.1.0",
-    "react-toastify": "11.0.5"
+    "react-toastify": "11.0.5",
+    "socket.io": "^4.8.1",
+    "xlsx": "^0.18.5"
   },
   "engines": {
     "node": "18.x"

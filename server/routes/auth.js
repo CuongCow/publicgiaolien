@@ -64,4 +64,40 @@ router.post('/verify-invite-code', authController.verifyInviteCode);
 // Tạo route để lấy thông báo cho user hiện tại
 router.get('/notifications', auth, authController.getNotifications);
 
+// Lấy danh sách admin dựa trên vai trò (role) người dùng hiện tại
+// @route   GET api/auth/admins
+// @desc    Lấy danh sách admin - superadmin thấy tất cả admin, admin thường chỉ thấy superadmin
+// @access  Private
+router.get('/admins', auth, async (req, res) => {
+  try {
+    // Lấy thông tin người dùng hiện tại
+    const currentUser = await Admin.findById(req.admin.id);
+    
+    if (!currentUser) {
+      return res.status(404).json({ message: 'Không tìm thấy thông tin người dùng' });
+    }
+    
+    let query = {};
+    
+    // Nếu là superadmin, trả về tất cả admin (trừ chính họ)
+    if (currentUser.role === 'superadmin') {
+      query = { _id: { $ne: currentUser._id } };
+    } 
+    // Nếu là admin thường, chỉ trả về superadmin
+    else {
+      query = { role: 'superadmin' };
+    }
+    
+    // Lấy danh sách admin theo query
+    const admins = await Admin.find(query)
+      .select('-password -loginHistory -verificationCode -resetPasswordCode')
+      .sort({ username: 1 });
+    
+    res.json(admins);
+  } catch (err) {
+    console.error('Lỗi khi lấy danh sách admin:', err);
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+});
+
 module.exports = router; 

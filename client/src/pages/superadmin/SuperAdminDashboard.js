@@ -24,13 +24,30 @@ const SuperAdminDashboard = () => {
         // Gọi API để lấy thống kê từ Super Admin
         const response = await axios.get('/api/superadmin/database/stats');
         
-        setStats({
-          admins: response.data.collections.admins || 0,
-          teams: response.data.collections.teams || 0,
-          inviteCodes: response.data.collections.inviteCodes || 0,
-          notifications: response.data.collections.notifications || 0,
-          logs: response.data.collections.systemLogs || 0
-        });
+        // Xử lý dữ liệu để chỉ lấy count từ mỗi collection
+        const processedStats = {
+          admins: typeof response.data.collections.admins === 'object' 
+            ? response.data.collections.admins.count || 0 
+            : response.data.collections.admins || 0,
+          
+          teams: typeof response.data.collections.teams === 'object'
+            ? response.data.collections.teams.count || 0
+            : response.data.collections.teams || 0,
+          
+          inviteCodes: typeof response.data.collections.inviteCodes === 'object'
+            ? response.data.collections.inviteCodes.count || 0
+            : response.data.collections.inviteCodes || 0,
+          
+          notifications: typeof response.data.collections.notifications === 'object'
+            ? response.data.collections.notifications.count || 0
+            : response.data.collections.notifications || 0,
+          
+          logs: typeof response.data.collections.systemLogs === 'object'
+            ? response.data.collections.systemLogs.count || 0
+            : response.data.collections.systemLogs || 0
+        };
+        
+        setStats(processedStats);
       } catch (error) {
         console.error('Error fetching superadmin stats:', error);
       } finally {

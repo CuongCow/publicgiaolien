@@ -23,12 +23,44 @@ const SuperAdminDashboard = () => {
     try {
       // Lấy danh sách admin
       const adminsRes = await authApi.getAllAdmins();
-      setAdmins(adminsRes.data);
+      
+      // Kiểm tra và chuyển đổi dữ liệu trước khi cập nhật state
+      const processedAdmins = adminsRes.data.map(admin => {
+        // Đảm bảo rằng mỗi admin có dữ liệu là chuỗi hoặc số
+        return {
+          ...admin,
+          _id: admin._id ? admin._id.toString() : '',
+          username: admin.username || '',
+          name: admin.name || '',
+          email: admin.email || '',
+          role: admin.role || 'admin',
+          createdAt: admin.createdAt || ''
+        };
+      });
+      
+      setAdmins(processedAdmins);
       
       // Thử lấy danh sách mã mời, nếu lỗi thì bỏ qua
       try {
         const invitationsRes = await invitationApi.getAll();
-        setInvitations(invitationsRes.data);
+        
+        // Kiểm tra và chuyển đổi dữ liệu invitations
+        const processedInvitations = invitationsRes.data.map(invitation => {
+          return {
+            ...invitation,
+            _id: invitation._id ? invitation._id.toString() : '',
+            code: invitation.code || '',
+            isUsed: !!invitation.isUsed,
+            createdAt: invitation.createdAt || '',
+            expiresAt: invitation.expiresAt || '',
+            usedBy: invitation.usedBy ? {
+              _id: invitation.usedBy._id ? invitation.usedBy._id.toString() : '',
+              username: invitation.usedBy.username || ''
+            } : null
+          };
+        });
+        
+        setInvitations(processedInvitations);
       } catch (invitationError) {
         console.log('Không thể tải dữ liệu mã mời:', invitationError);
         // Không gán lỗi cho state error vì chức năng mã mời có thể chưa được cài đặt

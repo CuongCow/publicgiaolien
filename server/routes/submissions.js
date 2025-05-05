@@ -8,7 +8,7 @@ const { auth } = require('../middleware/auth');
 // Lấy tất cả các lần nộp (admin only)
 router.get('/', auth, async (req, res) => {
   try {
-    // Lấy danh sách trạm của admin
+    // Lấy danh sách trạm của admin đang đăng nhập
     const stations = await Station.find({ adminId: req.admin.id });
     const stationIds = stations.map(station => station._id);
     
@@ -17,6 +17,7 @@ router.get('/', auth, async (req, res) => {
       stationId: { $in: stationIds } 
     }).sort({ timestamp: -1 });
     
+    console.log(`Tìm thấy ${submissions.length} lịch sử trả lời cho admin ID: ${req.admin.id}`);
     res.json(submissions);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -143,16 +144,44 @@ router.post('/', async (req, res) => {
     // Chuyển đáp án của người dùng sang chữ thường
     const userAnswer = answer.toLowerCase().trim();
     
-    // Kiểm tra xem đáp án có khớp với một trong các đáp án chính xác không
-    // Nếu correctAnswer là chuỗi (phiên bản cũ), convert sang mảng
-    const correctAnswers = Array.isArray(station.correctAnswer) 
-      ? station.correctAnswer 
-      : [station.correctAnswer];
+    // Kiểm tra nếu đây là mật thư riêng cho từng đội (individual)
+    let correctAnswers = [];
+    
+    if (station.messageType === 'individual') {
+      // Tìm nội dung đặc thù cho đội này
+      const teamContent = station.teamSpecificContents?.find(content => content.team === teamName);
+      
+      if (teamContent && teamContent.correctAnswer) {
+        // Sử dụng đáp án đặc thù của đội
+        correctAnswers = Array.isArray(teamContent.correctAnswer) 
+          ? teamContent.correctAnswer 
+          : [teamContent.correctAnswer];
+        
+        console.log(`[Debug] Đáp án riêng cho đội ${teamName}:`, correctAnswers);
+      } else {
+        // Nếu không tìm thấy nội dung đặc thù, sử dụng đáp án chung
+        correctAnswers = Array.isArray(station.correctAnswer) 
+          ? station.correctAnswer 
+          : [station.correctAnswer];
+          
+        console.log(`[Debug] Không tìm thấy đáp án riêng cho đội ${teamName}, sử dụng đáp án chung:`, correctAnswers);
+      }
+    } else {
+      // Sử dụng đáp án chung cho mật thư thông thường
+      correctAnswers = Array.isArray(station.correctAnswer) 
+        ? station.correctAnswer 
+        : [station.correctAnswer];
+        
+      console.log(`[Debug] Sử dụng đáp án chung cho mật thư loại ${station.messageType || 'common'}:`, correctAnswers);
+    }
     
     // Kiểm tra nếu đáp án người dùng khớp với bất kỳ đáp án nào trong mảng
-    const isCorrect = correctAnswers.some(correctAns => 
-      correctAns.toLowerCase().trim() === userAnswer
-    );
+    const isCorrect = correctAnswers.some(correctAns => {
+      if (!correctAns) return false;
+      return correctAns.toLowerCase().trim() === userAnswer;
+    });
+    
+    console.log(`[Debug] Đáp án người dùng: "${userAnswer}", Kết quả kiểm tra: ${isCorrect}`);
     
     // Khi trả lời sai lần cuối cùng có sẵn, đặt thời gian chờ
     if (!isCorrect && attemptNumber >= station.maxAttempts && station.lockTime > 0) {

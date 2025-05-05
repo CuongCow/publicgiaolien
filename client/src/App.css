@@ -675,3 +675,69 @@ body {
     max-width: none !important;
   }
 }
+
+/* Menu điều hướng mật thư - Inline CSS */
+.secret-message-nav {
+  background-color: #f8f9fa !important;
+  border-radius: 8px !important;
+  padding: 15px !important;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1) !important;
+  margin-bottom: 20px !important;
+  border: 1px solid #e9ecef !important;
+}
+
+.secret-message-nav .nav-item {
+  margin-bottom: 10px !important;
+  width: 100% !important;
+}
+
+.secret-message-nav .nav-link {
+  color: #495057 !important;
+  font-weight: 500 !important;
+  padding: 12px 15px !important;
+  border-radius: 6px !important;
+  transition: all 0.2s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  border: 1px solid transparent !important;
+}
+
+.secret-message-nav .nav-link:hover {
+  background-color: #e9ecef !important;
+  color: #212529 !important;
+  transform: translateX(3px) !important;
+}
+
+.secret-message-nav .nav-link.active {
+  background-color: #0d6efd !important;
+  color: white !important;
+  box-shadow: 0 3px 8px rgba(13, 110, 253, 0.3) !important;
+  border-color: #0d6efd !important;
+  transform: translateX(5px) !important;
+}
+
+.secret-message-nav .nav-link i {
+  font-size: 1.2rem !important;
+  margin-right: 10px !important;
+}
+
+/* Menu items được tô màu riêng */
+.nav-link-basic {
+  border-left: 3px solid #007bff !important;
+}
+
+.nav-link-content {
+  border-left: 3px solid #28a745 !important;
+}
+
+.nav-link-user-info {
+  border-left: 3px solid #ffc107 !important;
+}
+
+.nav-link-formatting {
+  border-left: 3px solid #dc3545 !important;
+}
+
+.nav-link-answer {
+  border-left: 3px solid #6f42c1 !important;
+}

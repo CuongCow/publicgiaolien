@@ -1268,7 +1268,7 @@ const UserStation = () => {
                           className="station-image img-fluid"
                           style={{ 
                             width: '100%', 
-                            maxHeight: '500px', 
+                            maxHeight: '600px', 
                             objectFit: 'contain',
                             border: '1px solid #ddd', 
                             borderRadius: '4px',

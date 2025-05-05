@@ -16,7 +16,11 @@ const AdminSettings = () => {
     notifications: localStorage.getItem('notifications') === 'true',
     autoLogout: parseInt(localStorage.getItem('autoLogout')) || 60,
     termType: 'default',
-    customTerm: ''
+    customTerm: '',
+    customCopyTemplates: {
+      stationCentered: '',
+      stationRace: ''
+    }
   });
 
   // Cập nhật form khi lấy được settings từ API
@@ -25,7 +29,11 @@ const AdminSettings = () => {
       setSettings(prev => ({
         ...prev,
         termType: systemSettings.termType || 'default',
-        customTerm: systemSettings.customTerm || ''
+        customTerm: systemSettings.customTerm || '',
+        customCopyTemplates: {
+          stationCentered: systemSettings.customCopyTemplates?.stationCentered || '',
+          stationRace: systemSettings.customCopyTemplates?.stationRace || ''
+        }
       }));
     }
   }, [systemSettings]);
@@ -75,8 +83,16 @@ const AdminSettings = () => {
       // Cập nhật cài đặt thuật ngữ lên server
       await updateSettings({
         termType: settings.termType,
-        customTerm: settings.customTerm
+        customTerm: settings.customTerm,
+        customCopyTemplates: settings.customCopyTemplates
       });
+      
+      // Lưu cài đặt vào localStorage để TeamList có thể sử dụng
+      localStorage.setItem('systemSettings', JSON.stringify({
+        termType: settings.termType,
+        customTerm: settings.customTerm,
+        customCopyTemplates: settings.customCopyTemplates
+      }));
       
       // Hiển thị thông báo thành công
       setSuccess(t('settings_save_success'));
@@ -103,13 +119,21 @@ const AdminSettings = () => {
         notifications: true,
         autoLogout: 60,
         termType: 'default',
-        customTerm: ''
+        customTerm: '',
+        customCopyTemplates: {
+          stationCentered: '',
+          stationRace: ''
+        }
       });
       
       // Đặt lại cài đặt hệ thống trên server
       await updateSettings({
         termType: 'default',
-        customTerm: ''
+        customTerm: '',
+        customCopyTemplates: {
+          stationCentered: '',
+          stationRace: ''
+        }
       });
       
       // Xóa chế độ tối nếu đang được áp dụng
@@ -264,6 +288,49 @@ const AdminSettings = () => {
                       <option value="vi">Tiếng Việt</option>
                       <option value="en">English</option>
                     </Form.Select>
+                  </Form.Group>
+                  
+                  <Form.Group className="mb-4">
+                    <Form.Label>{t('copy_template_customization')}</Form.Label>
+                    <div className="mb-3">
+                      <Form.Label>{t('station_centered_template_label')}</Form.Label>
+                      <Form.Control
+                        as="textarea"
+                        name="customCopyTemplates.stationCentered"
+                        rows={10}
+                        value={settings.customCopyTemplates?.stationCentered || ''}
+                        onChange={(e) => setSettings(prev => ({
+                          ...prev,
+                          customCopyTemplates: {
+                            ...prev.customCopyTemplates,
+                            stationCentered: e.target.value
+                          }
+                        }))}
+                      />
+                      <Form.Text className="text-muted">
+                        {t('station_centered_template_placeholders')}
+                      </Form.Text>
+                    </div>
+                    
+                    <div className="mb-3">
+                      <Form.Label>{t('station_race_template_label')}</Form.Label>
+                      <Form.Control
+                        as="textarea"
+                        name="customCopyTemplates.stationRace"
+                        rows={10}
+                        value={settings.customCopyTemplates?.stationRace || ''}
+                        onChange={(e) => setSettings(prev => ({
+                          ...prev,
+                          customCopyTemplates: {
+                            ...prev.customCopyTemplates,
+                            stationRace: e.target.value
+                          }
+                        }))}
+                      />
+                      <Form.Text className="text-muted">
+                        {t('station_race_template_placeholders')}
+                      </Form.Text>
+                    </div>
                   </Form.Group>
                   
                   <div className="d-flex gap-2">

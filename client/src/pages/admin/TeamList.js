@@ -429,58 +429,255 @@ const TeamList = () => {
     }));
   };
 
-  // Hàm sao chép thông tin đội vào clipboard
+  // Sao chép thông tin đội vào clipboard
   const copyTeamInfo = (team, e) => {
     e.stopPropagation();
     
+    // Hiển thị menu với hai tùy chọn
+    const targetEl = e.currentTarget;
+    
+    // Tạo menu popup
+    const popupMenu = document.createElement('div');
+    popupMenu.className = 'copy-menu-popup';
+    popupMenu.style.position = 'absolute';
+    popupMenu.style.zIndex = '1000';
+    popupMenu.style.backgroundColor = 'white';
+    popupMenu.style.border = '1px solid #ddd';
+    popupMenu.style.borderRadius = '4px';
+    popupMenu.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
+    popupMenu.style.padding = '8px 0';
+    popupMenu.style.minWidth = '200px';
+    
+    // Tùy chọn 1: Tập trung tại trạm
+    const option1 = document.createElement('div');
+    option1.className = 'copy-menu-item';
+    option1.style.padding = '8px 16px';
+    option1.style.cursor = 'pointer';
+    option1.style.transition = 'background-color 0.2s';
+    option1.innerHTML = `<i class="bi bi-people-fill me-2"></i>${t('station_race_copy_option')}`;
+    option1.addEventListener('mouseover', () => {
+      option1.style.backgroundColor = '#f0f0f0';
+    });
+    option1.addEventListener('mouseout', () => {
+      option1.style.backgroundColor = 'transparent';
+    });
+    option1.addEventListener('click', () => {
+      copyStationCenteredInfo(team);
+      // Kiểm tra popupMenu còn tồn tại trong DOM trước khi xóa
+      if (document.body.contains(popupMenu)) {
+        document.body.removeChild(popupMenu);
+      }
+    });
+    
+    // Tùy chọn 2: Chạy đua theo trạm
+    const option2 = document.createElement('div');
+    option2.className = 'copy-menu-item';
+    option2.style.padding = '8px 16px';
+    option2.style.cursor = 'pointer';
+    option2.style.transition = 'background-color 0.2s';
+    option2.innerHTML = `<i class="bi bi-stopwatch-fill me-2"></i>${t('station_centered_copy_option')}`;
+    option2.addEventListener('mouseover', () => {
+      option2.style.backgroundColor = '#f0f0f0';
+    });
+    option2.addEventListener('mouseout', () => {
+      option2.style.backgroundColor = 'transparent';
+    });
+    option2.addEventListener('click', () => {
+      copyStationRaceInfo(team);
+      // Kiểm tra popupMenu còn tồn tại trong DOM trước khi xóa
+      if (document.body.contains(popupMenu)) {
+        document.body.removeChild(popupMenu);
+      }
+    });
+    
+    // Thêm các tùy chọn vào menu
+    popupMenu.appendChild(option1);
+    popupMenu.appendChild(option2);
+    
+    // Thêm menu vào body và định vị
+    document.body.appendChild(popupMenu);
+    const rect = targetEl.getBoundingClientRect();
+    popupMenu.style.left = `${rect.left}px`;
+    popupMenu.style.top = `${rect.bottom + window.scrollY}px`;
+    
+    // Xử lý đóng menu khi click ra ngoài
+    const handleClickOutside = (event) => {
+      if (!popupMenu.contains(event.target) && event.target !== targetEl) {
+        try {
+          // Kiểm tra nếu popupMenu vẫn còn trong DOM trước khi xóa
+          if (document.body.contains(popupMenu)) {
+            document.body.removeChild(popupMenu);
+          }
+        } catch (e) {
+          console.error('Error removing popup menu:', e);
+        }
+      }
+    };
+    
+    // Đợi một tick để tránh sự kiện click hiện tại
+    setTimeout(() => {
+      document.addEventListener('click', handleClickOutside, { once: true });
+    }, 0);
+  };
+  
+  // Tải cài đặt hệ thống từ localStorage
+  const loadSystemSettings = () => {
+    try {
+      const settingsJson = localStorage.getItem('systemSettings');
+      if (settingsJson) {
+        return JSON.parse(settingsJson);
+      }
+    } catch (e) {
+      console.error('Error parsing system settings:', e);
+    }
+    return {
+      termType: 'default',
+      customTerm: '',
+      customCopyTemplates: {
+        stationCentered: '',
+        stationRace: ''
+      }
+    };
+  };
+  
+  // Sao chép thông tin "Tập trung tại trạm"
+  const copyStationCenteredInfo = (team) => {
     try {
       // Đảm bảo các giá trị đều hợp lệ
       const teamName = team.name || 'Không có tên';
       const teamPassword = team.password || 'Không có mật khẩu';
       
-      // Nội dung được sao chép mới
-      const teamInfo = 
-`${t('login_info')} ${replaceStationTerm(t('station_label')).toUpperCase()}
-------------------------------------------
-${t('team_name_label')}: ${teamName}
-${t('password_label')}: ${teamPassword}
-------------------------------------------
-${t('login_instructions')}:
-1. ${t('scan_qr')} ${replaceStationTerm(t('station_label').toLowerCase())}
-2. ${t('enter_login_info')}:
-   - ${t('select_team')}: ${teamName}
-   - ${t('password_label')}: ${teamPassword}
-3. ${t('press_confirm')}
-4. ${t('solve_cipher')}
-
-${t('notes')}:
-- ${t('keep_password_secure')}
-- ${t('login_single_device')}
-- ${t('attempt_limit')}
-- ${t('attempt_lock')}
-- ${t('troubleshooting')}:
-  + ${t('check_connection')}
-  + ${t('verify_credentials')}
-  + ${t('contact_organizers')}`;
+      // Lấy mẫu từ hệ thống hoặc sử dụng mẫu mặc định
+      let templateText = '';
       
-      // Phương pháp 1: Sử dụng Clipboard API (hiện đại hơn)
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(teamInfo)
-          .then(() => {
-            setSuccess(t('copy_team_info_success').replace('{teamName}', teamName));
-            setTimeout(() => setSuccess(null), 3000);
-          })
-          .catch(err => {
-            // Nếu phương pháp 1 thất bại, thử phương pháp 2
-            copyToClipboardFallback(teamInfo, teamName);
-          });
-      } else {
-        // Sử dụng phương pháp thay thế
-        copyToClipboardFallback(teamInfo, teamName);
+      // Tải cài đặt từ localStorage
+      const settings = loadSystemSettings();
+      templateText = settings.customCopyTemplates?.stationCentered || '';
+      
+      // Nếu không có mẫu trong cài đặt, sử dụng mẫu mặc định
+      if (!templateText) {
+        templateText = `THÔNG TIN ĐĂNG NHẬP TRẠM
+------------------------------------------
+Tên đội: {teamName}
+Mật khẩu: {teamPassword}
+------------------------------------------
+HƯỚNG DẪN ĐĂNG NHẬP:
+1. Quét QR của ban tổ chức cung cấp để vào trạm
+2. Nhập thông tin đăng nhập:
+   - Chọn đội tham gia: {teamName}
+   - Mật khẩu: {teamPassword}
+3. Nhấn nút "XÁC NHẬN"
+4. Giải mật thư và nhập đáp án vào ô trả lời
+
+LƯU Ý:
+- Giữ kín Mật khẩu, không chia sẻ cho đội khác
+- Chỉ đăng nhập trên một thiết bị tại một thời điểm
+- Ban tổ chức có thể giới hạn số lần trả lời sai cho mỗi đội
+- Trả lời sai quá số lần sẽ bị khóa tùy vào thời gian của ban tổ chức chọn
+- Nếu gặp lỗi, hãy:
+  + Kiểm tra kết nối mạng
+  + Đảm bảo chọn đúng đội và nhập đúng mật khẩu
+  + Liên hệ ban tổ chức để được hỗ trợ`;
       }
+      
+      // Thay thế các placeholder
+      const teamInfo = templateText
+        .replace(/{teamName}/g, teamName)
+        .replace(/{teamPassword}/g, teamPassword);
+      
+      copyToClipboard(teamInfo, teamName);
     } catch (err) {
       setError(t('copy_error'));
       console.error('Error copying team info:', err);
+    }
+  };
+  
+  // Sao chép thông tin "Chạy đua theo trạm"
+  const copyStationRaceInfo = (team) => {
+    try {
+      // Đảm bảo các giá trị đều hợp lệ
+      const teamName = team.name || 'Không có tên';
+      const teamPassword = team.password || 'Không có mật khẩu';
+      
+      // Lấy adminId từ localStorage
+      let adminId = '';
+      try {
+        const adminData = localStorage.getItem('admin');
+        if (adminData) {
+          const admin = JSON.parse(adminData);
+          adminId = admin.id || admin._id || '';
+        }
+      } catch (e) {
+        console.error('Error parsing admin data from localStorage:', e);
+      }
+      
+      // Lấy mẫu từ hệ thống hoặc sử dụng mẫu mặc định
+      let templateText = '';
+      
+      // Tải cài đặt từ localStorage
+      const settings = loadSystemSettings();
+      templateText = settings.customCopyTemplates?.stationRace || '';
+      
+      // Nếu không có mẫu trong cài đặt, sử dụng mẫu mặc định
+      if (!templateText) {
+        templateText = `THÔNG TIN ĐĂNG NHẬP TRẠM
+------------------------------------------
+Tên đội: {teamName}
+Mật khẩu: {teamPassword}
+------------------------------------------
+HƯỚNG DẪN ĐĂNG NHẬP:
+1. Truy cập đường dẫn website: {websiteUrl}/station/team/{adminId}
+2. Nhập thông tin đăng nhập:
+   - Nhập tên đội: {teamName}
+   - Mật khẩu: {teamPassword}
+3. Nhấn nút "XÁC NHẬN"
+4. Chờ tất cả các đội đều đăng nhập vào Ban tổ chức sẽ bắt đầu trạm
+5. Giải mật thư và nhập đáp án vào ô trả lời
+
+LƯU Ý:
+- Giữ kín Mật khẩu, không chia sẻ cho đội khác
+- Chỉ đăng nhập trên một thiết bị tại một thời điểm
+- Ban tổ chức có thể giới hạn số lần trả lời sai cho mỗi đội
+- Trả lời sai quá số lần sẽ bị khóa tùy vào thời gian của ban tổ chức chọn
+- Nếu gặp lỗi, hãy:
+  + Kiểm tra kết nối mạng
+  + Đảm bảo chọn đúng đội và nhập đúng mật khẩu
+  + Liên hệ ban tổ chức để được hỗ trợ`;
+      }
+
+      // Xác định đường dẫn website chính xác
+      const websiteUrl = window.location.origin;
+      
+      // Thay thế các placeholder
+      const teamInfo = templateText
+        .replace(/{teamName}/g, teamName)
+        .replace(/{teamPassword}/g, teamPassword)
+        .replace(/{adminId}/g, adminId)
+        .replace(/{websiteUrl}/g, websiteUrl);
+      
+      copyToClipboard(teamInfo, teamName);
+    } catch (err) {
+      setError(t('copy_error'));
+      console.error('Error copying team info:', err);
+    }
+  };
+  
+  // Hàm chung để sao chép văn bản vào clipboard
+  const copyToClipboard = (text, teamName) => {
+    // Phương pháp 1: Sử dụng Clipboard API (hiện đại hơn)
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text)
+        .then(() => {
+          setSuccess(t('copy_team_info_success').replace('{teamName}', teamName));
+          setTimeout(() => setSuccess(null), 3000);
+        })
+        .catch(err => {
+          // Nếu phương pháp 1 thất bại, thử phương pháp 2
+          copyToClipboardFallback(text, teamName);
+        });
+    } else {
+      // Sử dụng phương pháp thay thế
+      copyToClipboardFallback(text, teamName);
     }
   };
   
@@ -733,10 +930,6 @@ ${t('notes')}:
                         <td>{team.completedStations?.length || 0}</td>
                         <td onClick={(e) => e.stopPropagation()}>
                           <div className="d-flex gap-2">
-                            <OverlayTrigger
-                              placement="top"
-                              overlay={<Tooltip>{t('copy_team_info_tooltip')}</Tooltip>}
-                            >
                               <Button
                                 variant="info"
                                 size="sm"
@@ -745,7 +938,6 @@ ${t('notes')}:
                               >
                                 <i className="bi bi-clipboard"></i>
                               </Button>
-                            </OverlayTrigger>
                             <Button
                               variant="warning"
                               size="sm"

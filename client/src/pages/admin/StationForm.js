@@ -347,10 +347,27 @@ const StationForm = () => {
   const handleStationChange = (index, field, value) => {
     setStations(prev => {
       const updatedStations = [...prev];
+      
+      // Cập nhật trường được chỉ định
       updatedStations[index] = {
         ...updatedStations[index],
         [field]: value
       };
+      
+      // Đảm bảo giữ nguyên trạng thái các checkbox khi nhập nội dung
+      if (field === 'ottContent' || field === 'nwContent') {
+        // Đảm bảo hiển thị văn bản và giữ nguyên trạng thái hiển thị OTT/NW
+        updatedStations[index].showText = true;
+        
+        if (field === 'ottContent') {
+          updatedStations[index].showOTT = true;
+        }
+        
+        if (field === 'nwContent') {
+          updatedStations[index].showNW = true;
+        }
+      }
+      
       return updatedStations;
     });
   };
@@ -839,13 +856,32 @@ const StationForm = () => {
   // Hàm cập nhật nội dung cho một đội cụ thể
   const handleTeamContentChange = (stationIndex, team, field, value) => {
     const key = `${stationIndex}_${team}`;
-    setTeamContents(prev => ({
-      ...prev,
-      [key]: {
+    setTeamContents(prev => {
+      // Tạo bản sao của đối tượng nội dung đội hiện tại
+      const updatedTeamContent = {
         ...prev[key],
         [field]: value
+      };
+      
+      // Đảm bảo giữ nguyên trạng thái các checkbox khi nhập nội dung
+      if (field === 'ottContent' || field === 'nwContent') {
+        // Đảm bảo hiển thị văn bản và giữ nguyên trạng thái hiển thị OTT/NW
+        updatedTeamContent.showText = true;
+        
+        if (field === 'ottContent') {
+          updatedTeamContent.showOTT = true;
+        }
+        
+        if (field === 'nwContent') {
+          updatedTeamContent.showNW = true;
+        }
       }
-    }));
+      
+      return {
+        ...prev,
+        [key]: updatedTeamContent
+      };
+    });
   };
 
   // Hàm tải lên hình ảnh cho một đội cụ thể

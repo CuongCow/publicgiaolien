@@ -65,7 +65,7 @@ exports.getPublicSettings = async (req, res) => {
 // @access  Private (Admin only)
 exports.updateSettings = async (req, res) => {
   try {
-    const { termType, customTerm } = req.body;
+    const { termType, customTerm, customCopyTemplates } = req.body;
     const adminId = req.admin.id;
     
     // Kiểm tra các giá trị hợp lệ
@@ -83,6 +83,16 @@ exports.updateSettings = async (req, res) => {
     // Cập nhật các trường
     if (termType !== undefined) settings.termType = termType;
     if (customTerm !== undefined) settings.customTerm = customTerm;
+    
+    // Cập nhật mẫu sao chép tùy chỉnh nếu có
+    if (customCopyTemplates) {
+      if (customCopyTemplates.stationCentered) {
+        settings.customCopyTemplates.stationCentered = customCopyTemplates.stationCentered;
+      }
+      if (customCopyTemplates.stationRace) {
+        settings.customCopyTemplates.stationRace = customCopyTemplates.stationRace;
+      }
+    }
     
     // Cập nhật thời gian cập nhật
     settings.lastUpdated = Date.now();
