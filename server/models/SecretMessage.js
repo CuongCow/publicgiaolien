@@ -115,9 +115,15 @@ const SecretMessageSchema = new mongoose.Schema({
 SecretMessageSchema.pre('save', async function(next) {
   if (this.isNew || this.isModified('_id')) {
     try {
-      // Sử dụng CLIENT_URL từ biến môi trường hoặc window.location.origin nếu có thể, 
-      // chỉ fallback sang localhost khi không có lựa chọn nào khác
-      const url = `${process.env.CLIENT_URL || process.env.REACT_APP_BASE_URL || 'http://localhost:3000'}/secret-message/${this._id}`;
+      // Đảm bảo sử dụng CLIENT_URL từ biến môi trường thay vì localhost
+      // Ưu tiên thứ tự: CLIENT_URL > REACT_APP_BASE_URL > window.location.origin
+      const clientUrl = process.env.CLIENT_URL || process.env.REACT_APP_BASE_URL;
+      if (!clientUrl) {
+        console.warn('Biến môi trường CLIENT_URL hoặc REACT_APP_BASE_URL không được đặt. Vui lòng cấu hình cho môi trường production.');
+      }
+      
+      const url = `${clientUrl || 'http://localhost:3000'}/secret-message/${this._id}`;
+      console.log('Generating QR code with URL:', url);
       
       // Tạo QR code với các tùy chọn nâng cao
       const qrcode = require('qrcode');
