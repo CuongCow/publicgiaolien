@@ -26,16 +26,18 @@ const allowedOrigins = [
 
 // Middleware CORS tùy chỉnh cho route đăng nhập
 app.options('/api/auth/login', (req, res) => {
+  console.log('Handling OPTIONS request for /api/auth/login');
   res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, x-auth-token, Authorization');
-  res.status(200).send();
+  res.sendStatus(200);
 });
 
 // Middleware CORS tùy chỉnh cho route đăng nhập
 app.post('/api/auth/login', (req, res, next) => {
+  console.log('POST request to /api/auth/login received:', req.headers);
   res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, x-auth-token, Authorization');
   next();
 });
@@ -107,6 +109,28 @@ mongoose.connect(MONGODB_URI, {
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
   next();
+});
+
+// Xử lý đặc biệt cho route login
+app.all('/api/auth/login', (req, res, next) => {
+  console.log('Login route was called with method:', req.method);
+  console.log('Login route headers:', req.headers);
+  
+  // Cho phép OPTIONS method
+  if (req.method === 'OPTIONS') {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, x-auth-token, Authorization');
+    return res.sendStatus(200);
+  }
+  
+  // Cho phép POST method
+  if (req.method === 'POST') {
+    next();
+  } else {
+    // Trả về 405 cho các method khác
+    res.status(405).json({ message: 'Method Not Allowed' });
+  }
 });
 
 // Import Routes

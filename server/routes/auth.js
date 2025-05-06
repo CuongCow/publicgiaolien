@@ -13,18 +13,23 @@ const SystemSettings = require('../models/SystemSettings');
 const Notification = require('../models/Notification');
 const mongoose = require('mongoose');
 
+// Xử lý đặc biệt cho route login
+router.options('/login', (req, res) => {
+  console.log('OPTIONS request to /api/auth/login in router');
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, x-auth-token, Authorization');
+  res.sendStatus(200);
+});
+
 // Đăng ký admin mới
 router.post('/register', authController.register);
 
 // Đăng nhập
-router.post('/login', authController.login);
-
-// Thêm OPTIONS handler riêng cho route login
-router.options('/login', (req, res) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, x-auth-token, Authorization');
-  res.status(200).send();
+router.post('/login', (req, res, next) => {
+  console.log('Processing login request in router', req.body);
+  // Xử lý đăng nhập
+  authController.login(req, res, next);
 });
 
 // Lấy thông tin admin
