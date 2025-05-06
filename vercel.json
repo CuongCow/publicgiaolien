@@ -30,6 +30,26 @@
       }
     },
     {
+      "src": "/api/auth/login-test",
+      "methods": ["POST", "OPTIONS"],
+      "dest": "server/server.js",
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "X-Requested-With, Content-Type, Accept, x-auth-token, Authorization"
+      }
+    },
+    {
+      "src": "/api/test/(.*)",
+      "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+      "dest": "server/server.js",
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+        "Access-Control-Allow-Headers": "X-Requested-With, Content-Type, Accept, x-auth-token, Authorization"
+      }
+    },
+    {
       "src": "/api/(.*)",
       "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
       "dest": "server/server.js",

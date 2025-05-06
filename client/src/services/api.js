@@ -65,7 +65,10 @@ axiosInstance.interceptors.request.use(
 // API xác thực
 export const authApi = {
   register: (data) => axiosInstance.post('/api/auth/register', data),
-  login: (data) => axiosInstance.post('/api/auth/login', data),
+  login: (data) => {
+    console.log('Sending login request with data:', data);
+    return axiosInstance.post('/api/auth/login', data);
+  },
   getMe: () => axiosInstance.get('/api/auth/me'),
   updateProfile: (data) => axiosInstance.patch('/api/auth/profile', data),
   checkEmail: (email) => axiosInstance.post('/api/auth/check-email', { email }),

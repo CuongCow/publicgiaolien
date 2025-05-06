@@ -133,6 +133,15 @@ app.all('/api/auth/login', (req, res, next) => {
   }
 });
 
+// Middleware OPTIONS cho tất cả các route API
+app.options('/api/*', (req, res) => {
+  console.log('OPTIONS request for:', req.originalUrl);
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, x-auth-token, Authorization');
+  res.sendStatus(200);
+});
+
 // Import Routes
 const authRoutes = require('./routes/auth');
 const stationRoutes = require('./routes/stations');
