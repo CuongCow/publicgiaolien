@@ -1,0 +1,39 @@
+{
+  "name": "giaolien",
+  "version": "1.0.0",
+  "description": "Ứng dụng quản lý trò chơi giải mật thư",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "server": "cd server && npm run dev",
+    "client": "cd client && npm start",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "heroku-postbuild": "npm install --legacy-peer-deps && cd server && npm install --legacy-peer-deps && cd ../client && npm install --legacy-peer-deps && npm run build",
+    "vercel-build": "cd client && npm install && npm run build"
+  },
+  "keywords": [
+    "game",
+    "puzzle",
+    "mern"
+  ],
+  "author": "CuongCow",
+  "license": "MIT",
+  "dependencies": {
+    "@types/react-beautiful-dnd": "^13.1.8",
+    "aos": "2.3.4",
+    "bootstrap-icons": "1.11.3",
+    "concurrently": "8.2.2",
+    "jsqr": "1.4.0",
+    "nodemailer": "6.10.1",
+    "react-beautiful-dnd": "^13.1.1",
+    "react-dnd": "^16.0.1",
+    "react-dnd-html5-backend": "^16.0.1",
+    "react-qr-barcode-scanner": "2.1.0",
+    "react-toastify": "11.0.5",
+    "socket.io": "^4.8.1",
+    "xlsx": "^0.18.5"
+  },
+  "engines": {
+    "node": "18.x"
+  }
+}
