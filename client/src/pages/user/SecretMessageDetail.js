@@ -16,6 +16,7 @@ const SecretMessageDetail = () => {
   const [isUserInfoValid, setIsUserInfoValid] = useState(true);
   const [userInfoSubmitted, setUserInfoSubmitted] = useState(false);
   const [activeTab, setActiveTab] = useState('main');
+  const [previousCorrectAnswer, setPreviousCorrectAnswer] = useState(null);
   const [remainingAttempts, setRemainingAttempts] = useState({
     hasLimit: false,
     maxAttempts: 0,
@@ -66,6 +67,18 @@ const SecretMessageDetail = () => {
         // Kiểm tra nếu có đáp án
         if (response.data.data.correctAnswer && response.data.data.correctAnswer.length > 0) {
           setShowAnswerInput(true);
+          
+          // Kiểm tra xem người dùng đã trả lời đúng trước đó chưa
+          const correctAnswerResponse = await secretMessageApi.checkCorrectAnswer(id);
+          if (correctAnswerResponse && correctAnswerResponse.data && correctAnswerResponse.data.hasCorrectAnswer) {
+            // Người dùng đã trả lời đúng trước đó
+            setPreviousCorrectAnswer(correctAnswerResponse.data.response.answer);
+            setAnswerResult({
+              isCorrect: true,
+              message: 'Chúc mừng! Bạn đã trả lời đúng trước đó.',
+              previousAnswer: correctAnswerResponse.data.response.answer
+            });
+          }
         }
         
         // Lấy thông tin số lần thử còn lại
@@ -195,6 +208,77 @@ const SecretMessageDetail = () => {
     
     // Fallback to medium spacing if unknown value
     return 'paragraph-spacing-medium';
+  };
+  
+  // Phần hiển thị form nhập đáp án và kết quả
+  const renderAnswerForm = () => {
+    // Nếu đã trả lời đúng trước đó, hiển thị thông báo và đáp án
+    if (answerResult && answerResult.isCorrect && previousCorrectAnswer) {
+      return (
+        <div className="mt-4">
+          <Alert variant="success" className="d-flex align-items-center">
+            <i className="bi bi-check-circle-fill me-2 fs-4"></i>
+            <div>
+              <p className="mb-1 fw-bold">{answerResult.message}</p>
+              <p className="mb-0 small">Đáp án của bạn: <strong>{previousCorrectAnswer}</strong></p>
+            </div>
+          </Alert>
+        </div>
+      );
+    }
+
+    return (
+      <>
+        {/* Hiển thị form nhập đáp án nếu người dùng chưa trả lời đúng hoặc chưa có kết quả */}
+        {(!answerResult || !answerResult.isCorrect) && (
+          <Form onSubmit={handleAnswerSubmit} className="mt-4">
+            <Form.Group className="mb-3">
+              <Form.Label>Nhập đáp án:</Form.Label>
+              <Form.Control
+                type="text"
+                value={answer}
+                onChange={(e) => setAnswer(e.target.value)}
+                placeholder="Nhập đáp án của bạn tại đây"
+                disabled={checkingAnswer || (remainingAttempts.hasLimit && remainingAttempts.remainingAttempts <= 0)}
+              />
+            </Form.Group>
+            
+            {/* Hiển thị thông tin số lần thử còn lại nếu có giới hạn */}
+            {remainingAttempts.hasLimit && (
+              <div className="d-flex justify-content-between mb-3">
+                <small className="text-muted">
+                  Số lần thử: {remainingAttempts.usedAttempts}/{remainingAttempts.maxAttempts}
+                </small>
+                <small className={`${remainingAttempts.remainingAttempts > 0 ? 'text-success' : 'text-danger'} fw-bold`}>
+                  Còn lại: {remainingAttempts.remainingAttempts}
+                </small>
+              </div>
+            )}
+            
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={checkingAnswer || (remainingAttempts.hasLimit && remainingAttempts.remainingAttempts <= 0)}
+            >
+              {checkingAnswer ? (
+                <>
+                  <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
+                  Đang kiểm tra...
+                </>
+              ) : 'Gửi đáp án'}
+            </Button>
+          </Form>
+        )}
+        
+        {/* Hiển thị kết quả */}
+        {answerResult && (
+          <Alert variant={answerResult.isCorrect ? 'success' : 'danger'} className="mt-3">
+            <i className={`bi ${answerResult.isCorrect ? 'bi-check-circle' : 'bi-x-circle'} me-2`}></i>
+            {answerResult.message}
+          </Alert>
+        )}
+      </>
+    );
   };
   
   if (loading) {
@@ -398,57 +482,7 @@ const SecretMessageDetail = () => {
 
               </div>
               
-              {showAnswerInput && (
-                <div className="mt-4">
-                  <hr className="mb-4" />
-                  
-                  {answerResult && (
-                    <Alert variant={answerResult.isCorrect ? 'success' : 'danger'} className="mb-4">
-                      <i className={`bi ${answerResult.isCorrect ? 'bi-check-circle' : 'bi-x-circle'} me-2`}></i>
-                      {answerResult.message}
-                    </Alert>
-                  )}
-                  
-                  {/* Hiển thị số lần thử còn lại */}
-                  {remainingAttempts.hasLimit && (
-                    <div className="mb-3 text-center">
-                      <Badge bg={remainingAttempts.remainingAttempts > 0 ? 'info' : 'danger'} className="fs-6 px-3 py-2">
-                        Số lần thử còn lại: {remainingAttempts.remainingAttempts} / {remainingAttempts.maxAttempts}
-                      </Badge>
-                    </div>
-                  )}
-                  
-                  <Form onSubmit={handleAnswerSubmit}>
-                    <Form.Group className="mb-3">
-                      <Form.Label><strong>Đáp án của bạn:</strong></Form.Label>
-                      <Form.Control
-                        type="text"
-                        placeholder="Nhập đáp án của bạn..."
-                        value={answer}
-                        onChange={(e) => setAnswer(e.target.value)}
-                        disabled={answerResult?.isCorrect || (remainingAttempts.hasLimit && remainingAttempts.remainingAttempts <= 0)}
-                      />
-                    </Form.Group>
-                    
-                    {(!answerResult?.isCorrect && (!remainingAttempts.hasLimit || remainingAttempts.remainingAttempts > 0)) && (
-                      <Button 
-                        type="submit" 
-                        variant="primary" 
-                        className="w-100"
-                        disabled={checkingAnswer}
-                      >
-                        {checkingAnswer ? (
-                          <>
-                            Đang kiểm tra...
-                          </>
-                        ) : (
-                          'Gửi đáp án'
-                        )}
-                      </Button>
-                    )}
-                  </Form>
-                </div>
-              )}
+              {renderAnswerForm()}
               
               <div className="text-center mt-4">
                 <Button 

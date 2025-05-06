@@ -323,59 +323,16 @@ exports.deleteResponse = async (req, res) => {
   try {
     const { responseId } = req.params;
     
-    // Xác định adminId từ req.admin nếu có
-    const adminId = req.admin ? req.admin.id : null;
-    
-    // Nếu không có adminId, trả về lỗi
-    if (!adminId) {
-      return res.status(403).json({
-        success: false,
-        message: 'Không có quyền truy cập'
-      });
-    }
-
-    // Kiểm tra xem responseId có hợp lệ không
-    if (!mongoose.Types.ObjectId.isValid(responseId)) {
-      return res.status(400).json({
-        success: false,
-        message: 'ID phản hồi không hợp lệ'
-      });
-    }
-
-    // Tìm phản hồi trước khi xóa để lấy thông tin secretMessageId
     const response = await SecretMessageResponse.findById(responseId);
-
     if (!response) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy phản hồi với ID này'
+        message: 'Không tìm thấy phản hồi này'
       });
     }
     
-    // Kiểm tra xem mật thư có thuộc về admin này không
-    const secretMessage = await SecretMessage.findById(response.secretMessageId);
-    
-    if (!secretMessage) {
-      return res.status(404).json({
-        success: false,
-        message: 'Không tìm thấy mật thư liên quan'
-      });
-    }
-    
-    // So sánh adminId từ request với adminId của mật thư
-    if (secretMessage.adminId.toString() !== adminId.toString()) {
-      console.log(`Lỗi quyền truy cập: Admin ${adminId} không sở hữu mật thư ${secretMessage._id} (thuộc về admin ${secretMessage.adminId})`);
-      return res.status(403).json({
-        success: false,
-        message: 'Không có quyền xóa phản hồi này'
-      });
-    }
-
-    // Xóa phản hồi sau khi đã kiểm tra quyền truy cập
     await SecretMessageResponse.findByIdAndDelete(responseId);
     
-    console.log(`Admin ${adminId} đã xóa phản hồi ${responseId} của mật thư ${secretMessage.name}`);
-
     res.status(200).json({
       success: true,
       message: 'Xóa phản hồi thành công',
@@ -389,4 +346,367 @@ exports.deleteResponse = async (req, res) => {
       error: error.message
     });
   }
-}; 
+};
+
+// Xóa tất cả phản hồi mật thư
+exports.deleteAllResponses = async (req, res) => {
+  try {
+    // Xác định adminId từ req.admin
+    const adminId = req.admin ? req.admin.id : null;
+    
+    // Nếu không có adminId, trả về lỗi
+    if (!adminId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Không có quyền truy cập'
+      });
+    }
+    
+    console.log(`Xóa tất cả phản hồi mật thư cho admin ID: ${adminId}`);
+    
+    // Tìm tất cả mật thư của admin
+    const secretMessages = await SecretMessage.find({ adminId });
+    const secretMessageIds = secretMessages.map(message => message._id);
+    
+    console.log(`Tìm thấy ${secretMessages.length} mật thư thuộc admin ID ${adminId}`);
+
+    // Xóa tất cả phản hồi liên quan đến mật thư của admin
+    const deleteResult = await SecretMessageResponse.deleteMany({
+      secretMessageId: { $in: secretMessageIds }
+    });
+    
+    console.log(`Đã xóa ${deleteResult.deletedCount} phản hồi mật thư`);
+    
+    res.status(200).json({
+      success: true,
+      message: 'Xóa tất cả phản hồi mật thư thành công',
+      deletedCount: deleteResult.deletedCount
+    });
+  } catch (error) {
+    console.error('Error deleting all responses:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Lỗi khi xóa tất cả phản hồi mật thư',
+      error: error.message
+    });
+  }
+};
+
+// Lấy thống kê và xếp hạng người dùng
+exports.getStatistics = async (req, res) => {
+  try {
+    // Xác định adminId từ req.admin nếu có
+    const adminId = req.admin ? req.admin.id : null;
+    
+    // Nếu không có adminId, trả về lỗi
+    if (!adminId) {
+      console.log('Không tìm thấy adminId trong request');
+      return res.status(403).json({
+        success: false,
+        message: 'Không có quyền truy cập'
+      });
+    }
+    
+    console.log(`Lấy thống kê mật thư cho admin ID: ${adminId}`);
+    
+    // Tìm tất cả mật thư của admin với xử lý lỗi rõ ràng hơn
+    let secretMessages = [];
+    try {
+      secretMessages = await SecretMessage.find({ adminId });
+    } catch (err) {
+      console.error('Lỗi khi truy vấn mật thư:', err);
+      // Trả về thống kê rỗng thay vì lỗi 500
+      return res.status(200).json({
+        success: true,
+        statistics: {
+          totalResponses: 0,
+          correctResponses: 0,
+          incorrectResponses: 0,
+          accuracyRate: "0.00",
+          dailyStats: [],
+          messageStats: [],
+          userRankings: []
+        }
+      });
+    }
+    
+    // Nếu không có mật thư nào, trả về thống kê rỗng
+    if (!Array.isArray(secretMessages) || secretMessages.length === 0) {
+      console.log(`Admin ${adminId} không có mật thư nào`);
+      return res.status(200).json({
+        success: true,
+        statistics: {
+          totalResponses: 0,
+          correctResponses: 0,
+          incorrectResponses: 0,
+          accuracyRate: "0.00",
+          dailyStats: [],
+          messageStats: [],
+          userRankings: []
+        }
+      });
+    }
+    
+    const secretMessageIds = secretMessages.map(message => message._id);
+    console.log(`Tìm thấy ${secretMessages.length} mật thư của admin ${adminId}`);
+    
+    // Lấy tất cả phản hồi từ mật thư của admin, với xử lý lỗi tốt hơn
+    let responses = [];
+    try {
+      responses = await SecretMessageResponse.find({
+        secretMessageId: { $in: secretMessageIds },
+        isUserInfoSubmission: false
+      });
+    } catch (err) {
+      console.error('Lỗi khi truy vấn phản hồi:', err);
+      // Trả về thống kê với các mật thư nhưng không có phản hồi
+      return res.status(200).json({
+        success: true,
+        statistics: {
+          totalResponses: 0,
+          correctResponses: 0,
+          incorrectResponses: 0,
+          accuracyRate: "0.00",
+          dailyStats: [],
+          messageStats: secretMessages.map(message => ({
+            id: message._id,
+            name: message.name || 'Không tên',
+            total: 0,
+            correct: 0,
+            incorrect: 0
+          })),
+          userRankings: []
+        }
+      });
+    }
+    
+    if (!Array.isArray(responses)) {
+      responses = [];
+    }
+    
+    console.log(`Tìm thấy ${responses.length} phản hồi từ các mật thư của admin ${adminId}`);
+    
+    // Thống kê tổng số
+    const totalResponses = responses.length;
+    const correctResponses = responses.filter(r => r.isCorrect).length;
+    const incorrectResponses = totalResponses - correctResponses;
+    
+    // Tính tỉ lệ chính xác
+    const accuracyRate = totalResponses > 0 ? (correctResponses / totalResponses * 100).toFixed(2) : "0.00";
+    
+    // Thống kê theo ngày (7 ngày gần nhất) - với xử lý lỗi tốt hơn
+    const today = new Date();
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      return date.toISOString().split('T')[0];
+    }).reverse();
+    
+    const dailyStats = last7Days.map(dateStr => {
+      const startDate = new Date(dateStr);
+      const endDate = new Date(dateStr);
+      endDate.setDate(endDate.getDate() + 1);
+      
+      try {
+        const dayResponses = responses.filter(r => {
+          try {
+            const timestamp = new Date(r.timestamp);
+            return timestamp >= startDate && timestamp < endDate;
+          } catch (err) {
+            console.error('Lỗi khi phân tích timestamp:', err);
+            return false;
+          }
+        });
+        
+        const dayCorrect = dayResponses.filter(r => r.isCorrect).length;
+        
+        return {
+          date: dateStr,
+          total: dayResponses.length,
+          correct: dayCorrect,
+          incorrect: dayResponses.length - dayCorrect
+        };
+      } catch (err) {
+        console.error('Lỗi khi tính toán thống kê theo ngày:', err);
+        return {
+          date: dateStr,
+          total: 0,
+          correct: 0,
+          incorrect: 0
+        };
+      }
+    });
+    
+    // Thống kê theo mật thư
+    const messageStats = secretMessages.map(message => {
+      try {
+        const messageResponses = responses.filter(r => {
+          try {
+            return r.secretMessageId && message._id && 
+                  r.secretMessageId.toString() === message._id.toString();
+          } catch (err) {
+            console.error('Lỗi khi so sánh ID:', err);
+            return false;
+          }
+        });
+        
+        const messageCorrect = messageResponses.filter(r => r.isCorrect).length;
+        
+        return {
+          id: message._id,
+          name: message.name || 'Không tên',
+          total: messageResponses.length,
+          correct: messageCorrect,
+          incorrect: messageResponses.length - messageCorrect
+        };
+      } catch (err) {
+        console.error('Lỗi khi tính toán thống kê theo mật thư:', err);
+        return {
+          id: message._id,
+          name: message.name || 'Không tên',
+          total: 0,
+          correct: 0,
+          incorrect: 0
+        };
+      }
+    });
+    
+    // Xếp hạng người dùng (top 20) - với xử lý lỗi tốt hơn
+    const userRankings = [];
+    const userMap = new Map();
+    
+    // Nhóm dữ liệu theo userIdentifier
+    try {
+      responses.forEach(response => {
+        if (!response || !response.userIdentifier) return;
+        
+        if (!userMap.has(response.userIdentifier)) {
+          userMap.set(response.userIdentifier, {
+            userIdentifier: response.userIdentifier,
+            userName: response.userName || 'Định danh',
+            totalAttempts: 0,
+            correctAttempts: 0
+          });
+        }
+        
+        const userData = userMap.get(response.userIdentifier);
+        userData.totalAttempts++;
+        if (response.isCorrect) {
+          userData.correctAttempts++;
+        }
+      });
+      
+      // Chuyển đổi map thành mảng và sắp xếp
+      Array.from(userMap.values())
+        .sort((a, b) => {
+          // Sắp xếp theo số câu trả lời đúng giảm dần
+          if (b.correctAttempts !== a.correctAttempts) {
+            return b.correctAttempts - a.correctAttempts;
+          }
+          // Nếu bằng nhau thì sắp xếp theo tỉ lệ đúng
+          const aRate = a.totalAttempts > 0 ? a.correctAttempts / a.totalAttempts : 0;
+          const bRate = b.totalAttempts > 0 ? b.correctAttempts / b.totalAttempts : 0;
+          return bRate - aRate;
+        })
+        .slice(0, 20) // Chỉ lấy top 20
+        .forEach((user, index) => {
+          userRankings.push({
+            rank: index + 1,
+            userName: user.userName,
+            totalAttempts: user.totalAttempts,
+            correctAttempts: user.correctAttempts,
+            accuracy: user.totalAttempts > 0 
+              ? (user.correctAttempts / user.totalAttempts * 100).toFixed(2) 
+              : "0.00"
+          });
+        });
+    } catch (err) {
+      console.error('Lỗi khi tính toán xếp hạng người dùng:', err);
+      // Để mảng userRankings trống nếu có lỗi
+    }
+    
+    console.log(`Trả về thành công thống kê cho admin ${adminId}`);
+    
+    return res.status(200).json({
+      success: true,
+      statistics: {
+        totalResponses,
+        correctResponses,
+        incorrectResponses,
+        accuracyRate,
+        dailyStats,
+        messageStats,
+        userRankings
+      }
+    });
+  } catch (error) {
+    console.error('Error getting statistics:', error);
+    // Trả về dữ liệu rỗng thay vì lỗi 500
+    return res.status(200).json({
+      success: true,
+      statistics: {
+        totalResponses: 0,
+        correctResponses: 0,
+        incorrectResponses: 0,
+        accuracyRate: "0.00",
+        dailyStats: [],
+        messageStats: [],
+        userRankings: []
+      },
+      error: error.message
+    });
+  }
+};
+
+// Kiểm tra người dùng đã trả lời đúng mật thư chưa
+exports.checkCorrectAnswer = async (req, res) => {
+  try {
+    const { secretMessageId } = req.params;
+    const ipAddress = getClientIp(req);
+    
+    console.log(`Kiểm tra người dùng IP ${ipAddress} đã trả lời đúng mật thư ${secretMessageId} chưa`);
+    
+    // Tìm mật thư
+    const secretMessage = await SecretMessage.findById(secretMessageId);
+    if (!secretMessage) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy mật thư'
+      });
+    }
+    
+    // Tìm phản hồi đúng từ địa chỉ IP này
+    const correctResponse = await SecretMessageResponse.findOne({
+      secretMessageId,
+      ipAddress,
+      isCorrect: true,
+      isUserInfoSubmission: false
+    });
+    
+    // Nếu tìm thấy phản hồi đúng, trả về thông tin
+    if (correctResponse) {
+      console.log(`Người dùng IP ${ipAddress} đã trả lời đúng mật thư ${secretMessageId}`);
+      return res.status(200).json({
+        success: true,
+        hasCorrectAnswer: true,
+        response: {
+          answer: correctResponse.answer,
+          timestamp: correctResponse.timestamp
+        }
+      });
+    } else {
+      console.log(`Người dùng IP ${ipAddress} chưa trả lời đúng mật thư ${secretMessageId}`);
+      return res.status(200).json({
+        success: true,
+        hasCorrectAnswer: false
+      });
+    }
+  } catch (error) {
+    console.error('Error checking correct answer:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Lỗi khi kiểm tra câu trả lời',
+      error: error.message
+    });
+  }
+};

@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import * as XLSX from 'xlsx';
 import { QRCodeSVG } from 'qrcode.react';
+import SecretMessageStats from './SecretMessageStats';
 
 const SecretMessageList = () => {
   const [secretMessages, setSecretMessages] = useState([]);
@@ -29,6 +30,9 @@ const SecretMessageList = () => {
   const [showUserInfoModal, setShowUserInfoModal] = useState(false);
   const [selectedResponseForDelete, setSelectedResponseForDelete] = useState(null);
   const [showDeleteResponseModal, setShowDeleteResponseModal] = useState(false);
+  const [showDeleteAllResponsesModal, setShowDeleteAllResponsesModal] = useState(false);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   // Lấy danh sách mật thư
   useEffect(() => {
@@ -66,10 +70,13 @@ const SecretMessageList = () => {
     if (activeTab === 'responses') {
       fetchMessageResponses();
       
-      // Thiết lập cập nhật tự động mỗi 10 giây
-      const interval = setInterval(() => {
-        fetchMessageResponses();
-      }, 10000);
+      // Thiết lập cập nhật tự động mỗi 5 giây nếu autoRefresh = true
+      let interval;
+      if (autoRefresh) {
+        interval = setInterval(() => {
+          fetchMessageResponses(false); // false = không hiển thị loading spinner
+        }, 5000);
+      }
       
       setRefreshInterval(interval);
     } else {
@@ -84,15 +91,16 @@ const SecretMessageList = () => {
         clearInterval(refreshInterval);
       }
     };
-  }, [activeTab]);
+  }, [activeTab, autoRefresh]);
 
   // Hàm lấy danh sách phản hồi
-  const fetchMessageResponses = useCallback(async () => {
+  const fetchMessageResponses = useCallback(async (showLoading = true) => {
     try {
-      setLoadingResponses(true);
+      if (showLoading) {
+        setLoadingResponses(true);
+      }
       // Gọi API lấy phản hồi
       const response = await secretMessageApi.getMessageResponses();
-      console.log('API response:', response); // Debug log để kiểm tra cấu trúc dữ liệu
       
       // Đảm bảo messageResponses luôn là một mảng
       // Kiểm tra cấu trúc đúng của dữ liệu: response.data.data
@@ -104,13 +112,16 @@ const SecretMessageList = () => {
         : [];
       
       setMessageResponses(sortedData);
+      setLastUpdated(new Date());
     } catch (error) {
       console.error('Error fetching message responses:', error);
       // Đảm bảo messageResponses vẫn là mảng khi có lỗi
       setMessageResponses([]);
       // Không hiển thị toast lỗi khi cập nhật tự động để tránh làm phiền người dùng
     } finally {
-      setLoadingResponses(false);
+      if (showLoading) {
+        setLoadingResponses(false);
+      }
     }
   }, []);
 
@@ -330,6 +341,33 @@ const SecretMessageList = () => {
     }
   };
   
+  // Hiển thị modal xác nhận xóa tất cả phản hồi
+  const handleDeleteAllResponses = () => {
+    setShowDeleteAllResponsesModal(true);
+  };
+  
+  // Xác nhận xóa tất cả phản hồi
+  const handleDeleteAllResponsesConfirm = async () => {
+    try {
+      const response = await secretMessageApi.deleteAllMessageResponses();
+      
+      if (response && response.data && response.data.success) {
+        toast.success(`Đã xóa ${response.data.deletedCount} phản hồi mật thư`);
+        
+        // Cập nhật danh sách (làm trống)
+        setMessageResponses([]);
+      } else {
+        toast.warning('Xóa phản hồi thành công nhưng không nhận được phản hồi từ server');
+      }
+      
+      setShowDeleteAllResponsesModal(false);
+    } catch (error) {
+      console.error('Error deleting all responses:', error);
+      toast.error(`Không thể xóa phản hồi: ${error.message || 'Lỗi không xác định'}`);
+      setShowDeleteAllResponsesModal(false);
+    }
+  };
+  
   // Export lịch sử phản hồi ra Excel
   const handleExportExcel = () => {
     try {
@@ -490,7 +528,16 @@ const SecretMessageList = () => {
     <Card className="shadow-sm border-0">
       <Card.Body>
         <div className="d-flex justify-content-between align-items-center mb-4">
-          <h5 className="mb-0">Lịch sử trả lời mật thư</h5>
+          <h5 className="mb-0">
+            Lịch sử trả lời mật thư
+            {lastUpdated && (
+              <small className="text-muted ms-3 d-inline-flex align-items-center">
+                <i className="bi bi-clock me-1"></i>
+                Cập nhật lúc: {format(lastUpdated, 'HH:mm:ss dd/MM/yyyy', { locale: vi })}
+                {autoRefresh && <Spinner animation="border" size="sm" className="ms-2" style={{ width: '1rem', height: '1rem' }} />}
+              </small>
+            )}
+          </h5>
           <div>
             <Button 
               variant="outline-success" 
@@ -502,12 +549,23 @@ const SecretMessageList = () => {
               Xuất Excel
             </Button>
             <Button 
-              variant="outline-primary" 
+              variant="outline-danger" 
               size="sm"
-              onClick={fetchMessageResponses}
+              className="me-2"
+              onClick={handleDeleteAllResponses}
+              disabled={!Array.isArray(messageResponses) || messageResponses.length === 0}
             >
-              <i className="bi bi-arrow-clockwise me-2"></i>
-              Làm mới
+              <i className="bi bi-trash me-2"></i>
+              Xóa tất cả
+            </Button>
+            <Button 
+              variant={autoRefresh ? "secondary" : "outline-primary"} 
+              size="sm"
+              onClick={() => setAutoRefresh(!autoRefresh)}
+              title={autoRefresh ? "Dừng cập nhật tự động" : "Bật cập nhật tự động"}
+            >
+              <i className={`bi ${autoRefresh ? "bi-pause-circle" : "bi-arrow-clockwise"} me-2`}></i>
+              {autoRefresh ? "Dừng cập nhật" : "Cập nhật tự động"}
             </Button>
           </div>
         </div>
@@ -613,6 +671,9 @@ const SecretMessageList = () => {
           </Tab>
           <Tab eventKey="responses" title={<span><i className="bi bi-reply-all me-2"></i>Lịch sử trả lời</span>}>
             {renderResponseHistory()}
+          </Tab>
+          <Tab eventKey="stats" title={<span><i className="bi bi-bar-chart-fill me-2"></i>Thống kê & Xếp hạng</span>}>
+            <SecretMessageStats />
           </Tab>
         </Tabs>
       </Container>
@@ -839,6 +900,25 @@ const SecretMessageList = () => {
             Hủy
           </Button>
           <Button variant="danger" onClick={handleDeleteResponseConfirm}>
+            Xóa
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Modal xác nhận xóa tất cả phản hồi */}
+      <Modal show={showDeleteAllResponsesModal} onHide={() => setShowDeleteAllResponsesModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Xác nhận xóa tất cả phản hồi</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Bạn có chắc chắn muốn xóa tất cả phản hồi mật thư?<br />
+          Hành động này không thể hoàn tác.
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDeleteAllResponsesModal(false)}>
+            Hủy
+          </Button>
+          <Button variant="danger" onClick={handleDeleteAllResponsesConfirm}>
             Xóa
           </Button>
         </Modal.Footer>

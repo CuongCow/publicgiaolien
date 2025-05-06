@@ -24,6 +24,55 @@ const debugAuth = (req, res, next) => {
 router.post('/create', debugAuth, secretMessageController.create);
 router.get('/admin', debugAuth, secretMessageController.getAllByAdmin);
 
+// API thống kê - đặt trước các route có tham số
+router.get('/statistics', debugAuth, secretMessageResponseController.getStatistics);
+
+// Route test không cần xác thực (chỉ dùng cho môi trường phát triển)
+router.get('/statistics/test', (req, res) => {
+  // Tạo dữ liệu mẫu để test frontend
+  const sampleData = {
+    totalResponses: 25,
+    correctResponses: 15,
+    incorrectResponses: 10,
+    accuracyRate: "60.00",
+    dailyStats: [
+      { date: '2025-04-30', total: 2, correct: 1, incorrect: 1 },
+      { date: '2025-05-01', total: 5, correct: 3, incorrect: 2 },
+      { date: '2025-05-02', total: 4, correct: 2, incorrect: 2 },
+      { date: '2025-05-03', total: 3, correct: 2, incorrect: 1 },
+      { date: '2025-05-04', total: 6, correct: 4, incorrect: 2 },
+      { date: '2025-05-05', total: 3, correct: 2, incorrect: 1 },
+      { date: '2025-05-06', total: 2, correct: 1, incorrect: 1 },
+    ],
+    messageStats: [
+      { id: '1', name: 'Mật thư 1', total: 10, correct: 6, incorrect: 4 },
+      { id: '2', name: 'Mật thư 2', total: 8, correct: 5, incorrect: 3 },
+      { id: '3', name: 'Mật thư 3', total: 7, correct: 4, incorrect: 3 }
+    ],
+    userRankings: [
+      { rank: 1, userName: 'User 1', totalAttempts: 8, correctAttempts: 7, accuracy: "87.50" },
+      { rank: 2, userName: 'User 2', totalAttempts: 7, correctAttempts: 5, accuracy: "71.43" },
+      { rank: 3, userName: 'User 3', totalAttempts: 6, correctAttempts: 3, accuracy: "50.00" },
+      { rank: 4, userName: 'User 4', totalAttempts: 4, correctAttempts: 2, accuracy: "50.00" }
+    ]
+  };
+
+  // Trả về dữ liệu mẫu
+  return res.status(200).json({
+    success: true,
+    statistics: sampleData
+  });
+});
+
+// Routes cho phản hồi mật thư
+router.post('/response/submit-answer', secretMessageResponseController.submitAnswer);
+router.post('/response/submit-user-info', secretMessageResponseController.submitUserInfo);
+router.get('/response/admin', debugAuth, secretMessageResponseController.getAllByAdmin);
+router.get('/response/remaining-attempts/:secretMessageId', secretMessageResponseController.getRemainingAttempts);
+router.get('/response/check-correct/:secretMessageId', secretMessageResponseController.checkCorrectAnswer);
+router.delete('/response/all', debugAuth, secretMessageResponseController.deleteAllResponses);
+router.delete('/response/:responseId', debugAuth, secretMessageResponseController.deleteResponse);
+
 // Endpoint mới: Tạo QR code cho mật thư (đặt trước /:id)
 router.get('/:id/qrcode', debugAuth, async (req, res) => {
   try {
@@ -60,12 +109,5 @@ router.get('/:id/qrcode', debugAuth, async (req, res) => {
 router.get('/:id', secretMessageController.getById);
 router.put('/:id', debugAuth, secretMessageController.update);
 router.delete('/:id', debugAuth, secretMessageController.delete);
-
-// Routes mới cho phản hồi mật thư
-router.post('/response/submit-answer', secretMessageResponseController.submitAnswer);
-router.post('/response/submit-user-info', secretMessageResponseController.submitUserInfo);
-router.get('/response/admin', debugAuth, secretMessageResponseController.getAllByAdmin);
-router.get('/response/remaining-attempts/:secretMessageId', secretMessageResponseController.getRemainingAttempts);
-router.delete('/response/:responseId', debugAuth, secretMessageResponseController.deleteResponse);
 
 module.exports = router; 

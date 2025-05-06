@@ -269,8 +269,40 @@ export const secretMessageApi = {
   getRemainingAttempts: (secretMessageId) => {
     return axiosInstance.get(`/api/secret-messages/response/remaining-attempts/${secretMessageId}`);
   },
+  checkCorrectAnswer: (secretMessageId) => {
+    return axiosInstance.get(`/api/secret-messages/response/check-correct/${secretMessageId}`)
+      .catch(error => {
+        console.error('Lỗi khi kiểm tra đáp án đúng:', error);
+        return { data: { success: false, hasCorrectAnswer: false }};
+      });
+  },
   deleteMessageResponse: (responseId) => {
     return axiosInstance.delete(`/api/secret-messages/response/${responseId}`);
+  },
+  deleteAllMessageResponses: () => {
+    return axiosInstance.delete('/api/secret-messages/response/all');
+  },
+  getStatistics: () => {
+    return axiosInstance.get('/api/secret-messages/statistics')
+      .catch(error => {
+        console.error('Lỗi khi lấy thống kê:', error);
+        // Trả về dữ liệu rỗng khi có lỗi để tránh crash frontend
+        return {
+          data: {
+            success: true,
+            statistics: {
+              totalResponses: 0,
+              correctResponses: 0,
+              incorrectResponses: 0,
+              accuracyRate: "0.00",
+              dailyStats: [],
+              messageStats: [],
+              userRankings: []
+            },
+            error: error.message
+          }
+        };
+      });
   }
 };
 
