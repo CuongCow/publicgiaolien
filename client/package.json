@@ -70,6 +70,6 @@
   },
   "proxy": "http://localhost:5000",
   "engines": {
-    "node": "22.x"
+    "node": "18.x"
   }
 }
