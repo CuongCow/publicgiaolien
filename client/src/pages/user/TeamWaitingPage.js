@@ -535,7 +535,7 @@ const TeamWaitingPage = () => {
                       // Trường hợp 2: Đường dẫn API
                       teamSpecificContent.image.startsWith('/api/') ?
                         process.env.NODE_ENV === 'production' ?
-                          `https://giaolien-backend-c7ca8074e9c5.herokuapp.com${teamSpecificContent.image}` :
+                          `https://giaolien-git-master-cuongcows-projects.vercel.app${teamSpecificContent.image}` :
                           `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${teamSpecificContent.image}` :
                       // Trường hợp 3: Các đường dẫn khác
                       teamSpecificContent.image
