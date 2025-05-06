@@ -108,6 +108,10 @@ mongoose.connect(MONGODB_URI, {
 // Middleware để log ra tất cả các request tới server
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
+  console.log('Headers:', JSON.stringify(req.headers));
+  console.log('Base URL:', req.baseUrl);
+  console.log('Route path:', req.path);
+  console.log('Vercel environment:', process.env.VERCEL ? 'Yes' : 'No');
   next();
 });
 
