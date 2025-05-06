@@ -26,10 +26,23 @@ router.options('/login', (req, res) => {
 router.post('/register', authController.register);
 
 // Đăng nhập
-router.post('/login', (req, res, next) => {
-  console.log('Processing login request in router', req.body);
-  // Xử lý đăng nhập
-  authController.login(req, res, next);
+router.post('/login', async (req, res) => {
+  console.log('POST request to /api/auth/login in router received');
+  console.log('Headers:', req.headers);
+  console.log('Body:', req.body);
+
+  // Thêm CORS headers một lần nữa để đảm bảo
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, x-auth-token, Authorization');
+  
+  try {
+    // Gọi tới controller thực tế để xử lý đăng nhập
+    return authController.login(req, res);
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).json({ message: 'Lỗi đăng nhập', error: err.message });
+  }
 });
 
 // Lấy thông tin admin

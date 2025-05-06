@@ -204,8 +204,10 @@ app.get('/api', (req, res) => {
   res.status(200).json({
     message: 'Giao Lien API',
     status: 'running',
+    timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
     vercel: process.env.VERCEL ? 'true' : 'false',
+    headers: req.headers,
     endpoints: [
       '/api/auth',
       '/api/stations',
@@ -215,6 +217,26 @@ app.get('/api', (req, res) => {
       '/api/status'
     ]
   });
+});
+
+// Đặc biệt thêm xử lý cho gốc (cho Vercel)
+app.get('/', (req, res, next) => {
+  console.log('Root endpoint was called - Vercel catchall');
+  
+  // Nếu là yêu cầu API, trả về thông tin API
+  if (req.path === '/' && req.headers['x-vercel-deployment-url']) {
+    res.status(200).json({
+      message: 'Giao Lien API Server',
+      status: 'running',
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV,
+      vercel: process.env.VERCEL ? 'true' : 'false',
+      headers: req.headers
+    });
+  } else {
+    // Nếu không, để hệ thống xử lý như mặc định
+    next();
+  }
 });
 
 // Thiết lập HTTP server và Socket.IO - thay thế cho app.listen

@@ -18,43 +18,20 @@
       }
     }
   ],
-  "routes": [
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/server/server.js" },
+    { "source": "/socket.io/(.*)", "destination": "/server/server.js" },
+    { "source": "/(.*)", "destination": "/client/build/index.html" }
+  ],
+  "headers": [
     {
-      "src": "/api/auth/login-test",
-      "methods": ["POST", "OPTIONS"],
-      "dest": "server/server.js"
-    },
-    {
-      "src": "/api/auth/login",
-      "methods": ["POST", "OPTIONS"],
-      "dest": "server/server.js"
-    },
-    {
-      "src": "/api/test/(.*)",
-      "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-      "dest": "server/server.js"
-    },
-    {
-      "src": "/api/auth/(.*)",
-      "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-      "dest": "server/server.js"
-    },
-    {
-      "src": "/api/(.*)",
-      "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-      "dest": "server/server.js"
-    },
-    {
-      "src": "/socket.io/(.*)",
-      "dest": "server/server.js"
-    },
-    {
-      "src": "/(.*\\.(js|json|css|ico|png|jpg|jpeg|svg|gif))",
-      "dest": "client/build/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "client/build/index.html"
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Credentials", "value": "true" },
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET,OPTIONS,PATCH,DELETE,POST,PUT" },
+        { "key": "Access-Control-Allow-Headers", "value": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, x-auth-token, Authorization" }
+      ]
     }
   ],
   "env": {
