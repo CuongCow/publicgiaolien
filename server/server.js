@@ -20,19 +20,28 @@ const allowedOrigins = [
   'http://localhost:3000',
   'https://giaolien.vercel.app',
   'https://giaolien-fullstack.vercel.app',
-  'https://giaolien-git-master-cuongcow.vercel.app'
+  'https://giaolien-git-master-cuongcows-projects.vercel.app',
+  'https://giaolien-9i2hk3zou-cuongcows-projects.vercel.app'
 ];
 app.use(cors({
   origin: function(origin, callback) {
-    // Cho phép request không có origin (như từ Postman) hoặc nằm trong danh sách
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+    console.log('CORS Origin:', origin);
+    
+    // Cho phép tất cả các request trong môi trường production từ Vercel
+    if (process.env.VERCEL || !origin) {
+      return callback(null, true);
+    }
+    
+    // Cho phép request từ origin trong danh sách
+    if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      console.warn('Origin rejected by CORS:', origin);
+      callback(null, false);
     }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'x-auth-token'],
+  allowedHeaders: ['Content-Type', 'x-auth-token', 'Authorization'],
   credentials: true
 }));
 app.options('*', cors()); // Đảm bảo trả về 200 cho preflight
@@ -53,9 +62,14 @@ app.use('/api/uploads', express.static(uploadsPath));
 
 // MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI || config.MONGODB_URI;
-mongoose.connect(MONGODB_URI)
+console.log('Connecting to MongoDB with URI:', MONGODB_URI.replace(/\/\/(.*)@/, '//***:***@')); // Ẩn thông tin nhạy cảm
+
+mongoose.connect(MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
   .then(() => {
-    console.log('MongoDB Connected...');
+    console.log('MongoDB Connected Successfully...');
     
     // Lên lịch chạy công việc gửi email thông báo hàng giờ
     setInterval(async () => {
@@ -87,6 +101,7 @@ const settingsRoutes = require('./routes/settings');
 const superAdminRoutes = require('./routes/superadmin');
 const secretMessageRoutes = require('./routes/secretMessageRoutes');
 const chatRoutes = require('./routes/chat');
+const apiTestRoutes = require('./api-test');
 
 // Use Routes
 app.use('/api/auth', authRoutes);
@@ -97,6 +112,7 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/superadmin', superAdminRoutes);
 app.use('/api/secret-messages', secretMessageRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/test', apiTestRoutes);
 
 // API kiểm tra trạng thái
 app.get('/api/status', (req, res) => {
@@ -105,7 +121,10 @@ app.get('/api/status', (req, res) => {
     status: 'Server đang hoạt động', 
     environment: process.env.NODE_ENV, 
     vercel: process.env.VERCEL ? 'true' : 'false',
-    time: new Date().toISOString()
+    time: new Date().toISOString(),
+    host: req.get('host'),
+    url: req.originalUrl,
+    headers: req.headers
   });
 });
 
@@ -282,4 +301,23 @@ io.on('connection', (socket) => {
 // Thiết lập HTTP server và Socket.IO - thay thế cho app.listen
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+});
+
+// Xử lý lỗi toàn cục
+app.use((err, req, res, next) => {
+  console.error('Lỗi server:', err);
+  res.status(500).json({
+    message: 'Đã xảy ra lỗi server',
+    error: process.env.NODE_ENV === 'production' ? {} : err
+  });
+});
+
+// Xử lý route không tồn tại
+app.use((req, res) => {
+  console.log(`Route không tồn tại: ${req.method} ${req.originalUrl}`);
+  res.status(404).json({
+    message: 'Endpoint không tồn tại',
+    path: req.originalUrl,
+    method: req.method
+  });
 }); 
