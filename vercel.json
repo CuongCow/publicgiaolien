@@ -6,7 +6,7 @@
       "src": "client/package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "build",
+        "distDir": "client/build",
         "nodeVersion": "22.x"
       }
     },
@@ -28,8 +28,12 @@
       "dest": "/server/server.js"
     },
     {
+      "src": "/(.*\\.(js|json|css|ico|png|jpg|jpeg|svg|gif))",
+      "dest": "/client/build/$1"
+    },
+    {
       "src": "/(.*)",
-      "dest": "/client/$1"
+      "dest": "/client/build/index.html"
     }
   ]
 } 

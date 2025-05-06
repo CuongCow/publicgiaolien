@@ -101,13 +101,18 @@ app.use('/api/chat', chatRoutes);
 // API kiểm tra trạng thái
 app.get('/api/status', (req, res) => {
   console.log('API Status endpoint was called');
-  res.json({ status: 'Server đang hoạt động', environment: process.env.NODE_ENV, vercel: process.env.VERCEL ? 'true' : 'false' });
+  res.status(200).json({ 
+    status: 'Server đang hoạt động', 
+    environment: process.env.NODE_ENV, 
+    vercel: process.env.VERCEL ? 'true' : 'false',
+    time: new Date().toISOString()
+  });
 });
 
-// Đối với root path, trả về thông tin API
-app.get('/', (req, res) => {
+// Endpoint API gốc
+app.get('/api', (req, res) => {
   console.log('Root API endpoint was called');
-  res.json({
+  res.status(200).json({
     message: 'Giao Lien API',
     status: 'running',
     environment: process.env.NODE_ENV,
