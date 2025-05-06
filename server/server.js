@@ -145,6 +145,20 @@ app.get('/api/status', (req, res) => {
   });
 });
 
+// Test đặc biệt cho route login
+app.post('/api/auth/login-test', (req, res) => {
+  console.log('Login test endpoint was called');
+  console.log('Request body:', req.body);
+  
+  res.status(200).json({
+    success: true,
+    message: 'Login test endpoint is working!',
+    receivedData: req.body,
+    headers: req.headers,
+    time: new Date().toISOString()
+  });
+});
+
 // Endpoint API gốc
 app.get('/api', (req, res) => {
   console.log('Root API endpoint was called');

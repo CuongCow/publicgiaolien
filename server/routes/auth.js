@@ -19,6 +19,14 @@ router.post('/register', authController.register);
 // Đăng nhập
 router.post('/login', authController.login);
 
+// Thêm OPTIONS handler riêng cho route login
+router.options('/login', (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, x-auth-token, Authorization');
+  res.status(200).send();
+});
+
 // Lấy thông tin admin
 router.get('/me', auth, authController.getMe);
 
