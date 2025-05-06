@@ -23,6 +23,23 @@ const allowedOrigins = [
   'https://giaolien-git-master-cuongcows-projects.vercel.app',
   'https://giaolien-9i2hk3zou-cuongcows-projects.vercel.app'
 ];
+
+// Middleware CORS tùy chỉnh cho route đăng nhập
+app.options('/api/auth/login', (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, x-auth-token, Authorization');
+  res.status(200).send();
+});
+
+// Middleware CORS tùy chỉnh cho route đăng nhập
+app.post('/api/auth/login', (req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, x-auth-token, Authorization');
+  next();
+});
+
 app.use(cors({
   origin: function(origin, callback) {
     console.log('CORS Origin:', origin);

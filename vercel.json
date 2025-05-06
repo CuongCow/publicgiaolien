@@ -20,6 +20,16 @@
   ],
   "routes": [
     {
+      "src": "/api/auth/login",
+      "methods": ["POST", "OPTIONS"],
+      "dest": "server/server.js",
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "X-Requested-With, Content-Type, Accept, x-auth-token"
+      }
+    },
+    {
       "src": "/api/(.*)",
       "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
       "dest": "server/server.js",
