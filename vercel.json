@@ -1,5 +1,5 @@
 {
-  "name": "giaolien-frontend",
+  "name": "giaolien-fullstack",
   "version": 2,
   "builds": [
     {
@@ -9,9 +9,24 @@
         "distDir": "build",
         "nodeVersion": "22.x"
       }
+    },
+    {
+      "src": "server/server.js",
+      "use": "@vercel/node",
+      "config": {
+        "nodeVersion": "22.x"
+      }
     }
   ],
   "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "server/server.js"
+    },
+    {
+      "src": "/socket.io/(.*)",
+      "dest": "server/server.js"
+    },
     {
       "src": "/(.*)",
       "dest": "client/$1"

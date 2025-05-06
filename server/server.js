@@ -5,6 +5,7 @@ const qrcode = require('qrcode');
 const config = require('./config');
 const path = require('path');
 const { processNotificationEmails } = require('./jobs/notificationEmailJob');
+const fs = require('fs');
 
 // Import models cần thiết
 const Admin = require('./models/Admin');
@@ -14,7 +15,13 @@ const app = express();
 const PORT = process.env.PORT || config.PORT || 5000;
 
 // Cấu hình CORS an toàn hơn
-const allowedOrigins = ['https://www.giaolien.com', 'http://localhost:3000'];
+const allowedOrigins = [
+  'https://www.giaolien.com', 
+  'http://localhost:3000',
+  'https://giaolien.vercel.app',
+  'https://giaolien-fullstack.vercel.app',
+  'https://giaolien-git-master-cuongcow.vercel.app'
+];
 app.use(cors({
   origin: function(origin, callback) {
     // Cho phép request không có origin (như từ Postman) hoặc nằm trong danh sách
@@ -32,7 +39,17 @@ app.options('*', cors()); // Đảm bảo trả về 200 cho preflight
 app.use(express.json());
 
 // Phục vụ các file tĩnh từ thư mục uploads
-app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
+// Sử dụng tmp folder cho uploads trên Vercel (stateless)
+const uploadsPath = process.env.VERCEL 
+  ? '/tmp/uploads' 
+  : path.join(__dirname, 'uploads');
+
+// Đảm bảo thư mục uploads tồn tại
+if (!fs.existsSync(uploadsPath)) {
+  fs.mkdirSync(uploadsPath, { recursive: true });
+}
+
+app.use('/api/uploads', express.static(uploadsPath));
 
 // MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI || config.MONGODB_URI;
@@ -103,7 +120,8 @@ const io = require('socket.io')(server, {
     origin: allowedOrigins,
     methods: ["GET", "POST"],
     credentials: true
-  }
+  },
+  path: '/socket.io'
 });
 
 // Lưu trữ thông tin người dùng trực tuyến
@@ -248,5 +266,5 @@ io.on('connection', (socket) => {
 
 // Thiết lập HTTP server và Socket.IO - thay thế cho app.listen
 server.listen(PORT, () => {
-  console.log(`Server đang chạy trên cổng ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 }); 
