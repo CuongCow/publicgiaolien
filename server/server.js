@@ -111,6 +111,21 @@ app.use((req, res, next) => {
   next();
 });
 
+// Middleware CORS chung cho tất cả các yêu cầu
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, x-auth-token, Authorization, X-Requested-With, Accept');
+  
+  // Xử lý đặc biệt cho yêu cầu OPTIONS
+  if (req.method === 'OPTIONS') {
+    console.log(`OPTIONS request to: ${req.originalUrl}`);
+    return res.status(200).end();
+  }
+  
+  next();
+});
+
 // Xử lý đặc biệt cho route login
 app.all('/api/auth/login', (req, res, next) => {
   console.log('Login route was called with method:', req.method);
@@ -131,15 +146,6 @@ app.all('/api/auth/login', (req, res, next) => {
     // Trả về 405 cho các method khác
     res.status(405).json({ message: 'Method Not Allowed' });
   }
-});
-
-// Middleware OPTIONS cho tất cả các route API
-app.options('/api/*', (req, res) => {
-  console.log('OPTIONS request for:', req.originalUrl);
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, x-auth-token, Authorization');
-  res.sendStatus(200);
 });
 
 // Import Routes
