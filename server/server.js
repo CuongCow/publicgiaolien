@@ -127,11 +127,13 @@ app.all('/api/auth/login', (req, res, next) => {
   console.log('Login route was called with method:', req.method);
   console.log('Login route headers:', req.headers);
   
+  // Set CORS headers đặc biệt cho route login
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, x-auth-token, Authorization, X-Requested-With');
+  
   // Cho phép OPTIONS method
   if (req.method === 'OPTIONS') {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, x-auth-token, Authorization');
     return res.sendStatus(200);
   }
   

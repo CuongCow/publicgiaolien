@@ -2,14 +2,14 @@
   "name": "giaolien-app",
   "version": "1.0.0",
   "description": "Giao Lien - Ứng dụng kết nối tương tác",
-  "main": "server/server.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node server/server.js",
+    "start": "node server.js",
     "server": "nodemon server/server.js",
     "client": "npm start --prefix client",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "build": "npm install && cd client && npm install && npm run build",
-    "vercel-build": "npm install && cd client && npm install && npm run build"
+    "vercel-build": "chmod +x ./vercel-build.sh && ./vercel-build.sh"
   },
   "keywords": [
     "game",

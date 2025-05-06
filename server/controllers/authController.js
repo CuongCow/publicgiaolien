@@ -705,3 +705,23 @@ module.exports = {
     sendNotificationEmail
   }
 }; 
+  getMe,
+  updateProfile,
+  checkEmail,
+  sendVerification,
+  verifyCode,
+  requestPasswordReset,
+  resetPassword,
+  getLoginHistory,
+  getLoginHistoryDetail,
+  getNotifications,
+  verifyInviteCode,
+  // Thêm export các hàm gửi email
+  emailService: {
+    sendVerificationEmail,
+    sendPasswordResetEmail,
+    sendWelcomeEmail,
+    sendLoginAlertEmail,
+    sendNotificationEmail
+  }
+}; 

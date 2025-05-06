@@ -20,9 +20,12 @@
     }
   ],
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/server/server.js" },
-    { "source": "/socket.io/(.*)", "destination": "/server/server.js" },
-    { "source": "/(.*)", "destination": "/client/build/index.html" }
+    { "source": "/api/status", "destination": "server/server.js" },
+    { "source": "/api/check/(.*)", "destination": "server/server.js" },
+    { "source": "/api/auth/(.*)", "destination": "server/server.js" },
+    { "source": "/api/(.*)", "destination": "server/server.js" },
+    { "source": "/socket.io/(.*)", "destination": "server/server.js" },
+    { "source": "/(.*)", "destination": "client/build/index.html" }
   ],
   "headers": [
     {

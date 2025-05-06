@@ -35,3 +35,18 @@ router.post('/login-test', (req, res) => {
 });
 
 module.exports = router; 
+router.post('/login-test', (req, res) => {
+  console.log('API Check login-test POST called with data:', req.body);
+  res.status(200).json({
+    message: 'Login test OK',
+    body: req.body,
+    headers: {
+      contentType: req.headers['content-type'],
+      origin: req.headers['origin'],
+      host: req.headers['host']
+    },
+    timestamp: new Date().toISOString()
+  });
+});
+
+module.exports = router; 
