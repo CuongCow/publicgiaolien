@@ -4,38 +4,19 @@
   "builds": [
     {
       "src": "server/server.js",
-      "use": "@vercel/node",
-      "config": {
-        "nodeVersion": "22.x"
-      }
+      "use": "@vercel/node"
     },
     {
       "src": "client/package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "client/build",
-        "nodeVersion": "22.x"
+        "distDir": "client/build"
       }
     }
   ],
-  "rewrites": [
-    { "source": "/api/:path*", "destination": "/server/server.js" },
-    { "source": "/socket.io/:path*", "destination": "/server/server.js" },
-    { "source": "/:path*\\.(js|json|css|ico|png|jpg|jpeg|svg|gif)", "destination": "/client/build/:path*.$1" },
-    { "source": "/(.*)", "destination": "/client/build/index.html" }
-  ],
-  "headers": [
-    {
-      "source": "/api/(.*)",
-      "headers": [
-        { "key": "Access-Control-Allow-Credentials", "value": "true" },
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET,OPTIONS,PATCH,DELETE,POST,PUT" },
-        { "key": "Access-Control-Allow-Headers", "value": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, x-auth-token, Authorization" }
-      ]
-    }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  }
+  "routes": [
+    { "src": "/api/(.*)", "dest": "server/server.js" },
+    { "src": "/socket.io/(.*)", "dest": "server/server.js" },
+    { "src": "/(.*)", "dest": "client/build/index.html" }
+  ]
 } 
