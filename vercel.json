@@ -8,6 +8,10 @@
   },
   "builds": [
     {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
+    },
+    {
       "src": "server/server.js",
       "use": "@vercel/node"
     },
@@ -19,13 +23,42 @@
       }
     }
   ],
-  "rewrites": [
-    { "source": "/api/status", "destination": "server/server.js" },
-    { "source": "/api/check/(.*)", "destination": "server/server.js" },
-    { "source": "/api/auth/(.*)", "destination": "server/server.js" },
-    { "source": "/api/(.*)", "destination": "server/server.js" },
-    { "source": "/socket.io/(.*)", "destination": "server/server.js" },
-    { "source": "/(.*)", "destination": "client/build/index.html" }
+  "routes": [
+    {
+      "src": "/api/auth-login",
+      "dest": "/api/auth-login.js",
+      "methods": ["GET", "POST", "OPTIONS"]
+    },
+    {
+      "src": "/api/test",
+      "dest": "/api/test.js",
+      "methods": ["GET", "OPTIONS"]
+    },
+    {
+      "src": "/api/api-check",
+      "dest": "/api/api-check.js",
+      "methods": ["GET", "OPTIONS"]
+    },
+    {
+      "src": "/api/status",
+      "dest": "/server/server.js",
+      "methods": ["GET", "OPTIONS"]
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/server/server.js"
+    },
+    {
+      "src": "/socket.io/(.*)",
+      "dest": "/server/server.js"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/client/build/index.html"
+    }
   ],
   "headers": [
     {

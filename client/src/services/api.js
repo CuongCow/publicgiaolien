@@ -84,6 +84,13 @@ export const authApi = {
   login: (data) => {
     console.log('Sending login request with data:', data);
     console.log('API URL being used:', API_URL + '/api/auth/login');
+    
+    // Nếu sử dụng trong production, thử dùng serverless function
+    if (process.env.NODE_ENV === 'production') {
+      console.log('Using serverless function for login in production');
+      return axiosInstance.post('/api/auth-login', data);
+    }
+    
     return axiosInstance.post('/api/auth/login', data);
   },
   getMe: () => axiosInstance.get('/api/auth/me'),
