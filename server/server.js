@@ -24,24 +24,16 @@ const allowedOrigins = [
   'https://giaolien-9i2hk3zou-cuongcows-projects.vercel.app'
 ];
 
-// Middleware CORS tùy chỉnh cho route đăng nhập
-app.options('/api/auth/login', (req, res) => {
-  console.log('Handling OPTIONS request for /api/auth/login');
+// Middleware xử lý preflight CORS đặc biệt
+app.options('*', (req, res) => {
+  console.log('OPTIONS request received for:', req.originalUrl);
   res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, x-auth-token, Authorization');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, x-auth-token, Authorization, X-Requested-With, Accept');
   res.sendStatus(200);
 });
 
-// Middleware CORS tùy chỉnh cho route đăng nhập
-app.post('/api/auth/login', (req, res, next) => {
-  console.log('POST request to /api/auth/login received:', req.headers);
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, x-auth-token, Authorization');
-  next();
-});
-
+// Middleware CORS chung
 app.use(cors({
   origin: function(origin, callback) {
     console.log('CORS Origin:', origin);
@@ -60,10 +52,10 @@ app.use(cors({
     }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'x-auth-token', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'x-auth-token', 'Authorization', 'X-Requested-With', 'Accept'],
   credentials: true
 }));
-app.options('*', cors()); // Đảm bảo trả về 200 cho preflight
+
 app.use(express.json());
 
 // Phục vụ các file tĩnh từ thư mục uploads

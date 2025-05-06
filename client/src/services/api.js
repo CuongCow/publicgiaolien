@@ -4,9 +4,9 @@ import axios from 'axios';
 // Xác định API URL dựa trên môi trường
 let API_URL;
 if (process.env.NODE_ENV === 'production') {
-  // Luôn sử dụng đường dẫn tương đối khi triển khai trên Vercel
-  API_URL = '/api';
-  console.log('Using relative API URL in production: /api');
+  // Luôn sử dụng đường dẫn gốc cho API trong môi trường production
+  API_URL = '';
+  console.log('Using empty base API URL in production for relative paths');
 } else {
   API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
   console.log('Using development API URL:', API_URL);
@@ -22,31 +22,47 @@ const axiosInstance = axios.create({
   withCredentials: false
 });
 
-// Thêm interceptor để xử lý lỗi
-axiosInstance.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.code === 'ERR_NETWORK') {
-      console.error('Network error:', error);
-      return Promise.reject(new Error('Không thể kết nối đến máy chủ. Vui lòng thử lại sau.'));
-    }
-    
-    // Xử lý lỗi HTTP từ server
-    if (error.response) {
-      // Trích xuất message từ response API
-      const errorMessage = error.response.data && error.response.data.message 
-        ? error.response.data.message 
-        : 'Có lỗi xảy ra. Vui lòng thử lại sau.';
-        
-      // Nếu là lỗi status 400 Bad Request, gói message trong Error object
-      if (error.response.status === 400) {
-        return Promise.reject(new Error(errorMessage));
-      }
-    }
-    
-    return Promise.reject(error);
+// Interceptor để ghi log request
+axiosInstance.interceptors.request.use(request => {
+  console.log('Sending API request:', {
+    url: request.url,
+    method: request.method,
+    baseURL: request.baseURL,
+    headers: request.headers,
+    data: request.data,
+    fullUrl: request.baseURL + request.url
+  });
+  return request;
+}, error => {
+  console.error('API request error:', error);
+  return Promise.reject(error);
+});
+
+// Interceptor để ghi log response
+axiosInstance.interceptors.response.use(response => {
+  console.log('API response received:', {
+    url: response.config.url,
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers,
+    data: response.data
+  });
+  return response;
+}, error => {
+  console.error('API response error:', error);
+  
+  if (error.response) {
+    console.error('Error response data:', {
+      url: error.config.url,
+      status: error.response.status,
+      statusText: error.response.statusText,
+      headers: error.response.headers,
+      data: error.response.data
+    });
   }
-);
+  
+  return Promise.reject(error);
+});
 
 // Thêm token vào header
 axiosInstance.interceptors.request.use(
@@ -67,6 +83,7 @@ export const authApi = {
   register: (data) => axiosInstance.post('/api/auth/register', data),
   login: (data) => {
     console.log('Sending login request with data:', data);
+    console.log('API URL being used:', API_URL + '/api/auth/login');
     return axiosInstance.post('/api/auth/login', data);
   },
   getMe: () => axiosInstance.get('/api/auth/me'),

@@ -104,23 +104,34 @@ const register = async (req, res) => {
 // @access  Public
 const login = async (req, res) => {
   try {
+    console.log('[authController.login] Xử lý yêu cầu đăng nhập');
+    console.log('[authController.login] Body:', req.body);
+
+    // Kiểm tra dữ liệu đầu vào
     const { username, password } = req.body;
+    
+    if (!username || !password) {
+      console.log('[authController.login] Thiếu username hoặc password');
+      return res.status(400).json({ message: 'Vui lòng nhập tên đăng nhập và mật khẩu' });
+    }
 
     // Kiểm tra username
     let admin = await Admin.findOne({ username });
     if (!admin) {
+      console.log('[authController.login] Không tìm thấy username:', username);
       return res.status(400).json({ message: 'Tên đăng nhập hoặc mật khẩu không đúng' });
     }
 
     // Kiểm tra mật khẩu
     const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) {
+      console.log('[authController.login] Mật khẩu không khớp cho username:', username);
       return res.status(400).json({ message: 'Tên đăng nhập hoặc mật khẩu không đúng' });
     }
 
     // Lấy thông tin thiết bị và vị trí
     const ipAddress = req.ip || req.connection.remoteAddress;
-    const geo = geoip.lookup(ipAddress.replace('::ffff:', ''));
+    const geo = geoip ? geoip.lookup(ipAddress.replace('::ffff:', '')) : null;
     const location = geo ? `${geo.city || ''}, ${geo.country || ''}` : 'Không xác định';
     
     const parser = new UAParser(req.headers['user-agent']);
@@ -130,6 +141,7 @@ const login = async (req, res) => {
     const deviceInfo = `${browserName} ${browserVersion} (${os})`;
     
     // Lưu lịch sử đăng nhập
+    console.log('[authController.login] Lưu lịch sử đăng nhập');
     const loginHistory = new LoginHistory({
       adminId: admin._id,
       username: admin.username,
@@ -142,9 +154,10 @@ const login = async (req, res) => {
     
     await loginHistory.save();
 
-    // Cố gắng gửi email thông báo đăng nhập
-    try {
-      if (admin.email) {
+    // Cố gắng gửi email thông báo đăng nhập - không block luồng chính
+    if (admin.email) {
+      try {
+        console.log('[authController.login] Gửi email thông báo đăng nhập đến:', admin.email);
         const loginInfo = {
           username: admin.username,
           loginTime: new Date().toLocaleString('vi-VN'),
@@ -153,14 +166,17 @@ const login = async (req, res) => {
           deviceInfo
         };
 
-        await sendLoginAlertEmail(admin.email, admin.name || admin.username, loginInfo);
+        sendLoginAlertEmail(admin.email, admin.name || admin.username, loginInfo)
+          .catch(emailErr => {
+            console.error('[authController.login] Lỗi khi gửi email thông báo:', emailErr);
+          });
+      } catch (emailErr) {
+        console.error('[authController.login] Lỗi khi chuẩn bị email thông báo:', emailErr);
       }
-    } catch (emailErr) {
-      console.error('Lỗi khi gửi email thông báo đăng nhập:', emailErr);
-      // Không trả về lỗi cho người dùng nếu gửi email thất bại
     }
 
     // Tạo token
+    console.log('[authController.login] Tạo JWT token');
     const payload = {
       admin: {
         id: admin.id
@@ -181,13 +197,17 @@ const login = async (req, res) => {
       config.JWT_SECRET,
       { expiresIn: '24h' },
       (err, token) => {
-        if (err) throw err;
+        if (err) {
+          console.error('[authController.login] Lỗi khi tạo token:', err);
+          throw err;
+        }
+        console.log('[authController.login] Đăng nhập thành công cho username:', username);
         res.json({ token, admin: adminInfo });
       }
     );
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    console.error('[authController.login] Lỗi server:', err);
+    res.status(500).json({ message: 'Lỗi server', error: err.message });
   }
 };
 
