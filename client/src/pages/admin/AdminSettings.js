@@ -293,7 +293,7 @@ const AdminSettings = () => {
                   <Form.Group className="mb-4">
                     <Form.Label>{t('copy_template_customization')}</Form.Label>
                     <div className="mb-3">
-                      <Form.Label>{t('station_centered_template_label')}</Form.Label>
+                      <Form.Label>{t('station_race_template_label')}</Form.Label>
                       <Form.Control
                         as="textarea"
                         name="customCopyTemplates.stationCentered"
@@ -313,7 +313,7 @@ const AdminSettings = () => {
                     </div>
                     
                     <div className="mb-3">
-                      <Form.Label>{t('station_race_template_label')}</Form.Label>
+                      <Form.Label>{t('station_centered_template_label')}</Form.Label>
                       <Form.Control
                         as="textarea"
                         name="customCopyTemplates.stationRace"

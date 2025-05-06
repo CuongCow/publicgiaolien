@@ -508,6 +508,7 @@ export const translations = {
     image_upload_error: 'Có lỗi khi tải ảnh lên. Vui lòng thử lại.',
 
     // Thêm các chuỗi mới cho mẫu sao chép
+    settings_reset_success: 'Cài đặt đã được đặt lại thành công',
     copy_template_customization: 'Tùy chỉnh mẫu sao chép',
     station_centered_template_label: 'Mẫu "Tập trung tại trạm"',
     station_race_template_label: 'Mẫu "Chạy đua theo trạm"',

@@ -15,12 +15,23 @@ const ForgotPassword = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
     setMounted(true);
     return () => setMounted(false);
   }, []);
+
+  useEffect(() => {
+    let interval;
+    if (resendCooldown > 0) {
+      interval = setInterval(() => {
+        setResendCooldown(current => current - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [resendCooldown]);
 
   const handleRequestReset = async (e) => {
     e.preventDefault();
@@ -34,6 +45,7 @@ const ForgotPassword = () => {
       
       setSuccess('Mã xác thực đã được gửi đến email của bạn.');
       setStep(2);
+      setResendCooldown(60); // Bắt đầu đếm ngược 60 giây
     } catch (err) {
       if (err.response?.status === 404) {
         setError('Email không tồn tại trong hệ thống. Vui lòng kiểm tra lại.');
@@ -113,6 +125,7 @@ const ForgotPassword = () => {
       await authApi.requestPasswordReset(email);
       
       setSuccess('Mã xác thực mới đã được gửi đến email của bạn.');
+      setResendCooldown(60); // Bắt đầu đếm ngược 60 giây
     } catch (err) {
       setError(
         err.response?.data?.message || 
@@ -233,7 +246,6 @@ const ForgotPassword = () => {
                       >
                         {loading ? (
                           <>
-                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                             Đang xử lý...
                           </>
                         ) : (
@@ -309,7 +321,6 @@ const ForgotPassword = () => {
                         >
                           {loading ? (
                             <>
-                              <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                               Đang xử lý...
                             </>
                           ) : (
@@ -323,12 +334,14 @@ const ForgotPassword = () => {
                         <Button 
                           variant="outline-primary" 
                           type="button" 
-                          disabled={loading}
+                          disabled={loading || resendCooldown > 0}
                           onClick={resendVerificationCode}
                           className="auth-resend-btn"
                         >
                           <i className="bi bi-arrow-repeat me-2"></i>
-                          Gửi lại mã xác thực
+                          {resendCooldown > 0 
+                            ? `Gửi lại sau (${resendCooldown}s)` 
+                            : 'Gửi lại mã xác thực'}
                         </Button>
                         
                         <Button 
@@ -417,7 +430,6 @@ const ForgotPassword = () => {
                       >
                         {loading ? (
                           <>
-                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                             Đang xử lý...
                           </>
                         ) : (
