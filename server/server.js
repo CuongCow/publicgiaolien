@@ -72,6 +72,12 @@ mongoose.connect(MONGODB_URI)
     process.exit(1);
   });
 
+// Middleware để log ra tất cả các request tới server
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
+  next();
+});
+
 // Import Routes
 const authRoutes = require('./routes/auth');
 const stationRoutes = require('./routes/stations');
@@ -94,14 +100,18 @@ app.use('/api/chat', chatRoutes);
 
 // API kiểm tra trạng thái
 app.get('/api/status', (req, res) => {
-  res.json({ status: 'Server đang hoạt động' });
+  console.log('API Status endpoint was called');
+  res.json({ status: 'Server đang hoạt động', environment: process.env.NODE_ENV, vercel: process.env.VERCEL ? 'true' : 'false' });
 });
 
-// Đối với production, trả về trang chủ API
+// Đối với root path, trả về thông tin API
 app.get('/', (req, res) => {
+  console.log('Root API endpoint was called');
   res.json({
     message: 'Giao Lien API',
     status: 'running',
+    environment: process.env.NODE_ENV,
+    vercel: process.env.VERCEL ? 'true' : 'false',
     endpoints: [
       '/api/auth',
       '/api/stations',
