@@ -4,10 +4,12 @@ import axios from 'axios';
 // Xác định API URL dựa trên môi trường
 let API_URL;
 if (process.env.NODE_ENV === 'production') {
-  // Sử dụng đường dẫn tương đối khi triển khai trên Vercel
+  // Luôn sử dụng đường dẫn tương đối khi triển khai trên Vercel
   API_URL = '/';
+  console.log('Using relative API URL in production:', API_URL);
 } else {
   API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+  console.log('Using development API URL:', API_URL);
 }
 
 const axiosInstance = axios.create({
