@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Card, Button, Alert, Spinner, Row, Col, Table, Badge } from 'react-bootstrap';
 import { QRCodeSVG } from 'qrcode.react';
-import { stationApi } from '../../services/api';
+import { stationApi, teamApi } from '../../services/api';
 import { replaceStationTerm } from '../../utils/helpers';
 import TermReplacer from '../../utils/TermReplacer';
 import AdminNavbar from '../../components/Navbar';
@@ -21,22 +21,69 @@ const AdminStationView = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [loggedInTeams, setLoggedInTeams] = useState([]);
+  const [refreshingTeams, setRefreshingTeams] = useState(false);
+  const teamsRefreshInterval = useRef(null);
 
   // Effect to fetch stations for this admin
   useEffect(() => {
     fetchStations();
+    fetchLoggedInTeams();
     
-    // Restore logged in teams list
-    const savedTeamsList = localStorage.getItem('admin_logged_in_teams');
-    if (savedTeamsList) {
-      try {
-        const teamsData = JSON.parse(savedTeamsList);
-        setLoggedInTeams(teamsData);
-      } catch (err) {
-        console.error('Error parsing saved teams list:', err);
+    // Thiết lập interval để cập nhật danh sách đội định kỳ
+    teamsRefreshInterval.current = setInterval(() => {
+      fetchLoggedInTeams(false); // false = không hiển thị loading
+    }, 5000); // cập nhật mỗi 5 giây
+    
+    // Cleanup khi component unmount
+    return () => {
+      if (teamsRefreshInterval.current) {
+        clearInterval(teamsRefreshInterval.current);
+      }
+    };
+  }, [adminId]);
+
+  // Hàm lấy danh sách đội đã đăng nhập
+  const fetchLoggedInTeams = async (showLoading = true) => {
+    if (showLoading) {
+      setRefreshingTeams(true);
+    }
+    
+    try {
+      // Lấy danh sách đội qua API
+      const response = await teamApi.getAll();
+      const allTeams = response.data;
+      
+      // Lọc các đội đang active (có sessionId và thuộc admin này)
+      const activeTeams = allTeams.filter(team => 
+        team.sessionId && team.adminId === adminId
+      );
+      
+      console.debug(`Đã tìm thấy ${activeTeams.length} đội đang hoạt động`);
+      
+      // Cập nhật state
+      setLoggedInTeams(activeTeams);
+      
+      // Cập nhật localStorage để đồng bộ với server
+      localStorage.setItem('admin_logged_in_teams', JSON.stringify(activeTeams));
+    } catch (err) {
+      console.error('Lỗi khi lấy danh sách đội đăng nhập:', err);
+      
+      // Nếu có lỗi, thử lấy từ localStorage
+      const savedTeamsList = localStorage.getItem('admin_logged_in_teams');
+      if (savedTeamsList) {
+        try {
+          const teamsData = JSON.parse(savedTeamsList);
+          setLoggedInTeams(teamsData);
+        } catch (parseErr) {
+          console.error('Lỗi khi phân tích dữ liệu từ localStorage:', parseErr);
+        }
+      }
+    } finally {
+      if (showLoading) {
+        setRefreshingTeams(false);
       }
     }
-  }, [adminId]);
+  };
 
   const fetchStations = async () => {
     try {
@@ -134,6 +181,51 @@ const AdminStationView = () => {
     // Mở trang chờ của đội trong tab mới
     window.open(`/station/team/${adminId}`, '_blank');
   };
+  
+  // Hàm làm mới danh sách đội thủ công
+  const handleRefreshTeams = () => {
+    fetchLoggedInTeams(true);
+  };
+  
+  // Hàm lấy badge thích hợp cho từng trạng thái
+  const getStatusBadge = (status) => {
+    switch(status) {
+      case 'active':
+        return <Badge bg="success">Đang hoạt động</Badge>;
+      case 'inactive':
+        return <Badge bg="secondary">Không hoạt động</Badge>;
+      case 'hidden':
+        return <Badge bg="warning" text="dark">Ẩn tab</Badge>;
+      case 'copied':
+        return <Badge bg="info">Đã sao chép</Badge>;
+      case 'exited':
+        return <Badge bg="danger">Đã thoát</Badge>;
+      default:
+        return <Badge bg="secondary">Đã đăng nhập</Badge>;
+    }
+  };
+  
+  // Hàm lấy biểu tượng thích hợp cho từng trạng thái
+  const getStatusIcon = (status) => {
+    // Trả về chuỗi rỗng thay vì biểu tượng
+    return '';
+  };
+  
+  // Hàm buộc đăng xuất đội
+  const forceLogoutTeam = async (teamId) => {
+    if (!teamId || !window.confirm('Bạn có chắc muốn đăng xuất đội này?')) {
+      return;
+    }
+    
+    try {
+      await teamApi.forceLogout(teamId);
+      // Cập nhật danh sách đội sau khi đăng xuất
+      fetchLoggedInTeams();
+    } catch (err) {
+      console.error('Lỗi khi buộc đăng xuất đội:', err);
+      alert('Đã xảy ra lỗi khi buộc đăng xuất đội');
+    }
+  };
 
   // Render admin control panel
   const renderAdminPanel = () => (
@@ -208,34 +300,77 @@ const AdminStationView = () => {
           </tbody>
         </Table>
         
-        <h5 className="mb-3">Đội đã đăng nhập ({loggedInTeams.length})</h5>
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h5 className="mb-0">Đội đã đăng nhập ({loggedInTeams.length})</h5>
+          <Button 
+            variant="outline-primary" 
+            size="sm"
+            onClick={handleRefreshTeams}
+            disabled={refreshingTeams}
+          >
+            {refreshingTeams ? (
+              <>
+                <Spinner animation="border" size="sm" className="me-1" />
+                Đang làm mới...
+              </>
+            ) : (
+              <>
+                <i className="bi bi-arrow-clockwise me-1"></i>
+                Làm mới
+              </>
+            )}
+          </Button>
+        </div>
         
         <Table hover bordered responsive className="align-middle">
           <thead className="bg-light">
             <tr>
               <th width="50" className="text-center">#</th>
               <th>Tên đội</th>
-              <th width="100">Trạng thái</th>
+              <th width="150">Trạng thái</th>
+              <th width="150">Thời gian</th>
+              <th width="100">Thao tác</th>
             </tr>
           </thead>
           <tbody>
             {loggedInTeams.map((team, index) => (
-              <tr key={team.teamId}>
+              <tr key={team._id || team.teamId}>
                 <td className="text-center">{index + 1}</td>
                 <td>
                   <div className="d-flex align-items-center">
                     <i className="bi bi-people me-2 text-primary"></i>
-                    <strong>{team.teamName}</strong>
+                    <strong>{team.teamName || team.name}</strong>
                   </div>
                 </td>
                 <td>
-                  <Badge bg="secondary">Đã đăng nhập</Badge>
+                  {getStatusBadge(team.status)}
+                </td>
+                <td>
+                  <small>
+                    {team.lastUpdated 
+                      ? new Date(team.lastUpdated).toLocaleTimeString()
+                      : team.timestamp 
+                        ? new Date(team.timestamp).toLocaleTimeString()
+                        : team.lastActivity
+                          ? new Date(team.lastActivity).toLocaleTimeString()
+                          : new Date().toLocaleTimeString()}
+                  </small>
+                </td>
+                <td>
+                  <Button 
+                    variant="outline-danger" 
+                    size="sm"
+                    onClick={() => forceLogoutTeam(team._id || team.teamId)}
+                    title="Buộc đăng xuất"
+                  >
+                    <i className="bi bi-box-arrow-right"></i>
+                  </Button>
                 </td>
               </tr>
             ))}
             {loggedInTeams.length === 0 && (
               <tr>
-                <td colSpan="3" className="text-center py-3">
+                <td colSpan="5" className="text-center py-3">
                   Chưa có đội nào đăng nhập.
                 </td>
               </tr>

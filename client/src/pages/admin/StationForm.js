@@ -865,13 +865,15 @@ const StationForm = () => {
       
       // Đảm bảo giữ nguyên trạng thái các checkbox khi nhập nội dung
       if (field === 'ottContent' || field === 'nwContent') {
-        // Đảm bảo hiển thị văn bản và giữ nguyên trạng thái hiển thị OTT/NW
+        // Đảm bảo hiển thị văn bản
         updatedTeamContent.showText = true;
         
+        // Đảm bảo hiển thị OTT nếu đang nhập OTT content
         if (field === 'ottContent') {
           updatedTeamContent.showOTT = true;
         }
         
+        // Đảm bảo hiển thị NW nếu đang nhập NW content
         if (field === 'nwContent') {
           updatedTeamContent.showNW = true;
         }
@@ -890,18 +892,26 @@ const StationForm = () => {
     if (!file) return;
     
     // Kiểm tra loại file
-    if (!file.type.startsWith('image/')) {
-      setError(t('invalid_image'));
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setError(t('invalid_image') + ' - Chỉ hỗ trợ định dạng JPG, PNG, GIF và WEBP');
       return;
     }
     
     // Kiểm tra kích thước file (tối đa 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      setError(t('image_size_limit'));
+      setError(t('image_size_limit') + ` - Kích thước tối đa là 5MB, file hiện tại: ${(file.size / (1024 * 1024)).toFixed(2)}MB`);
       return;
     }
     
+    // Kiểm tra kích thước hình ảnh thực tế
     try {
+      const imgDimensions = await getImageDimensions(file);
+      if (imgDimensions.width > 4000 || imgDimensions.height > 4000) {
+        setError(`Kích thước hình ảnh quá lớn (${imgDimensions.width}x${imgDimensions.height}px). Tối đa 4000x4000px`);
+        return;
+      }
+      
       setUploadLoading(true);
       setError(null);
       
@@ -933,13 +943,17 @@ const StationForm = () => {
         [key]: {
           ...prev[key],
           imageUrl: imageUrl,
-          imagePreview: previewUrl
+          imagePreview: previewUrl,
+          showImage: true // Đảm bảo checkbox hiển thị hình ảnh được bật
         }
       }));
       
+      // Hiển thị thông báo thành công
+      setSuccess(`Đã tải lên hình ảnh thành công (${imgDimensions.width}x${imgDimensions.height}px, ${(file.size / 1024).toFixed(0)}KB)`);
+      
     } catch (error) {
       console.error('Image upload error:', error);
-      setError(t('image_upload_error'));
+      setError(error.message || t('image_upload_error') + ' - Vui lòng thử lại với hình ảnh khác');
     } finally {
       setUploadLoading(false);
       
@@ -949,6 +963,26 @@ const StationForm = () => {
         inputRef.value = '';
       }
     }
+  };
+
+  // Hàm để kiểm tra kích thước thực tế của hình ảnh
+  const getImageDimensions = (file) => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        resolve({
+          width: img.width,
+          height: img.height
+        });
+        // Giải phóng bộ nhớ
+        URL.revokeObjectURL(img.src);
+      };
+      img.onerror = () => {
+        reject(new Error('Không thể đọc kích thước hình ảnh, định dạng file không hợp lệ'));
+        URL.revokeObjectURL(img.src);
+      };
+      img.src = URL.createObjectURL(file);
+    });
   };
 
   // Thêm đội vào danh sách
@@ -1199,6 +1233,7 @@ const StationForm = () => {
               // Chỉ ảnh
               finalTeamContent = teamContent.imageUrl || '';
               finalTeamContentType = 'image';
+              console.log('Team Content - Chỉ ảnh:', teamContent.team, 'imageUrl:', teamContent.imageUrl);
             } else if (teamContent.showText && !teamContent.showImage) {
               // Chỉ văn bản
               finalTeamContentType = 'text';
@@ -1214,8 +1249,12 @@ const StationForm = () => {
               // Cả hai
               finalTeamContentType = 'both';
               
+              // Đảm bảo imageUrl không bị mất khi có cả văn bản
               if (teamContent.imageUrl) {
                 finalTeamContent = teamContent.imageUrl;
+                console.log('Team Content - Cả văn bản và ảnh:', teamContent.team, 'imageUrl:', teamContent.imageUrl);
+              } else {
+                console.warn('Team Content - Thiếu imageUrl cho mode both:', teamContent.team);
               }
             } else {
               // Không có nội dung
@@ -2039,132 +2078,135 @@ const StationForm = () => {
                                       </Col>
                                     </Row>
 
-                                    {teamContent.showText && (
-                                      <>
-                                        <Row className="mb-2">
-                                          <Col md={12}>
-                                            <Form.Group>
-                                              <Form.Label>{t('text_format_label')}</Form.Label>
-                                              <div className="d-flex">
-                                                <Form.Check 
-                                                  type="checkbox"
-                                                  id={`team-${index}-${team}-showOTT`}
-                                                  label={t('ott_content_label')}
-                                                  className="me-4"
-                                                  checked={teamContent.showOTT}
-                                                  onChange={(e) => handleTeamContentChange(index, team, 'showOTT', e.target.checked)}
-                                                />
-                                                <Form.Check 
-                                                  type="checkbox"
-                                                  id={`team-${index}-${team}-showNW`}
-                                                  label={t('nw_content_label')}
-                                                  checked={teamContent.showNW}
-                                                  onChange={(e) => handleTeamContentChange(index, team, 'showNW', e.target.checked)}
-                                                />
-                                              </div>
-                                            </Form.Group>
+                                    {/* Phần hiển thị văn bản - luôn hiển thị không còn điều kiện teamContent.showText */}
+                                    <div className="mb-3">
+                                      <h6>Nội dung văn bản</h6>
+                                    
+                                      <Row className="mb-2">
+                                        <Col md={12}>
+                                          <Form.Group>
+                                            <Form.Label>{t('text_format_label')}</Form.Label>
+                                            <div className="d-flex">
+                                              <Form.Check 
+                                                type="checkbox"
+                                                id={`team-${index}-${team}-showOTT`}
+                                                label={t('ott_content_label')}
+                                                className="me-4"
+                                                checked={teamContent.showOTT}
+                                                onChange={(e) => handleTeamContentChange(index, team, 'showOTT', e.target.checked)}
+                                              />
+                                              <Form.Check 
+                                                type="checkbox"
+                                                id={`team-${index}-${team}-showNW`}
+                                                label={t('nw_content_label')}
+                                                checked={teamContent.showNW}
+                                                onChange={(e) => handleTeamContentChange(index, team, 'showNW', e.target.checked)}
+                                              />
+                                            </div>
+                                          </Form.Group>
+                                        </Col>
+                                      </Row>
+
+                                      {/* Thêm chọn kích thước chữ cho từng đội */}
+                                      <Form.Group className="mb-3">
+                                        <Form.Label>Font hiển thị cho đội</Form.Label>
+                                        <Row className="g-2">
+                                          <Col md={3}>
+                                            <Form.Label className="small mb-1">Kích thước chữ:</Form.Label>
+                                            <Form.Select 
+                                              value={teamContent.fontSize || '1.05rem'} 
+                                              onChange={(e) => handleTeamContentChange(index, team, 'fontSize', e.target.value)}
+                                              className="form-select-sm"
+                                            >
+                                              <option value="0.8rem">Nhỏ (0.8rem)</option>
+                                              <option value="1.05rem">Trung bình (1.05rem)</option>
+                                              <option value="1.3rem">Lớn (1.3rem)</option>
+                                              <option value="1.5rem">Rất lớn (1.5rem)</option>
+                                            </Form.Select>
+                                          </Col>
+                                          <Col md={3}>
+                                            <Form.Label className="small mb-1">Độ đậm chữ:</Form.Label>
+                                            <Form.Select 
+                                              value={teamContent.fontWeight || '500'} 
+                                              onChange={(e) => handleTeamContentChange(index, team, 'fontWeight', e.target.value)}
+                                              className="form-select-sm"
+                                            >
+                                              <option value="200">Bình thường (200)</option>
+                                              <option value="500">Vừa phải (500)</option>
+                                              <option value="700">Đậm (700)</option>
+                                              <option value="900">Rất đậm (900)</option>
+                                            </Form.Select>
+                                          </Col>
+                                          <Col md={3}>
+                                            <Form.Label className="small mb-1">Khoảng cách dòng:</Form.Label>
+                                            <Form.Select 
+                                              value={teamContent.lineHeight || '1.5'} 
+                                              onChange={(e) => handleTeamContentChange(index, team, 'lineHeight', e.target.value)}
+                                              className="form-select-sm"
+                                            >
+                                              <option value="1">Hẹp (1)</option>
+                                              <option value="1.5">Trung bình (1.5)</option>
+                                              <option value="2">Rộng (2)</option>
+                                              <option value="2.5">Rất rộng (2.5)</option>
+                                            </Form.Select>
+                                          </Col>
+                                          <Col md={3}>
+                                            <Form.Label className="small mb-1">Khoảng cách đoạn:</Form.Label>
+                                            <Form.Select 
+                                              value={teamContent.paragraphSpacing || '0.8rem'} 
+                                              onChange={(e) => handleTeamContentChange(index, team, 'paragraphSpacing', e.target.value)}
+                                              className="form-select-sm"
+                                            >
+                                              <option value="0">Không cách (0)</option>
+                                              <option value="0.5rem">Hẹp (0.5rem)</option>
+                                              <option value="0.8rem">Trung bình (0.8rem)</option>
+                                              <option value="1.2rem">Rộng (1.2rem)</option>
+                                              <option value="1.8rem">Rất rộng (1.8rem)</option>
+                                            </Form.Select>
                                           </Col>
                                         </Row>
+                                      </Form.Group>
 
-                                        {/* Thêm chọn kích thước chữ cho từng đội */}
-                                        <Form.Group className="mb-3">
-                                          <Form.Label>Font hiển thị cho đội</Form.Label>
-                                          <Row className="g-2">
-                                            <Col md={3}>
-                                              <Form.Label className="small mb-1">Kích thước chữ:</Form.Label>
-                                              <Form.Select 
-                                                value={teamContent.fontSize || '1.05rem'} 
-                                                onChange={(e) => handleTeamContentChange(index, team, 'fontSize', e.target.value)}
-                                                className="form-select-sm"
-                                              >
-                                                <option value="0.8rem">Nhỏ (0.8rem)</option>
-                                                <option value="1.05rem">Trung bình (1.05rem)</option>
-                                                <option value="1.3rem">Lớn (1.3rem)</option>
-                                                <option value="1.5rem">Rất lớn (1.5rem)</option>
-                                              </Form.Select>
-                                            </Col>
-                                            <Col md={3}>
-                                              <Form.Label className="small mb-1">Độ đậm chữ:</Form.Label>
-                                              <Form.Select 
-                                                value={teamContent.fontWeight || '500'} 
-                                                onChange={(e) => handleTeamContentChange(index, team, 'fontWeight', e.target.value)}
-                                                className="form-select-sm"
-                                              >
-                                                <option value="200">Bình thường (200)</option>
-                                                <option value="500">Vừa phải (500)</option>
-                                                <option value="700">Đậm (700)</option>
-                                                <option value="900">Rất đậm (900)</option>
-                                              </Form.Select>
-                                            </Col>
-                                            <Col md={3}>
-                                              <Form.Label className="small mb-1">Khoảng cách dòng:</Form.Label>
-                                              <Form.Select 
-                                                value={teamContent.lineHeight || '1.5'} 
-                                                onChange={(e) => handleTeamContentChange(index, team, 'lineHeight', e.target.value)}
-                                                className="form-select-sm"
-                                              >
-                                                <option value="1">Hẹp (1)</option>
-                                                <option value="1.5">Trung bình (1.5)</option>
-                                                <option value="2">Rộng (2)</option>
-                                                <option value="2.5">Rất rộng (2.5)</option>
-                                              </Form.Select>
-                                            </Col>
-                                            <Col md={3}>
-                                              <Form.Label className="small mb-1">Khoảng cách đoạn:</Form.Label>
-                                              <Form.Select 
-                                                value={teamContent.paragraphSpacing || '0.8rem'} 
-                                                onChange={(e) => handleTeamContentChange(index, team, 'paragraphSpacing', e.target.value)}
-                                                className="form-select-sm"
-                                              >
-                                                <option value="0">Không cách (0)</option>
-                                                <option value="0.5rem">Hẹp (0.5rem)</option>
-                                                <option value="0.8rem">Trung bình (0.8rem)</option>
-                                                <option value="1.2rem">Rộng (1.2rem)</option>
-                                                <option value="1.8rem">Rất rộng (1.8rem)</option>
-                                              </Form.Select>
-                                            </Col>
-                                          </Row>
-                                        </Form.Group>
+                                      <Row className="mb-3">
+                                        <Col>
+                                          <Form.Group>
+                                            <Form.Label>{t('ott_content_label')}</Form.Label>
+                                            <Form.Control
+                                              as="textarea"
+                                              rows={3}
+                                              value={teamContent.ottContent || ''}
+                                              onChange={(e) => handleTeamContentChange(index, team, 'ottContent', e.target.value)}
+                                              placeholder="Nhập nội dung OTT cho đội này"
+                                            />
+                                            {!teamContent.showOTT && (
+                                              <Form.Text className="text-muted">
+                                                Bật hiển thị OTT ở trên để hiển thị nội dung này trong mật thư
+                                              </Form.Text>
+                                            )}
+                                          </Form.Group>
+                                        </Col>
+                                      </Row>
 
-                                        {teamContent.showOTT && (
-                                          <Row className="mb-3">
-                                            <Col>
-                                              <Form.Group>
-                                                <Form.Label>{t('ott_content_label')}</Form.Label>
-                                                <Form.Control
-                                                  as="textarea"
-                                                  rows={3}
-                                                  value={teamContent.ottContent || ''}
-                                                  onChange={(e) => handleTeamContentChange(index, team, 'ottContent', e.target.value)}
-                                                  placeholder="Nhập nội dung OTT cho đội này"
-                                                />
-                                              </Form.Group>
-                                            </Col>
-                                          </Row>
-                                        )}
+                                      <Row className="mb-3">
+                                        <Col>
+                                          <Form.Group>
+                                            <Form.Label>{t('nw_content_label')}</Form.Label>
+                                            <InputGroup>
+                                              <Form.Control
+                                                as="textarea"
+                                                rows={3}
+                                                value={teamContent.nwContent || ''}
+                                                onChange={(e) => handleTeamContentChange(index, team, 'nwContent', e.target.value)}
+                                                placeholder="Nhập nội dung NW cho đội này"
+                                              />
+                                              <InputGroup.Text className="fw-bold">/AR</InputGroup.Text>
+                                            </InputGroup>
+                                          </Form.Group>
+                                        </Col>
+                                      </Row>
+                                    </div>
 
-                                        {teamContent.showNW && (
-                                          <Row className="mb-3">
-                                            <Col>
-                                              <Form.Group>
-                                                <Form.Label>{t('nw_content_label')}</Form.Label>
-                                                <InputGroup>
-                                                  <Form.Control
-                                                    as="textarea"
-                                                    rows={3}
-                                                    value={teamContent.nwContent || ''}
-                                                    onChange={(e) => handleTeamContentChange(index, team, 'nwContent', e.target.value)}
-                                                    placeholder="Nhập nội dung NW cho đội này"
-                                                  />
-                                                  <InputGroup.Text className="fw-bold">/AR</InputGroup.Text>
-                                                </InputGroup>
-                                              </Form.Group>
-                                            </Col>
-                                          </Row>
-                                        )}
-                                      </>
-                                    )}
-
+                                    {/* Phần hiển thị hình ảnh - chỉ hiển thị khi checkbox hình ảnh được chọn */}
                                     {teamContent.showImage && (
                                       <Row className="mb-3">
                                         <Col>
@@ -2205,18 +2247,29 @@ const StationForm = () => {
                                               value={teamContent.imageUrl || ''}
                                               onChange={(e) => handleTeamContentChange(index, team, 'imageUrl', e.target.value)}
                                               placeholder={t('image_url_placeholder')}
-                                              className="mt-2"
+                                              className="mt-2 mb-2"
                                             />
-                                            <Form.Text className="text-muted">
-                                              {t('image_upload_help')}
+                                            
+                                            <Form.Text className="text-muted mb-2 d-block">
+                                              <small>
+                                                <i className="bi bi-info-circle me-1"></i>
+                                                Hỗ trợ định dạng: JPG, PNG, GIF, WEBP. Kích thước tối đa: 5MB. 
+                                                Kích thước hình ảnh tối đa: 4000x4000px.
+                                              </small>
                                             </Form.Text>
+                                            
+                                            <Alert variant="info" className="p-2 mb-2 small">
+                                              <i className="bi bi-exclamation-triangle me-1"></i>
+                                              Lưu ý: Hình ảnh sẽ được lưu riêng cho từng đội. 
+                                              Sau khi tải lên, đảm bảo lưu lại trạm để không mất hình ảnh.
+                                            </Alert>
                                             
                                             {teamContent.imageUrl && (
                                               <div className="mt-3 border rounded p-2 text-center">
                                                 <p className="mb-2">{t('preview')}</p>
                                                 <img 
                                                   src={teamContent.imagePreview || 
-                                                      (teamContent.imageUrl.startsWith('/api/')
+                                                      (teamContent.imageUrl && teamContent.imageUrl.startsWith('/api/')
                                                       ? `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${teamContent.imageUrl}`
                                                       : teamContent.imageUrl)} 
                                                   alt="Preview" 
@@ -2226,8 +2279,19 @@ const StationForm = () => {
                                                     console.error('Lỗi tải hình ảnh xem trước:', e);
                                                     e.target.onerror = null;
                                                     e.target.src = 'https://via.placeholder.com/400x300?text=Không+thể+hiển+thị+hình+ảnh';
+                                                    // Hiển thị cảnh báo
+                                                    setError('Không thể hiển thị hình ảnh xem trước. Hình ảnh có thể bị hỏng hoặc đường dẫn không hợp lệ.');
                                                   }}
                                                 />
+                                                {/* Hiển thị thông tin hình ảnh nếu có */}
+                                                <div className="text-muted mt-2 small">
+                                                  {teamContent.imageUrl && (
+                                                    <span>
+                                                      URL: {teamContent.imageUrl.substring(0, 30)}
+                                                      {teamContent.imageUrl.length > 30 ? '...' : ''}
+                                                    </span>
+                                                  )}
+                                                </div>
                                               </div>
                                             )}
                                           </Form.Group>
