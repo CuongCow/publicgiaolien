@@ -28,6 +28,36 @@ const TeamWaitingPage = () => {
   const [nextAttemptTime, setNextAttemptTime] = useState(null);
   const [timeLeft, setTimeLeft] = useState(null);
 
+  // Hàm lưu thông tin lần thử vào localStorage
+  const saveAttemptInfoToLocalStorage = (submissionResult, nextAttemptTime) => {
+    if (!loggedInTeam || !activeStation) return;
+    
+    const attemptInfo = {
+      submissionResult,
+      nextAttemptTime,
+      stationId: activeStation._id,
+      teamId: loggedInTeam.teamId
+    };
+    
+    localStorage.setItem(`attempt_info_${adminId}_${activeStation._id}`, JSON.stringify(attemptInfo));
+  };
+  
+  // Hàm đọc thông tin lần thử từ localStorage
+  const loadAttemptInfoFromLocalStorage = () => {
+    if (!loggedInTeam || !activeStation) return null;
+    
+    try {
+      const attemptInfoStr = localStorage.getItem(`attempt_info_${adminId}_${activeStation._id}`);
+      if (!attemptInfoStr) return null;
+      
+      const attemptInfo = JSON.parse(attemptInfoStr);
+      return attemptInfo;
+    } catch (err) {
+      console.error('Lỗi khi đọc thông tin lần thử từ localStorage:', err);
+      return null;
+    }
+  };
+
   // Hiệu ứng khởi tạo
   useEffect(() => {
     // Khôi phục thông tin đội đã đăng nhập từ localStorage
@@ -58,6 +88,50 @@ const TeamWaitingPage = () => {
       }
     };
   }, [adminId]);
+
+  // Hiệu ứng khi activeStation hoặc loggedInTeam thay đổi
+  useEffect(() => {
+    // Nếu đã có trạm đang hoạt động và đã đăng nhập, kiểm tra thông tin lần thử từ localStorage
+    if (activeStation && loggedInTeam) {
+      // Đọc thông tin lần thử từ localStorage
+      const attemptInfo = loadAttemptInfoFromLocalStorage();
+      if (attemptInfo) {
+        console.log('Đã tìm thấy thông tin lần thử từ localStorage:', attemptInfo);
+        
+        // Khôi phục thông tin số lần thử
+        if (attemptInfo.submissionResult) {
+          setSubmissionResult(attemptInfo.submissionResult);
+        }
+        
+        // Khôi phục thông tin thời gian đợi nếu còn hợp lệ
+        if (attemptInfo.nextAttemptTime) {
+          const nextAttemptTime = new Date(attemptInfo.nextAttemptTime);
+          const now = new Date();
+          
+          if (nextAttemptTime > now) {
+            // Thời gian đợi còn hợp lệ, khôi phục
+            setNextAttemptTime(attemptInfo.nextAttemptTime);
+            console.log('Khôi phục thời gian đợi:', attemptInfo.nextAttemptTime);
+          } else {
+            // Đã hết thời gian đợi, reset
+            if (activeStation) {
+              console.log('Đã hết thời gian đợi, reset số lần thử');
+              const resetResult = {
+                isCorrect: false,
+                remainingAttempts: activeStation.maxAttempts,
+                attemptCount: 0
+              };
+              setSubmissionResult(resetResult);
+              setNextAttemptTime(null);
+              
+              // Cập nhật localStorage
+              saveAttemptInfoToLocalStorage(resetResult, null);
+            }
+          }
+        }
+      }
+    }
+  }, [activeStation, loggedInTeam, adminId]);
 
   // Kiểm tra xem có trạm nào đang hoạt động không
   const checkActiveStation = async () => {
@@ -355,10 +429,14 @@ const TeamWaitingPage = () => {
       
       // Đặt kết quả
       if (response.data.isCorrect) {
-        setSubmissionResult({
+        const successResult = {
           isCorrect: true,
           submission: response.data
-        });
+        };
+        setSubmissionResult(successResult);
+        
+        // Lưu kết quả vào localStorage
+        saveAttemptInfoToLocalStorage(successResult, null);
         
         // Reset trường đáp án
         setAnswer('');
@@ -367,23 +445,29 @@ const TeamWaitingPage = () => {
         const attemptCount = response.data.attemptCount;
         
         // Đặt kết quả submission
-        setSubmissionResult({
+        const failResult = {
           isCorrect: false,
           remainingAttempts,
           attemptCount
-        });
+        };
+        setSubmissionResult(failResult);
         
         // Nếu còn 0 lần thử, đặt thời gian chờ
+        let newNextAttemptTime = null;
         if (remainingAttempts <= 0 && activeStation.lockTime > 0) {
           if (response.data.nextAttemptAllowed) {
-            setNextAttemptTime(response.data.nextAttemptAllowed);
+            newNextAttemptTime = response.data.nextAttemptAllowed;
+            setNextAttemptTime(newNextAttemptTime);
           } else {
             // Tạo một thời gian chờ mới nếu chưa có
             const lockTimeMillis = activeStation.lockTime * 60 * 1000;
-            const newNextAttemptTime = new Date(Date.now() + lockTimeMillis).toISOString();
+            newNextAttemptTime = new Date(Date.now() + lockTimeMillis).toISOString();
             setNextAttemptTime(newNextAttemptTime);
           }
         }
+        
+        // Lưu kết quả và thời gian chờ vào localStorage
+        saveAttemptInfoToLocalStorage(failResult, newNextAttemptTime);
       }
     } catch (err) {
       console.error('Lỗi khi gửi đáp án:', err);
@@ -417,6 +501,9 @@ const TeamWaitingPage = () => {
           };
           
           setSubmissionResult(newSubmissionResult);
+          
+          // Lưu thông tin vào localStorage
+          saveAttemptInfoToLocalStorage(newSubmissionResult, null);
         }
       } else {
         const minutes = Math.floor(diff / 60);

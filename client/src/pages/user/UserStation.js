@@ -7,6 +7,7 @@ import TermReplacer from '../../utils/TermReplacer';
 import { updateSystemSettings } from '../../utils/helpers';
 import { useSystemSettings } from '../../context/SystemSettingsContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { BrowserQRCodeReader } from '@zxing/browser';
 import './UserStation.css';
 
 const UserStation = () => {
@@ -36,6 +37,11 @@ const UserStation = () => {
   const checkSessionIntervalRef = useRef(null);
   const [nextAttemptTime, setNextAttemptTime] = useState(null);
   const [timeLeft, setTimeLeft] = useState(null);
+  const [showQrScanner, setShowQrScanner] = useState(false);
+  const [selectedDeviceId, setSelectedDeviceId] = useState('');
+  const [videoInputDevices, setVideoInputDevices] = useState([]);
+  const videoRef = useRef(null);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   // Hàm helper để lưu thông tin vào localStorage
   const saveAttemptInfoToLocalStorage = (submissionResult, nextAttemptTime) => {
@@ -60,6 +66,9 @@ const UserStation = () => {
 
   useEffect(() => {
     fetchStationData();
+    
+    // Đặt lại trạng thái điều hướng khi trạm mới được tải
+    setIsNavigating(false);
     
     // Kiểm tra thông tin đội đã lưu
     const savedTeamData = localStorage.getItem('current_team');
@@ -609,7 +618,7 @@ const UserStation = () => {
       );
       
       if (teamContent) {
-        console.log('Đã tìm thấy nội dung riêng cho đội:', teamName, teamContent);
+        console.log('Đội:', teamName, teamContent);
         
         // Đảm bảo correctAnswer luôn là mảng
         let correctAnswerArray = [];
@@ -903,6 +912,173 @@ const UserStation = () => {
     return 'paragraph-spacing-medium';
   };
 
+  // Xử lý mở modal quét QR
+  const handleOpenQrScanner = async () => {
+    try {
+      // Đặt lại error (nếu có)
+      setError(null);
+      
+      // Mở modal
+      setShowQrScanner(true);
+      
+      // Khởi động camera ngay lập tức, không đợi thêm
+      // Lấy danh sách thiết bị camera
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevices = devices.filter(device => device.kind === 'videoinput');
+      setVideoInputDevices(videoDevices);
+      
+      // Chọn camera mặc định (thường camera sau trên điện thoại)
+      if (videoDevices.length > 0) {
+        // Ưu tiên camera sau nếu thiết bị có nhiều camera
+        const backCamera = videoDevices.find(device => 
+          device.label.toLowerCase().includes('back') || 
+          device.label.toLowerCase().includes('sau') ||
+          device.label.toLowerCase().includes('rear')
+        );
+        const deviceId = backCamera ? backCamera.deviceId : videoDevices[0].deviceId;
+        setSelectedDeviceId(deviceId);
+        
+        // Khởi động camera ngay lập tức
+        handleScanQR();
+      } else {
+        setError('Không tìm thấy camera nào trên thiết bị này');
+      }
+    } catch (error) {
+      console.error('Lỗi khi mở scanner QR:', error);
+      setError('Không thể mở trình quét QR. Vui lòng kiểm tra quyền truy cập camera và thử lại.');
+    }
+  };
+
+  // Xử lý đóng modal quét QR
+  const handleCloseQrScanner = () => {
+    // Dừng camera stream nếu đang chạy
+    if (videoRef.current && videoRef.current.srcObject) {
+      try {
+        const tracks = videoRef.current.srcObject.getTracks();
+        tracks.forEach(track => {
+          if (track.readyState === 'live') {
+            track.stop();
+          }
+        });
+        videoRef.current.srcObject = null;
+      } catch (err) {
+        console.error('Lỗi khi dừng camera:', err);
+      }
+    }
+    
+    // Xóa thông báo lỗi nếu có
+    setError(null);
+    
+    // Đóng modal
+    setShowQrScanner(false);
+    
+    // Đảm bảo đặt lại trạng thái này khi đóng modal
+    setIsNavigating(false);
+  };
+
+  // Xử lý quét QR code
+  const handleScanQR = async () => {
+    try {
+      // Đảm bảo có deviceId và video element
+      if (!videoRef.current) return;
+      
+      // Dừng stream hiện tại nếu có
+      if (videoRef.current.srcObject) {
+        const tracks = videoRef.current.srcObject.getTracks();
+        tracks.forEach(track => track.stop());
+        videoRef.current.srcObject = null;
+      }
+      
+      // Cấu hình yêu cầu video đơn giản nhất
+      let constraints = { video: true };
+      
+      // Chỉ định camera cụ thể nếu có
+      if (selectedDeviceId) {
+        constraints = { video: { deviceId: { exact: selectedDeviceId } } };
+      }
+      
+      try {
+        // Mở camera và gắn vào video element
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        videoRef.current.srcObject = stream;
+        videoRef.current.play();
+        
+        // Sau khi camera đã chạy, khởi tạo QR scanner
+        setTimeout(() => {
+          startQRScanning();
+        }, 500);
+      } catch (mediaErr) {
+        console.error('Lỗi truy cập camera:', mediaErr);
+        setError('Không thể mở camera. Vui lòng cấp quyền camera và làm mới trang.');
+      }
+    } catch (err) {
+      console.error('Lỗi quét QR:', err);
+      setError('Lỗi không xác định. Vui lòng thử lại sau.');
+    }
+  };
+
+  // Hàm bắt đầu quét QR
+  const startQRScanning = async () => {
+    try {
+      // Tạo QR code reader
+      const codeReader = new BrowserQRCodeReader();
+      
+      // Đảm bảo có callbackFn khi gọi decodeFromVideoDevice
+      codeReader.decodeFromVideoDevice(
+        selectedDeviceId, 
+        videoRef.current,
+        (result, error) => {
+          // Nếu đang trong quá trình chuyển trang, không xử lý kết quả QR tiếp
+          if (isNavigating) return;
+          
+          if (result) {
+            const qrData = result.getText();
+            console.log('QR Code data:', qrData);
+            
+            // Xử lý QR code - giả định QR chứa URL trạm
+            if (qrData.includes('station/')) {
+              // Lấy stationId từ QR code
+              const parts = qrData.split('station/');
+              if (parts.length > 1) {
+                const scannedStationId = parts[1].split('?')[0].split('/')[0]; // Lấy stationId từ URL
+                
+                // Đánh dấu đang trong quá trình chuyển trang
+                setIsNavigating(true);
+                
+                // Dừng camera trước khi chuyển hướng
+                if (videoRef.current && videoRef.current.srcObject) {
+                  const tracks = videoRef.current.srcObject.getTracks();
+                  tracks.forEach(track => track.stop());
+                  videoRef.current.srcObject = null;
+                }
+                
+                // Không sử dụng reset() vì không tồn tại
+                // Thay thế bằng việc đóng scanner
+                handleCloseQrScanner();
+                
+                // Chuyển đến trạm được quét sau một khoảng thời gian ngắn
+                // để đảm bảo camera đã dừng hoàn toàn
+                setTimeout(() => {
+                  navigate(`/station/${scannedStationId}`);
+                }, 300);
+              }
+            } else {
+              // QR code không đúng định dạng trạm
+              setError('Mã QR không phải là mã trạm hợp lệ');
+              setTimeout(() => setError(null), 3000);
+            }
+          }
+          
+          if (error && error.name !== 'NotFoundException') {
+            console.error('Lỗi khi quét:', error);
+          }
+        }
+      );
+    } catch (error) {
+      console.error('Lỗi khởi tạo QR scanner:', error);
+    }
+  };
+
   if (loading) {
     return (
       <Container className="d-flex justify-content-center align-items-center min-vh-100">
@@ -1046,12 +1222,22 @@ const UserStation = () => {
         <Col xs={12} md={12} lg={11} xl={10} className="px-0">
           <Card className="shadow-sm mb-4">
             <Card.Header className="bg-primary text-white py-3">
-              <div className="d-flex align-items-center">
-                <i className="bi bi-geo-alt-fill me-2" style={{ fontSize: '1.5rem' }}></i>
-                <div>
-                  <h2 className="mb-0"><TermReplacer>{t('station_term')}</TermReplacer> {station.name}</h2>
-                  {station.gameName && <p className="mb-0 mt-1 opacity-75">{station.gameName}</p>}
+              <div className="d-flex align-items-center justify-content-between">
+                <div className="d-flex align-items-center">
+                  <i className="bi bi-geo-alt-fill me-2" style={{ fontSize: '1.5rem' }}></i>
+                  <div>
+                    <h2 className="mb-0"><TermReplacer>{t('station_term')}</TermReplacer> {station.name}</h2>
+                    {station.gameName && <p className="mb-0 mt-1 opacity-75">{station.gameName}</p>}
+                  </div>
                 </div>
+                <Button 
+                  variant="link" 
+                  className="p-0 ms-2" 
+                  style={{ color: 'white', border: 'none', background: 'transparent' }} 
+                  onClick={handleOpenQrScanner}
+                >
+                  <i className="bi bi-qr-code-scan" style={{ fontSize: '2.5rem' }}></i>
+                </Button>
               </div>
             </Card.Header>
             <Card.Body className="px-2 py-3">
@@ -1452,6 +1638,91 @@ const UserStation = () => {
               Đăng xuất
             </Button>
           </div>
+        </Modal.Body>
+      </Modal>
+
+      {/* Modal QR Scanner */}
+      <Modal
+        show={showQrScanner}
+        onHide={handleCloseQrScanner}
+        centered
+        backdrop="static"
+      >
+        <Modal.Header closeButton className="bg-primary text-white">
+          <Modal.Title>
+            <i className="bi bi-qr-code-scan me-2"></i>
+            Quét mã QR
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="text-center py-4">
+          {error && (
+            <Alert variant="danger" className="mb-3">
+              <i className="bi bi-exclamation-triangle-fill me-2"></i>
+              {error}
+            </Alert>
+          )}
+
+          <div className="mb-3">
+            {videoInputDevices.length > 1 && (
+              <Form.Group className="mb-3">
+                <Form.Label>Chọn camera</Form.Label>
+                <Form.Select 
+                  value={selectedDeviceId} 
+                  onChange={(e) => {
+                    setSelectedDeviceId(e.target.value);
+                    // Khởi động lại camera khi thay đổi thiết bị
+                    setTimeout(() => handleScanQR(), 500);
+                  }}
+                >
+                  {videoInputDevices.map((device) => (
+                    <option key={device.deviceId} value={device.deviceId}>
+                      {device.label || `Camera ${videoInputDevices.indexOf(device) + 1}`}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+            )}
+            
+            <div className="qr-video-container" style={{ position: 'relative', width: '100%', maxWidth: '400px', margin: '0 auto', aspectRatio: '1/1' }}>
+              <video 
+                ref={videoRef}
+                style={{ 
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  borderRadius: '8px',
+                  border: '3px solid #ccc'
+                }}
+              ></video>
+              <div className="qr-target-area" style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: '65%',
+                height: '65%',
+                border: 'none',
+                boxShadow: 'none',
+                borderRadius: '8px',
+                zIndex: 1000,
+                pointerEvents: 'none'
+              }}></div>
+            </div>
+          </div>
+          
+          <p className="text-muted mt-3">Đưa mã QR vào giữa khung hình để quét</p>
+          
+          {/* Chỉ hiển thị nút Thử lại khi có lỗi */}
+          {error && (
+            <Button 
+              variant="primary" 
+              className="mt-2" 
+              onClick={handleScanQR}
+            >
+              <i className="bi bi-camera-fill me-1"></i>
+              Thử lại
+            </Button>
+          )}
         </Modal.Body>
       </Modal>
     </Container>

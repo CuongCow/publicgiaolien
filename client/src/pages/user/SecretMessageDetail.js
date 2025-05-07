@@ -236,6 +236,8 @@ const SecretMessageDetail = () => {
               <Form.Label>Nhập đáp án:</Form.Label>
               <Form.Control
                 type="text"
+                as="textarea"
+                rows={4}
                 value={answer}
                 onChange={(e) => setAnswer(e.target.value)}
                 placeholder="Nhập đáp án của bạn tại đây"
