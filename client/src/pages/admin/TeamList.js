@@ -173,6 +173,59 @@ const TeamList = () => {
     }
   };
 
+  // Kiểm tra thay đổi trạng thái
+  const checkStatusChanges = () => {
+    const prevTeams = prevTeamsRef.current;
+    const currentTeamsMap = {};
+    let hasChanges = false;
+    
+    // Tìm thay đổi trạng thái
+    for (const team of teams) {
+      currentTeamsMap[team._id] = {...team};
+      
+      const prevTeam = prevTeams[team._id];
+      
+      // Nếu không tìm thấy đội trước đó hoặc trạng thái thay đổi, ghi lại nhật ký
+      if (!prevTeam) {
+        console.log(`Đội mới: ${team.name}, trạng thái ban đầu: ${team.status || 'inactive'}`);
+        
+        // Đội mới, ghi lại trạng thái ban đầu
+        addStatusLog(
+          team._id,
+          team.name,
+          'inactive', // Trạng thái mặc định cho đội mới
+          team.status || 'inactive'
+        );
+        
+        hasChanges = true;
+      } 
+      else if (normalizeStatus(prevTeam.status) !== normalizeStatus(team.status)) {
+        console.log(`Thay đổi trạng thái: ${team.name}, từ ${normalizeStatus(prevTeam.status)} thành ${normalizeStatus(team.status)}`);
+        
+        // Thêm log
+        addStatusLog(
+          team._id,
+          team.name,
+          normalizeStatus(prevTeam.status),
+          normalizeStatus(team.status)
+        );
+        
+        hasChanges = true;
+      }
+    }
+    
+    // Cập nhật tham chiếu trạng thái trước đó
+    prevTeamsRef.current = currentTeamsMap;
+    
+    return hasChanges;
+  };
+
+  // Hàm chuẩn hóa trạng thái để tránh lỗi null/undefined
+  const normalizeStatus = (status) => {
+    if (!status) return 'inactive';
+    return status;
+  };
+
   // Kiểm tra thay đổi trạng thái mỗi khi teams được cập nhật
   useEffect(() => {
     // Bỏ qua lần render đầu tiên
@@ -193,41 +246,6 @@ const TeamList = () => {
     // Reset cờ cập nhật thủ công
     manualTeamUpdate.current = false;
   }, [teams]);
-
-  // Kiểm tra thay đổi trạng thái
-  const checkStatusChanges = () => {
-    const prevTeams = prevTeamsRef.current;
-    const currentTeamsMap = {};
-    let hasChanges = false;
-    
-    // Tìm thay đổi trạng thái
-    for (const team of teams) {
-      currentTeamsMap[team._id] = {...team};
-      
-      const prevTeam = prevTeams[team._id];
-      // So sánh với === null để xem xét cả trường hợp undefined và null
-      if (prevTeam && (prevTeam.status !== team.status || 
-                       (prevTeam.status === null && team.status !== null) ||
-                       (prevTeam.status !== null && team.status === null))) {
-        console.log(`Thay đổi trạng thái: ${team.name}, từ ${prevTeam.status || 'không có'} thành ${team.status || 'không có'}`);
-        
-        // Thêm log
-        addStatusLog(
-          team._id,
-          team.name,
-          prevTeam.status,
-          team.status
-        );
-        
-        hasChanges = true;
-      }
-    }
-    
-    // Cập nhật tham chiếu trạng thái trước đó
-    prevTeamsRef.current = currentTeamsMap;
-    
-    return hasChanges;
-  };
 
   const addStatusLog = (teamId, teamName, oldStatus, newStatus) => {
     // Chỉ thêm log nếu trạng thái thực sự thay đổi và có giá trị
@@ -423,10 +441,9 @@ const TeamList = () => {
 
   // Hiển thị trạng thái đội
   const renderStatus = (status) => {
-    // Làm rõ logic xử lý với status null/undefined
-    const statusValue = status || 'inactive';
+    if (!status) status = 'inactive'; // Đảm bảo luôn có một trạng thái mặc định
     
-    switch(statusValue) {
+    switch(status) {
       case 'active':
         return <Badge bg="success">{t('team_status_active')}</Badge>;
       case 'hidden':
@@ -435,6 +452,7 @@ const TeamList = () => {
         return <Badge bg="danger">{t('team_status_copied')}</Badge>;
       case 'exited':
         return <Badge bg="secondary">{t('team_status_exited')}</Badge>;
+      case 'inactive':
       default:
         return <Badge bg="light" text="dark">{t('team_status_inactive')}</Badge>;
     }
@@ -442,13 +460,16 @@ const TeamList = () => {
   
   // Hiển thị tên trạng thái
   const getStatusName = (status) => {
+    if (!status) status = 'inactive'; // Đảm bảo luôn có một trạng thái mặc định
+    
     switch(status) {
       case 'active': return t('team_status_active');
       case 'hidden': return t('team_status_hidden');
       case 'copied': return t('team_status_copied'); 
       case 'exited': return t('team_status_exited');
-      case 'inactive': return t('team_status_inactive');
-      default: return t('team_status_inactive');
+      case 'inactive': 
+      default: 
+        return t('team_status_inactive');
     }
   };
 
