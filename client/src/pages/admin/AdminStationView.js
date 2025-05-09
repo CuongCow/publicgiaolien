@@ -310,7 +310,6 @@ const AdminStationView = () => {
           >
             {refreshingTeams ? (
               <>
-                <Spinner animation="border" size="sm" className="me-1" />
                 Đang làm mới...
               </>
             ) : (
