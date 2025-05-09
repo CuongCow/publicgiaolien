@@ -167,6 +167,39 @@ const TeamWaitingPage = () => {
 
   // Hiệu ứng khởi tạo
   useEffect(() => {
+    // Biến để theo dõi lỗi kết nối
+    let connectionErrorTimer = null;
+    let connectionErrors = 0;
+    
+    // Bắt các lỗi không xử lý
+    const handleGlobalError = (event) => {
+      if (event.message && event.message.includes('Could not establish connection')) {
+        console.warn('Phát hiện lỗi kết nối extension:', event.message);
+        
+        // Đếm số lỗi kết nối liên tiếp
+        connectionErrors++;
+        
+        // Nếu đã có hẹn giờ, xóa đi để tạo mới
+        if (connectionErrorTimer) {
+          clearTimeout(connectionErrorTimer);
+        }
+        
+        // Hẹn giờ để reset sau 5 giây nếu không có lỗi mới
+        connectionErrorTimer = setTimeout(() => {
+          connectionErrors = 0;
+          connectionErrorTimer = null;
+        }, 5000);
+        
+        // Ngăn lỗi hiển thị trong console
+        event.preventDefault();
+        
+        return true; // Đã xử lý lỗi
+      }
+    };
+    
+    // Đăng ký bắt lỗi toàn cục
+    window.addEventListener('error', handleGlobalError);
+    
     // Khôi phục thông tin đội đã đăng nhập từ localStorage
     const savedTeamData = localStorage.getItem("team_waiting_" + adminId);
     if (savedTeamData) {
@@ -265,6 +298,7 @@ const TeamWaitingPage = () => {
       document.removeEventListener('copy', copyHandler);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('error', handleGlobalError);
       document.onselectionchange = null;
       
       // Cập nhật trạng thái khi thoát trang
@@ -275,6 +309,11 @@ const TeamWaitingPage = () => {
         }).catch((err) => 
           console.error("Error updating team status:", err)
         );
+      }
+      
+      // Xóa timer xử lý lỗi kết nối nếu có
+      if (connectionErrorTimer) {
+        clearTimeout(connectionErrorTimer);
       }
     };
   }, [adminId]);
@@ -862,6 +901,7 @@ const TeamWaitingPage = () => {
 
   // Xử lý khi tab bị ẩn hoặc hiện
   const handleVisibilityChange = () => {
+    // Kiểm tra kỹ xem đã đăng nhập và có đầy đủ thông tin cần thiết chưa
     if (!loggedInTeam || !loggedInTeam.teamId || !loggedInTeam.sessionId) {
       console.debug("Không thể cập nhật trạng thái: thiếu teamId hoặc sessionId");
       return;
@@ -874,7 +914,7 @@ const TeamWaitingPage = () => {
       // Trạng thái "Ẩn tab" khi người dùng chuyển sang tab khác
       console.debug("Tab bị ẩn, cập nhật trạng thái hidden cho đội:", loggedInTeam.teamId);
       
-      // Cập nhật trạng thái hiện tại - ĐẶT TRƯỚC KHI GỌI API
+      // Cập nhật trạng thái hiện tại 
       setCurrentStatus('hidden');
       
       // Xác định nguyên nhân tab bị ẩn (nếu có thể)
@@ -897,8 +937,6 @@ const TeamWaitingPage = () => {
         timestamp: new Date().toISOString()
       }).then(() => {
         console.debug('Đã cập nhật trạng thái hidden thành công');
-        // Xác nhận lại trạng thái
-        setCurrentStatus('hidden');
       }).catch(err => {
         console.error('Error updating hidden status:', err);
         
@@ -928,7 +966,7 @@ const TeamWaitingPage = () => {
       // Trạng thái "Đang hoạt động" khi người dùng quay lại tab
       console.debug("Tab được hiện, cập nhật trạng thái active cho đội:", loggedInTeam.teamId);
       
-      // Cập nhật trạng thái hiện tại - ĐẶT TRƯỚC KHI GỌI API
+      // Cập nhật trạng thái hiện tại 
       setCurrentStatus('active');
       
       // Quay trở lại sử dụng teamApi để đảm bảo nhất quán với các trạng thái khác
@@ -941,8 +979,6 @@ const TeamWaitingPage = () => {
         console.debug('Đã cập nhật trạng thái active thành công');
         // Cập nhật lại thời gian hoạt động cuối cùng
         lastActivityTimeRef.current = Date.now();
-        // Xác nhận lại trạng thái
-        setCurrentStatus('active');
       }).catch(err => {
         console.error('Error updating active status:', err);
         
@@ -990,7 +1026,7 @@ const TeamWaitingPage = () => {
                    'Nội dung:', selectedText.substring(0, 50),
                    'Từ trường đáp án:', isCopyingFromAnswer);
       
-      // Cập nhật trạng thái hiện tại TRƯỚC khi gọi API
+      // Cập nhật trạng thái hiện tại 
       setCurrentStatus('copied');
       
       // Quay trở lại sử dụng teamApi để đảm bảo nhất quán với các trạng thái khác
@@ -1002,30 +1038,22 @@ const TeamWaitingPage = () => {
         timestamp: new Date().toISOString()
       }).then(() => {
         console.debug('Đã cập nhật trạng thái sao chép thành công');
-        // Xác nhận lại trạng thái
-        setCurrentStatus('copied');
         
-        // Sau 1 giây, kiểm tra lại trạng thái từ server
+        // Đặt hẹn giờ để chuyển về trạng thái active sau 3 giây
         setTimeout(() => {
-          teamApi.getById(loggedInTeam.teamId).then(response => {
-            if (response.data && response.data.status === 'copied') {
-              console.debug('Xác nhận trạng thái sao chép từ server thành công');
-            } else {
-              console.warn('Trạng thái sao chép không đồng bộ với server:', response.data?.status);
-              // Gửi lại trạng thái nếu không đồng bộ
-              if (response.data && response.data.status !== 'copied') {
-                teamApi.updateStatus(loggedInTeam.teamId, { 
-                  status: 'copied',
-                  sessionId: loggedInTeam.sessionId,
-                  timestamp: new Date().toISOString(),
-                  retry: true
-                }).catch(err => console.error('Lỗi khi gửi lại trạng thái:', err));
-              }
-            }
-          }).catch(err => {
-            console.error('Không thể kiểm tra trạng thái từ server:', err);
-          });
-        }, 1000);
+          if (document.hidden) return; // Nếu tab đang ẩn, không cập nhật
+          
+          // Cập nhật trạng thái UI
+          setCurrentStatus('active');
+          
+          // Cập nhật trạng thái lên server
+          teamApi.updateStatus(loggedInTeam.teamId, {
+            status: 'active',
+            sessionId: loggedInTeam.sessionId,
+            timestamp: new Date().toISOString(),
+            returnedFrom: 'copied'
+          }).catch(err => console.error('Lỗi khi cập nhật lại trạng thái sau sao chép:', err));
+        }, 3000);
       }).catch(err => {
         console.error('Error updating copy status:', err);
         
@@ -1034,7 +1062,7 @@ const TeamWaitingPage = () => {
           const apiBase = process.env.NODE_ENV === 'production' 
             ? (process.env.REACT_APP_API_URL || 'https://giaolien-backend-c7ca8074e9c5.herokuapp.com')
             : (process.env.REACT_APP_API_URL || 'http://localhost:5000');
-            
+          
           const endpoint = `${apiBase}/api/teams/${loggedInTeam.teamId}/status`;
           
           const blob = new Blob([JSON.stringify({
@@ -1048,6 +1076,12 @@ const TeamWaitingPage = () => {
           
           navigator.sendBeacon(endpoint, blob);
           console.debug('Đã gửi beacon để cập nhật trạng thái sao chép');
+          
+          // Đặt hẹn giờ để chuyển về trạng thái active sau 3 giây
+          setTimeout(() => {
+            if (document.hidden) return; // Nếu tab đang ẩn, không cập nhật
+            setCurrentStatus('active');
+          }, 3000);
         } catch (beaconErr) {
           console.error('Lỗi khi gửi beacon cho trạng thái copy:', beaconErr);
         }
@@ -1335,11 +1369,14 @@ const TeamWaitingPage = () => {
                       currentStatus === 'active' ? 'success' :
                       currentStatus === 'hidden' ? 'warning' :
                       currentStatus === 'copied' ? 'danger' :
+                      currentStatus === 'inactive' ? 'light' :
                       currentStatus === 'exited' ? 'secondary' : 'light'
-                    }>
+                    } 
+                    text={currentStatus === 'inactive' || currentStatus === 'light' ? 'dark' : 'white'}>
                       {currentStatus === 'active' ? 'Đang hoạt động' :
                        currentStatus === 'hidden' ? 'Đã ẩn tab' :
                        currentStatus === 'copied' ? 'Đã sao chép' :
+                       currentStatus === 'inactive' ? 'Không hoạt động' :
                        currentStatus === 'exited' ? 'Đã thoát' : 'Không hoạt động'}
                     </Badge>
                   </span>
