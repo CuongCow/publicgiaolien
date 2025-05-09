@@ -48,6 +48,13 @@ const TeamWaitingPage = () => {
   // Thêm biến refs để theo dõi hoạt động người dùng
   const lastActivityTimeRef = useRef(Date.now());
   const inactivityTimerRef = useRef(null);
+  // Thêm ref để luôn truy cập được thông tin đăng nhập mới nhất
+  const loggedInTeamRef = useRef(null);
+  
+  // Cập nhật ref khi state thay đổi
+  useEffect(() => {
+    loggedInTeamRef.current = loggedInTeam;
+  }, [loggedInTeam]);
 
   // Hàm lưu thông tin lần thử vào localStorage
   const saveAttemptInfoToLocalStorage = (submissionResult, nextAttemptTime) => {
@@ -302,10 +309,11 @@ const TeamWaitingPage = () => {
       document.onselectionchange = null;
       
       // Cập nhật trạng thái khi thoát trang
-      if (loggedInTeam && loggedInTeam.teamId) {
-        teamApi.updateStatus(loggedInTeam.teamId, { 
+      const currentTeam = loggedInTeamRef.current;
+      if (currentTeam && currentTeam.teamId && currentTeam.sessionId) {
+        teamApi.updateStatus(currentTeam.teamId, { 
           status: "exited",
-          sessionId: loggedInTeam.sessionId 
+          sessionId: currentTeam.sessionId 
         }).catch((err) => 
           console.error("Error updating team status:", err)
         );
@@ -901,8 +909,11 @@ const TeamWaitingPage = () => {
 
   // Xử lý khi tab bị ẩn hoặc hiện
   const handleVisibilityChange = () => {
+    // Lấy thông tin đội từ ref để đảm bảo luôn có dữ liệu mới nhất
+    const currentTeam = loggedInTeamRef.current;
+    
     // Kiểm tra kỹ xem đã đăng nhập và có đầy đủ thông tin cần thiết chưa
-    if (!loggedInTeam || !loggedInTeam.teamId || !loggedInTeam.sessionId) {
+    if (!currentTeam || !currentTeam.teamId || !currentTeam.sessionId) {
       console.debug("Không thể cập nhật trạng thái: thiếu teamId hoặc sessionId");
       return;
     }
@@ -912,7 +923,7 @@ const TeamWaitingPage = () => {
     
     if (document.hidden) {
       // Trạng thái "Ẩn tab" khi người dùng chuyển sang tab khác
-      console.debug("Tab bị ẩn, cập nhật trạng thái hidden cho đội:", loggedInTeam.teamId);
+      console.debug("Tab bị ẩn, cập nhật trạng thái hidden cho đội:", currentTeam.teamId);
       
       // Cập nhật trạng thái hiện tại 
       setCurrentStatus('hidden');
@@ -930,9 +941,9 @@ const TeamWaitingPage = () => {
       }
       
       // Quay trở lại sử dụng teamApi để đảm bảo nhất quán với các trạng thái khác
-      teamApi.updateStatus(loggedInTeam.teamId, { 
+      teamApi.updateStatus(currentTeam.teamId, { 
         status: 'hidden',
-        sessionId: loggedInTeam.sessionId,
+        sessionId: currentTeam.sessionId,
         reason: hiddenReason,
         timestamp: new Date().toISOString()
       }).then(() => {
@@ -946,11 +957,11 @@ const TeamWaitingPage = () => {
             ? (process.env.REACT_APP_API_URL || 'https://giaolien-backend-c7ca8074e9c5.herokuapp.com')
             : (process.env.REACT_APP_API_URL || 'http://localhost:5000');
             
-          const endpoint = `${apiBase}/api/teams/${loggedInTeam.teamId}/status`;
+          const endpoint = `${apiBase}/api/teams/${currentTeam.teamId}/status`;
           
           const blob = new Blob([JSON.stringify({
             status: 'hidden',
-            sessionId: loggedInTeam.sessionId,
+            sessionId: currentTeam.sessionId,
             reason: hiddenReason,
             timestamp: new Date().toISOString(),
             retry: true
@@ -964,15 +975,15 @@ const TeamWaitingPage = () => {
       });
     } else {
       // Trạng thái "Đang hoạt động" khi người dùng quay lại tab
-      console.debug("Tab được hiện, cập nhật trạng thái active cho đội:", loggedInTeam.teamId);
+      console.debug("Tab được hiện, cập nhật trạng thái active cho đội:", currentTeam.teamId);
       
       // Cập nhật trạng thái hiện tại 
       setCurrentStatus('active');
       
       // Quay trở lại sử dụng teamApi để đảm bảo nhất quán với các trạng thái khác
-      teamApi.updateStatus(loggedInTeam.teamId, { 
+      teamApi.updateStatus(currentTeam.teamId, { 
         status: 'active',
-        sessionId: loggedInTeam.sessionId,
+        sessionId: currentTeam.sessionId,
         timestamp: new Date().toISOString(),
         returnedFrom: 'hidden'
       }).then(() => {
@@ -988,11 +999,11 @@ const TeamWaitingPage = () => {
             ? (process.env.REACT_APP_API_URL || 'https://giaolien-backend-c7ca8074e9c5.herokuapp.com')
             : (process.env.REACT_APP_API_URL || 'http://localhost:5000');
             
-          const endpoint = `${apiBase}/api/teams/${loggedInTeam.teamId}/status`;
+          const endpoint = `${apiBase}/api/teams/${currentTeam.teamId}/status`;
           
           const blob = new Blob([JSON.stringify({
             status: 'active',
-            sessionId: loggedInTeam.sessionId,
+            sessionId: currentTeam.sessionId,
             timestamp: new Date().toISOString(),
             returnedFrom: 'hidden',
             retry: true
@@ -1009,7 +1020,10 @@ const TeamWaitingPage = () => {
 
   // Xử lý khi người dùng sao chép nội dung
   const handleCopy = (e) => {
-    if (!loggedInTeam || !loggedInTeam.teamId || !loggedInTeam.sessionId) {
+    // Lấy thông tin đội từ ref để đảm bảo luôn có dữ liệu mới nhất
+    const currentTeam = loggedInTeamRef.current;
+    
+    if (!currentTeam || !currentTeam.teamId || !currentTeam.sessionId) {
       console.debug("Không thể cập nhật trạng thái sao chép: thiếu teamId hoặc sessionId");
       return;
     }
@@ -1022,7 +1036,7 @@ const TeamWaitingPage = () => {
       const isCopyingFromAnswer = answerTextarea && (activeElement === answerTextarea || 
                                   answerTextarea.contains(document.getSelection().anchorNode));
       
-      console.debug('Đang cập nhật trạng thái sao chép cho đội:', loggedInTeam.teamId, 
+      console.debug('Đang cập nhật trạng thái sao chép cho đội:', currentTeam.teamId, 
                    'Nội dung:', selectedText.substring(0, 50),
                    'Từ trường đáp án:', isCopyingFromAnswer);
       
@@ -1030,10 +1044,10 @@ const TeamWaitingPage = () => {
       setCurrentStatus('copied');
       
       // Quay trở lại sử dụng teamApi để đảm bảo nhất quán với các trạng thái khác
-      teamApi.updateStatus(loggedInTeam.teamId, { 
+      teamApi.updateStatus(currentTeam.teamId, { 
         status: 'copied', 
         content: selectedText,
-        sessionId: loggedInTeam.sessionId,
+        sessionId: currentTeam.sessionId,
         fromAnswerField: isCopyingFromAnswer,
         timestamp: new Date().toISOString()
       }).then(() => {
@@ -1047,9 +1061,9 @@ const TeamWaitingPage = () => {
           setCurrentStatus('active');
           
           // Cập nhật trạng thái lên server
-          teamApi.updateStatus(loggedInTeam.teamId, {
+          teamApi.updateStatus(currentTeam.teamId, {
             status: 'active',
-            sessionId: loggedInTeam.sessionId,
+            sessionId: currentTeam.sessionId,
             timestamp: new Date().toISOString(),
             returnedFrom: 'copied'
           }).catch(err => console.error('Lỗi khi cập nhật lại trạng thái sau sao chép:', err));
@@ -1063,12 +1077,12 @@ const TeamWaitingPage = () => {
             ? (process.env.REACT_APP_API_URL || 'https://giaolien-backend-c7ca8074e9c5.herokuapp.com')
             : (process.env.REACT_APP_API_URL || 'http://localhost:5000');
           
-          const endpoint = `${apiBase}/api/teams/${loggedInTeam.teamId}/status`;
+          const endpoint = `${apiBase}/api/teams/${currentTeam.teamId}/status`;
           
           const blob = new Blob([JSON.stringify({
             status: 'copied',
             content: selectedText.substring(0, 500), // Giới hạn kích thước để đảm bảo Beacon hoạt động
-            sessionId: loggedInTeam.sessionId,
+            sessionId: currentTeam.sessionId,
             fromAnswerField: isCopyingFromAnswer,
             timestamp: new Date().toISOString(),
             retry: true
@@ -1091,12 +1105,15 @@ const TeamWaitingPage = () => {
 
   // Xử lý khi người dùng thoát trang
   const handleBeforeUnload = (e) => {
-    if (loggedInTeam && loggedInTeam.teamId && loggedInTeam.sessionId) {
+    // Lấy thông tin đội từ ref để đảm bảo luôn có dữ liệu mới nhất
+    const currentTeam = loggedInTeamRef.current;
+    
+    if (currentTeam && currentTeam.teamId && currentTeam.sessionId) {
       // Cập nhật trạng thái hiện tại 
       setCurrentStatus('exited');
       
       // Ghi log ở phía client
-      console.debug('Người dùng thoát trang, cập nhật trạng thái exited cho đội:', loggedInTeam.teamId);
+      console.debug('Người dùng thoát trang, cập nhật trạng thái exited cho đội:', currentTeam.teamId);
       
       // Ghi nhận thời điểm thoát
       const exitTime = new Date().toISOString();
@@ -1108,12 +1125,12 @@ const TeamWaitingPage = () => {
           ? (process.env.REACT_APP_API_URL || 'https://giaolien-backend-c7ca8074e9c5.herokuapp.com')
           : (process.env.REACT_APP_API_URL || 'http://localhost:5000');
           
-        const endpoint = `${apiBase}/api/teams/${loggedInTeam.teamId}/status`;
+        const endpoint = `${apiBase}/api/teams/${currentTeam.teamId}/status`;
         
         // Sử dụng Blob để gửi dữ liệu JSON với đúng Content-Type
         const blob = new Blob([JSON.stringify({
           status: 'exited',
-          sessionId: loggedInTeam.sessionId,
+          sessionId: currentTeam.sessionId,
           timestamp: exitTime,
           reason: 'page_closed',
           beaconBackup: true
@@ -1186,6 +1203,10 @@ const TeamWaitingPage = () => {
   const startInactivityTracking = (teamId, sessionId) => {
     console.debug('Bắt đầu theo dõi hoạt động người dùng cho teamId:', teamId);
     
+    // Lưu thông tin đăng nhập vào closure để đảm bảo luôn sử dụng thông tin đúng
+    const savedTeamId = teamId;
+    const savedSessionId = sessionId;
+    
     // Đặt thời gian hoạt động ban đầu
     lastActivityTimeRef.current = Date.now();
     
@@ -1234,9 +1255,9 @@ const TeamWaitingPage = () => {
       // Cập nhật trạng thái hiện tại
       setCurrentStatus('active');
       
-      teamApi.updateStatus(teamId, { 
+      teamApi.updateStatus(savedTeamId, { 
         status: 'active',
-        sessionId: sessionId,
+        sessionId: savedSessionId,
         timestamp: new Date().toISOString(),
         activitySource: 'user_interaction'
       }).then(() => {
@@ -1306,9 +1327,9 @@ const TeamWaitingPage = () => {
         setCurrentStatus('inactive');
         
         // Cập nhật trạng thái thành "Không hoạt động"
-        teamApi.updateStatus(teamId, { 
+        teamApi.updateStatus(savedTeamId, { 
           status: 'inactive',
-          sessionId: sessionId,
+          sessionId: savedSessionId,
           inactiveTime: Math.floor(inactiveTime/1000),
           timestamp: new Date().toISOString()
         }).then(() => {
