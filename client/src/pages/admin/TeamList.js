@@ -127,9 +127,30 @@ const TeamList = () => {
     try {
       const response = await teamApi.getAll();
       
-      // Cập nhật state teams chỉ khi có thay đổi thực sự
-      if (JSON.stringify(response.data) !== JSON.stringify(teams)) {
-        setTeams(response.data);
+      // Kiểm tra dữ liệu đã nhận
+      if (response.data && Array.isArray(response.data)) {
+        // Kiểm tra xem có cần cập nhật lại teams hay không
+        let hasUpdate = false;
+        let teamsChanged = false;
+        
+        // So sánh dữ liệu mới với dữ liệu hiện có
+        if (teams.length !== response.data.length) {
+          teamsChanged = true;
+        } else {
+          // Kiểm tra và ghi nhận các thay đổi trạng thái
+          for (let i = 0; i < response.data.length; i++) {
+            const existingTeam = teams.find(t => t._id === response.data[i]._id);
+            if (!existingTeam || existingTeam.status !== response.data[i].status) {
+              hasUpdate = true;
+              break;
+            }
+          }
+        }
+        
+        // Cập nhật state teams chỉ khi có thay đổi thực sự
+        if (teamsChanged || hasUpdate) {
+          setTeams(response.data);
+        }
       }
     } catch (err) {
       console.error('Error fetching teams in background:', err);
@@ -184,7 +205,10 @@ const TeamList = () => {
       currentTeamsMap[team._id] = {...team};
       
       const prevTeam = prevTeams[team._id];
-      if (prevTeam && prevTeam.status !== team.status) {
+      // So sánh với === null để xem xét cả trường hợp undefined và null
+      if (prevTeam && (prevTeam.status !== team.status || 
+                       (prevTeam.status === null && team.status !== null) ||
+                       (prevTeam.status !== null && team.status === null))) {
         console.log(`Thay đổi trạng thái: ${team.name}, từ ${prevTeam.status || 'không có'} thành ${team.status || 'không có'}`);
         
         // Thêm log
@@ -355,6 +379,11 @@ const TeamList = () => {
     setSelectedTeam(team);
     setShowDetailModal(true);
     
+    // Nếu team đang ở trạng thái copied, kiểm tra xem trạng thái có chính xác không
+    if (team.status === 'copied') {
+      verifyTeamCopiedStatus(team._id);
+    }
+    
     // Tải nhật ký thay đổi trạng thái của đội cụ thể
     setLoadingTeamLogs(true);
     
@@ -394,7 +423,10 @@ const TeamList = () => {
 
   // Hiển thị trạng thái đội
   const renderStatus = (status) => {
-    switch(status) {
+    // Làm rõ logic xử lý với status null/undefined
+    const statusValue = status || 'inactive';
+    
+    switch(statusValue) {
       case 'active':
         return <Badge bg="success">{t('team_status_active')}</Badge>;
       case 'hidden':
@@ -816,6 +848,38 @@ LƯU Ý:
         setError(t('logout_device_error'));
         console.error('Error forcing team logout:', err);
       }
+    }
+  };
+
+  // Thêm hàm kiểm tra đặc biệt cho trạng thái "copied"
+  const verifyTeamCopiedStatus = (teamId) => {
+    if (!teamId) return;
+    
+    // Tìm team trong danh sách
+    const team = teams.find(t => t._id === teamId);
+    if (!team) return;
+    
+    // Nếu team có trạng thái copied, kiểm tra với server
+    if (team.status === 'copied') {
+      teamApi.getById(teamId).then(response => {
+        if (response.data && response.data.status !== 'copied') {
+          console.warn('Phát hiện trạng thái copied không đồng bộ:', 
+            'Local:', team.status, 'Server:', response.data.status);
+          
+          // Cập nhật lại trạng thái local từ server
+          setTeams(prevTeams => prevTeams.map(t =>
+            t._id === teamId ? {...t, status: response.data.status} : t
+          ));
+          
+          // Thêm log
+          addStatusLog(
+            teamId,
+            team.name,
+            'copied',
+            response.data.status
+          );
+        }
+      }).catch(err => console.error('Không thể kiểm tra trạng thái của team:', err));
     }
   };
 

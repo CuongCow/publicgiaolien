@@ -874,7 +874,7 @@ const TeamWaitingPage = () => {
       // Trạng thái "Ẩn tab" khi người dùng chuyển sang tab khác
       console.debug("Tab bị ẩn, cập nhật trạng thái hidden cho đội:", loggedInTeam.teamId);
       
-      // Cập nhật trạng thái hiện tại 
+      // Cập nhật trạng thái hiện tại - ĐẶT TRƯỚC KHI GỌI API
       setCurrentStatus('hidden');
       
       // Xác định nguyên nhân tab bị ẩn (nếu có thể)
@@ -897,6 +897,8 @@ const TeamWaitingPage = () => {
         timestamp: new Date().toISOString()
       }).then(() => {
         console.debug('Đã cập nhật trạng thái hidden thành công');
+        // Xác nhận lại trạng thái
+        setCurrentStatus('hidden');
       }).catch(err => {
         console.error('Error updating hidden status:', err);
         
@@ -926,7 +928,7 @@ const TeamWaitingPage = () => {
       // Trạng thái "Đang hoạt động" khi người dùng quay lại tab
       console.debug("Tab được hiện, cập nhật trạng thái active cho đội:", loggedInTeam.teamId);
       
-      // Cập nhật trạng thái hiện tại 
+      // Cập nhật trạng thái hiện tại - ĐẶT TRƯỚC KHI GỌI API
       setCurrentStatus('active');
       
       // Quay trở lại sử dụng teamApi để đảm bảo nhất quán với các trạng thái khác
@@ -939,6 +941,8 @@ const TeamWaitingPage = () => {
         console.debug('Đã cập nhật trạng thái active thành công');
         // Cập nhật lại thời gian hoạt động cuối cùng
         lastActivityTimeRef.current = Date.now();
+        // Xác nhận lại trạng thái
+        setCurrentStatus('active');
       }).catch(err => {
         console.error('Error updating active status:', err);
         
@@ -986,7 +990,7 @@ const TeamWaitingPage = () => {
                    'Nội dung:', selectedText.substring(0, 50),
                    'Từ trường đáp án:', isCopyingFromAnswer);
       
-      // Cập nhật trạng thái hiện tại 
+      // Cập nhật trạng thái hiện tại TRƯỚC khi gọi API
       setCurrentStatus('copied');
       
       // Quay trở lại sử dụng teamApi để đảm bảo nhất quán với các trạng thái khác
@@ -998,6 +1002,30 @@ const TeamWaitingPage = () => {
         timestamp: new Date().toISOString()
       }).then(() => {
         console.debug('Đã cập nhật trạng thái sao chép thành công');
+        // Xác nhận lại trạng thái
+        setCurrentStatus('copied');
+        
+        // Sau 1 giây, kiểm tra lại trạng thái từ server
+        setTimeout(() => {
+          teamApi.getById(loggedInTeam.teamId).then(response => {
+            if (response.data && response.data.status === 'copied') {
+              console.debug('Xác nhận trạng thái sao chép từ server thành công');
+            } else {
+              console.warn('Trạng thái sao chép không đồng bộ với server:', response.data?.status);
+              // Gửi lại trạng thái nếu không đồng bộ
+              if (response.data && response.data.status !== 'copied') {
+                teamApi.updateStatus(loggedInTeam.teamId, { 
+                  status: 'copied',
+                  sessionId: loggedInTeam.sessionId,
+                  timestamp: new Date().toISOString(),
+                  retry: true
+                }).catch(err => console.error('Lỗi khi gửi lại trạng thái:', err));
+              }
+            }
+          }).catch(err => {
+            console.error('Không thể kiểm tra trạng thái từ server:', err);
+          });
+        }, 1000);
       }).catch(err => {
         console.error('Error updating copy status:', err);
         
@@ -1465,16 +1493,12 @@ const TeamWaitingPage = () => {
                       <img
                         src={
                           teamSpecificContent.image
-                            ? // Trường hợp 1: Đường dẫn đầy đủ bắt đầu bằng http hoặc https
-                              teamSpecificContent.image.startsWith("http")
-                              ? teamSpecificContent.image
-                              : // Trường hợp 2: Đường dẫn API
-                                teamSpecificContent.image.startsWith("/api/")
-                                ? process.env.NODE_ENV === "production"
-                                  ? `https://giaolien-backend-c7ca8074e9c5.herokuapp.com${teamSpecificContent.image}`
-                                  : `${process.env.REACT_APP_API_URL || "http://localhost:5000"}${teamSpecificContent.image}`
-                                : // Trường hợp 3: Các đường dẫn khác
-                                  teamSpecificContent.image
+                            ? // Ưu tiên sử dụng URL API từ server
+                              teamSpecificContent.image.startsWith("/api/")
+                              ? `${process.env.REACT_APP_API_URL || "http://localhost:5000"}${teamSpecificContent.image}`
+                              : teamSpecificContent.image.startsWith("http")
+                                ? teamSpecificContent.image
+                                : teamSpecificContent.image
                             : ""
                         }
                         alt="Mật thư"
@@ -1488,11 +1512,7 @@ const TeamWaitingPage = () => {
                           boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
                         }}
                         onError={(e) => {
-                          console.error("Lỗi tải hình ảnh:", e);
-                          console.log(
-                            "URL hình ảnh:",
-                            teamSpecificContent.image,
-                          );
+                          console.error("Lỗi tải hình ảnh:", e.target.src);
                           e.target.onerror = null;
                           e.target.src =
                             "https://via.placeholder.com/400x300?text=Không+thể+hiển+thị+hình+ảnh";

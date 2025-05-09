@@ -597,47 +597,49 @@ const StationForm = () => {
       // Hiển thị preview trực tiếp thông qua URL.createObjectURL
       const previewUrl = URL.createObjectURL(file);
       
+      // Tải lên server trước khi cập nhật UI
+      const response = await stationApi.uploadImage(file);
+      const imageUrl = response.data.imageUrl;
+      
       if (stationIndex !== null) {
-        // Trường hợp nhiều trạm - cập nhật imagePreview cho trạm đang chọn
+        // Trường hợp nhiều trạm - cập nhật imagePreview và content cho trạm đang chọn
         setStations(prev => {
           const updatedStations = [...prev];
           updatedStations[stationIndex] = {
             ...updatedStations[stationIndex],
-            imagePreview: previewUrl
+            imagePreview: previewUrl,
+            content: imageUrl // Sử dụng URL API thay vì URL blob
           };
           return updatedStations;
         });
       } else {
         // Trường hợp một trạm hoặc chỉnh sửa
         setImagePreview(previewUrl);
+        
+        // Cập nhật URL vào form
+        if (isEditMode) {
+          // Cập nhật cho trạm đang chỉnh sửa
+          setStations(prev => {
+            const updatedStations = [...prev];
+            if (updatedStations[0]) {
+              updatedStations[0] = {
+                ...updatedStations[0],
+                content: imageUrl, // Sử dụng URL API từ server
+                imagePreview: previewUrl
+              };
+            }
+            return updatedStations;
+          });
+        } else {
+          // Cập nhật cho chế độ một trạm
+          setFormData(prev => ({
+            ...prev,
+            content: imageUrl // Sử dụng URL API từ server
+          }));
+        }
       }
       
-      // Tải lên server
-      const response = await stationApi.uploadImage(file);
-      
-      // Cập nhật URL vào form
-      if (isEditMode && stationIndex === null) {
-        // Cập nhật cho trạm đang chỉnh sửa
-        setStations(prev => {
-          const updatedStations = [...prev];
-          if (updatedStations[0]) {
-            updatedStations[0] = {
-              ...updatedStations[0],
-              content: response.data.imageUrl
-            };
-          }
-          return updatedStations;
-        });
-      } else if (stationIndex !== null) {
-        // Cập nhật cho chế độ nhiều trạm
-        handleStationChange(stationIndex, 'content', response.data.imageUrl);
-      } else {
-        // Cập nhật cho chế độ một trạm
-        setFormData(prev => ({
-          ...prev,
-          content: response.data.imageUrl
-        }));
-      }
+      setSuccess(`Đã tải lên hình ảnh thành công: ${imageUrl}`);
     } catch (err) {
       setError(t('image_upload_error'));
       console.error('Error uploading image:', err);
@@ -1183,11 +1185,20 @@ const StationForm = () => {
         } else if (station.showImage && station.showText) {
           // Cả hai
           finalContentType = 'both';
-          finalContent = station.imagePreview || station.content;
+          
+          if (station.imagePreview) {
+            // Đảm bảo sử dụng URL từ server thay vì URL blob
+            finalContent = station.content && station.content.startsWith('/api/') ? station.content : station.imagePreview;
+          }
         } else {
           // Không có nội dung
           finalContent = '';
           finalContentType = 'text';
+        }
+        
+        // Đảm bảo content sử dụng URL api thay vì URL blob khi có nội dung là hình ảnh
+        if ((finalContentType === 'image' || finalContentType === 'both') && station.content && station.content.startsWith('/api/')) {
+          finalContent = station.content;
         }
         
         // Chuẩn bị dữ liệu teamSpecificContents nếu là mật thư riêng
@@ -1381,12 +1392,18 @@ const StationForm = () => {
               finalContentType = 'both';
               
               if (station.imagePreview) {
-                finalContent = station.imagePreview;
+                // Đảm bảo sử dụng URL từ server thay vì URL blob
+                finalContent = station.content && station.content.startsWith('/api/') ? station.content : station.imagePreview;
               }
             } else {
               // Không có nội dung
               finalContent = '';
               finalContentType = 'text';
+            }
+            
+            // Đảm bảo content sử dụng URL api thay vì URL blob khi có nội dung là hình ảnh
+            if ((finalContentType === 'image' || finalContentType === 'both') && station.content && station.content.startsWith('/api/')) {
+              finalContent = station.content;
             }
             
             // Thêm vào mảng các trạm để tạo
@@ -2730,7 +2747,14 @@ const StationForm = () => {
                       <div className="text-center mb-3">
                         {previewContent.imagePreview || previewContent.content || previewContent.imageUrl ? (
                           <img 
-                            src={previewContent.imagePreview || previewContent.imageUrl || previewContent.content || ''} 
+                            src={
+                              // Ưu tiên sử dụng URL API từ server nếu có
+                              (previewContent.content && previewContent.content.startsWith('/api/')) 
+                                ? `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${previewContent.content}`
+                                : (previewContent.imageUrl && previewContent.imageUrl.startsWith('/api/'))
+                                  ? `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${previewContent.imageUrl}`
+                                  : previewContent.imagePreview || previewContent.imageUrl || previewContent.content || ''
+                            } 
                             alt="Mật thư" 
                             className="station-image img-fluid"
                             style={{ 

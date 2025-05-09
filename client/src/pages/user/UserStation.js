@@ -1445,9 +1445,13 @@ const UserStation = () => {
                     {teamSpecificContent && (teamSpecificContent.showImage || teamSpecificContent.contentType === 'image' || teamSpecificContent.contentType === 'both') && (teamSpecificContent.content || teamSpecificContent.imageUrl) ? (
                       <div className="text-center mb-3">
                         <img 
-                          src={teamSpecificContent.imageUrl || (teamSpecificContent.content && teamSpecificContent.content.startsWith('/api/') 
-                            ? `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${teamSpecificContent.content}`
-                            : teamSpecificContent.content)
+                          src={
+                            // Ưu tiên sử dụng URL API từ server
+                            (teamSpecificContent.content && teamSpecificContent.content.startsWith('/api/')) 
+                              ? `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${teamSpecificContent.content}`
+                              : (teamSpecificContent.imageUrl && teamSpecificContent.imageUrl.startsWith('/api/'))
+                                ? `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${teamSpecificContent.imageUrl}`
+                                : teamSpecificContent.imageUrl || teamSpecificContent.content
                           }
                           alt="Mật thư" 
                           className="station-image img-fluid"
@@ -1460,7 +1464,7 @@ const UserStation = () => {
                             boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                           }}
                           onError={(e) => {
-                            console.error('Lỗi tải hình ảnh:', e);
+                            console.error('Lỗi tải hình ảnh:', e.target.src);
                             e.target.onerror = null;
                             e.target.src = 'https://via.placeholder.com/400x300?text=Không+thể+hiển+thị+hình+ảnh';
                           }}
