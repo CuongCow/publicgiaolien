@@ -8,6 +8,8 @@ import { updateSystemSettings } from '../../utils/helpers';
 import { useSystemSettings } from '../../context/SystemSettingsContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { BrowserQRCodeReader } from '@zxing/browser';
+import LanguageSelector from '../../components/LanguageSelector';
+import { useTranslation } from '../../context/TranslationContext';
 import './UserStation.css';
 
 const UserStation = () => {
@@ -15,6 +17,7 @@ const UserStation = () => {
   const navigate = useNavigate();
   const { getAdminSettings } = useSystemSettings();
   const { t } = useLanguage();
+  const { changeLanguage } = useTranslation();
 
   const [station, setStation] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -1082,7 +1085,7 @@ const UserStation = () => {
   if (loading) {
     return (
       <Container className="d-flex justify-content-center align-items-center min-vh-100">
-        <div className="text-center spinner-container">
+        <div className="text-center spinner-container" data-translatable>
           <Spinner animation="border" variant="primary" />
           <p className="mt-3"><TermReplacer>{t('loading_station_info')}</TermReplacer></p>
           </div>
@@ -1094,7 +1097,7 @@ const UserStation = () => {
     return (
       <Container className="d-flex justify-content-center align-items-center min-vh-100">
         <Card className="text-center shadow w-100 animate__animated animate__fadeIn" style={{ maxWidth: '500px' }}>
-          <Card.Body className="p-5">
+          <Card.Body className="p-5" data-translatable>
             <div className="mb-4 text-danger">
               <i className="bi bi-exclamation-circle" style={{ fontSize: '3rem' }}></i>
             </div>
@@ -1115,11 +1118,11 @@ const UserStation = () => {
     return (
       <Container className="d-flex justify-content-center align-items-center min-vh-100">
         <Card className="text-center shadow w-100 animate__animated animate__fadeIn" style={{ maxWidth: '500px' }}>
-          <Card.Header className="bg-danger text-white">
+          <Card.Header className="bg-danger text-white" data-translatable>
             <i className="bi bi-shield-exclamation me-2"></i>
             Truy cập bị từ chối
           </Card.Header>
-          <Card.Body className="p-5">
+          <Card.Body className="p-5" data-translatable>
             <div className="mb-4 text-danger">
               <i className="bi bi-slash-circle" style={{ fontSize: '3rem' }}></i>
             </div>
@@ -1131,11 +1134,11 @@ const UserStation = () => {
                 window.location.reload();
               }}>
                 <i className="bi bi-box-arrow-left me-2"></i>
-                Đăng xuất
+                <span data-translatable>Đăng xuất</span>
               </Button>
               <Button variant="outline-secondary" onClick={() => navigate('/')}>
                 <i className="bi bi-house-door me-2"></i>
-                Về trang chủ
+                <span data-translatable>Về trang chủ</span>
               </Button>
             </div>
           </Card.Body>
@@ -1147,7 +1150,7 @@ const UserStation = () => {
   // Thêm vào phần chọn đội của form
   const renderTeamSelectionForm = () => (
     <div className="text-center py-3">
-      <div className="mb-4">
+      <div className="mb-4" data-translatable>
         <div className="d-inline-block bg-light p-4 rounded-circle mb-3">
           <i className="bi bi-people-fill text-primary" style={{ fontSize: '3rem' }}></i>
         </div>
@@ -1155,10 +1158,10 @@ const UserStation = () => {
         <p className="text-muted">{t('select_team_description')}</p>
       </div>
       
-      {error && <Alert variant="danger">{error}</Alert>}
+      {error && <Alert variant="danger" data-translatable>{error}</Alert>}
       
       {alreadyLoggedInError && (
-        <Alert variant="warning">
+        <Alert variant="warning" data-translatable>
           <Alert.Heading>{t('already_logged_in')}</Alert.Heading>
           <p>{alreadyLoggedInError.message}</p>
           <hr />
@@ -1170,14 +1173,14 @@ const UserStation = () => {
       
       <Form onSubmit={handleTeamSubmit} className="text-start">
         <Form.Group className="mb-3">
-          <Form.Label>{t('team')}</Form.Label>
+          <Form.Label data-translatable>{t('team')}</Form.Label>
           <Form.Select 
             value={selectedTeam} 
             onChange={handleTeamSelect}
             className="form-select-lg"
             required
           >
-            <option value="">{t('select_team_option')}</option>
+            <option value="" data-translatable>{t('select_team_option')}</option>
             {station.teams.map((team, index) => (
               <option key={index} value={team}>{team}</option>
             ))}
@@ -1185,13 +1188,14 @@ const UserStation = () => {
         </Form.Group>
         
         <Form.Group className="mb-4">
-          <Form.Label>{t('password_label')}</Form.Label>
+          <Form.Label data-translatable>{t('password_label')}</Form.Label>
           <Form.Control
             type="password"
             value={password}
             onChange={handlePasswordChange}
             placeholder={t('enter_password')}
             required
+            data-translatable
           />
         </Form.Group>
         
@@ -1202,11 +1206,9 @@ const UserStation = () => {
             size="lg" 
             disabled={submitting}
           >
-            {submitting ? (
-              <>
-                {t('processing')}
-              </>
-            ) : t('confirm')}
+            <span data-translatable>
+              {submitting ? t('processing') : t('confirm')}
+            </span>
           </Button>
         </div>
       </Form>
@@ -1225,25 +1227,30 @@ const UserStation = () => {
               <div className="d-flex align-items-center justify-content-between">
                 <div className="d-flex align-items-center">
                   <i className="bi bi-geo-alt-fill me-2" style={{ fontSize: '1.5rem' }}></i>
-                  <div>
+                  <div data-translatable>
                     <h2 className="mb-0"><TermReplacer>{t('station_term')}</TermReplacer> {station.name}</h2>
                     {station.gameName && <p className="mb-0 mt-1 opacity-75">{station.gameName}</p>}
                   </div>
                 </div>
-                <Button 
-                  variant="link" 
-                  className="p-0 ms-2" 
-                  style={{ color: 'white', border: 'none', background: 'transparent' }} 
-                  onClick={handleOpenQrScanner}
-                >
-                  <i className="bi bi-qr-code-scan" style={{ fontSize: '2.5rem' }}></i>
-                </Button>
+                <div className="d-flex align-items-center">
+                  <div className="me-2">
+                    <LanguageSelector onSelectLanguage={changeLanguage} />
+                  </div>
+                  <Button 
+                    variant="link" 
+                    className="p-0 ms-2" 
+                    style={{ color: 'white', border: 'none', background: 'transparent' }} 
+                    onClick={handleOpenQrScanner}
+                  >
+                    <i className="bi bi-qr-code-scan" style={{ fontSize: '2.5rem' }}></i>
+                  </Button>
+                </div>
               </div>
             </Card.Header>
             <Card.Body className="px-2 py-3">
               {/* Hiển thị thông báo buộc đăng xuất nếu có */}
               {forceLogoutMessage && (
-                <Alert variant="danger" className="mb-4 text-center">
+                <Alert variant="danger" className="mb-4 text-center" data-translatable>
                   <i className="bi bi-exclamation-triangle-fill me-2"></i>
                   {forceLogoutMessage}
                 </Alert>
@@ -1266,7 +1273,7 @@ const UserStation = () => {
               ) : (
                 <>
                   <div className="d-flex align-items-center justify-content-between mb-4">
-                    <div>
+                    <div data-translatable>
                       <h4 className="mb-1">
                         <i className="bi bi-people-fill me-2 text-primary"></i>
                         {t('team')}: {teamName}
@@ -1291,7 +1298,7 @@ const UserStation = () => {
                   </div>
 
                   {station.gameNote && (
-                    <Alert variant="info" className="d-flex align-items-start mb-4">
+                    <Alert variant="info" className="d-flex align-items-start mb-4" data-translatable>
                       <i className="bi bi-info-circle-fill me-2 mt-1" style={{ fontSize: '1.2rem' }}></i>
                       <div>{station.gameNote}</div>
                     </Alert>
@@ -1299,10 +1306,10 @@ const UserStation = () => {
 
                   {/* Hiển thị nội dung trạm */}
                   <div className="station-content-wrapper mb-4">
-                    <h5 className="fw-bold mb-3">
-                      <i className="bi bi-file-text me-2 text-primary"></i>
-                      Mật thư:
-                    </h5>
+                                  <h5 className="fw-bold mb-3" data-translatable>
+                <i className="bi bi-file-text me-2 text-primary"></i>
+                <span data-translatable>Mật thư:</span>
+              </h5>
                     
                     {/* Nội dung văn bản */}
                     {teamSpecificContent && (teamSpecificContent.showText || teamSpecificContent.contentType === 'text' || teamSpecificContent.contentType === 'both') ? (
@@ -1319,7 +1326,7 @@ const UserStation = () => {
                               {teamSpecificContent.ottContent && teamSpecificContent.showOTT && (
                                 <div className="mb-2">
                                   <h6 className="fw-bold d-inline-block bg-primary text-white px-3 py-1 rounded-0 mb-0 ms-0 mt-1">OTT:</h6>
-                                  <div className="content-text w-100 px-1">
+                                  <div className="content-text w-100 px-1" data-translatable>
                                     {teamSpecificContent.ottContent.split('\n').map((line, idx) => (
                                       <p 
                                         key={idx} 
@@ -1341,7 +1348,7 @@ const UserStation = () => {
                               {teamSpecificContent.nwContent && teamSpecificContent.showNW && (
                                 <div>
                                   <h6 className="fw-bold d-inline-block bg-primary text-white px-3 py-1 rounded-0 mb-0 ms-0">NW:</h6>
-                                  <div className="content-text w-100 px-1">
+                                  <div className="content-text w-100 px-1" data-translatable>
                                     {teamSpecificContent.nwContent.split('\n').map((line, idx) => (
                                       <p 
                                         key={idx} 
@@ -1363,7 +1370,7 @@ const UserStation = () => {
                               )}
                             </>
                           ) : (
-                            <div className="content-text w-100 px-1">
+                            <div className="content-text w-100 px-1" data-translatable>
                               {teamSpecificContent.content && teamSpecificContent.content.split('\n').map((line, idx) => {
                                 // Kiểm tra nếu dòng bắt đầu bằng "OTT:" hoặc "NW:"
                                 if (line.trim().startsWith('OTT:')) {
@@ -1475,7 +1482,7 @@ const UserStation = () => {
 
                   <Form onSubmit={handleSubmitAnswer}>
                     <Form.Group className="mb-4">
-                      <Form.Label>Đáp án của bạn</Form.Label>
+                      <Form.Label data-translatable>Đáp án của bạn</Form.Label>
                       <Form.Control
                         as="textarea"
                         rows={4}
@@ -1485,9 +1492,10 @@ const UserStation = () => {
                         disabled={nextAttemptTime !== null || submitting}
                         ref={answerInputRef}
                         className="form-control-lg"
+                        data-translatable
                       />
                       {nextAttemptTime && (
-                        <div className="text-danger mt-2">
+                        <div className="text-danger mt-2" data-translatable>
                           <i className="bi bi-hourglass-split me-1"></i>
                           Vui lòng đợi {timeLeft} để thử lại
                         </div>
@@ -1503,9 +1511,9 @@ const UserStation = () => {
                       >
                         {submitting ? (
                           <>
-                            Đang xử lý...
+                            <span data-translatable>Đang xử lý...</span>
                           </>
-                        ) : 'Gửi đáp án'}
+                        ) : <span data-translatable>Gửi đáp án</span>}
                       </Button>
                     </div>
                   </Form>
@@ -1513,17 +1521,17 @@ const UserStation = () => {
                   {submissionResult && (
                     <div className="mt-4">
                       {submissionResult.isCorrect ? (
-                        <Alert variant="success" className="d-flex align-items-center">
+                        <Alert variant="success" className="d-flex align-items-center" data-translatable>
                           <i className="bi bi-check-circle-fill me-2" style={{ fontSize: '1.5rem' }}></i>
                           <div>
                             <strong>Chính xác!</strong> Chúc mừng, bạn đã hoàn thành <TermReplacer>{t('station_term')}</TermReplacer> này.
                           </div>
                         </Alert>
                       ) : nextAttemptTime ? (
-                        <Alert variant="warning" className="d-flex align-items-start">
+                        <Alert variant="warning" className="d-flex align-items-start" data-translatable>
                           <i className="bi bi-hourglass-split me-2 mt-1" style={{ fontSize: '1.5rem' }}></i>
                           <div>
-                            <div className="mb-1"><strong>Đã hết lần thử!</strong></div>
+                            <div className="mb-1" data-translatable><strong>Đã hết lần thử!</strong></div>
                             <div>
                               <span className="me-3 badge bg-warning text-dark px-2 py-1 mb-1">
                                 <i className="bi bi-clock-history me-1"></i>
@@ -1533,12 +1541,12 @@ const UserStation = () => {
                           </div>
                         </Alert>
                       ) : submissionResult.remainingAttempts <= 0 ? (
-                        <Alert variant="danger" className="d-flex align-items-start">
+                        <Alert variant="danger" className="d-flex align-items-start" data-translatable>
                           <i className="bi bi-x-circle-fill me-2 mt-1" style={{ fontSize: '1.5rem' }}></i>
                           <div>
-                            <div className="mb-1"><strong>Đáp án không chính xác!</strong></div>
+                            <div className="mb-1" data-translatable><strong>Đáp án không chính xác!</strong></div>
                             <div className="d-flex align-items-center flex-wrap">
-                              <span className="text-danger mb-1">
+                              <span className="text-danger mb-1" data-translatable>
                                 <i className="bi bi-exclamation-circle-fill me-1"></i>
                                 Đã hết lần thử! Đang chuẩn bị khóa trong {station.lockTime} phút.
                               </span>
@@ -1546,18 +1554,18 @@ const UserStation = () => {
                           </div>
                         </Alert>
                       ) : submissionResult.attemptCount > 0 ? (
-                        <Alert variant="danger" className="d-flex align-items-start">
+                        <Alert variant="danger" className="d-flex align-items-start" data-translatable>
                           <i className="bi bi-x-circle-fill me-2 mt-1" style={{ fontSize: '1.5rem' }}></i>
                           <div>
-                            <div className="mb-1"><strong>Đáp án không chính xác!</strong></div>
+                            <div className="mb-1" data-translatable><strong>Đáp án không chính xác!</strong></div>
                             <div className="d-flex align-items-center flex-wrap">
-                              <span className="me-3 mb-1">
+                              <span className="me-3 mb-1" data-translatable>
                                 <i className="bi bi-arrow-counterclockwise me-1"></i>
                                 Bạn còn <strong className="badge bg-info">{submissionResult.remainingAttempts}</strong> lần thử
                               </span>
                               
                               {submissionResult.remainingAttempts <= 2 && (
-                                <span className="text-warning mb-1">
+                                <span className="text-warning mb-1" data-translatable>
                                   <i className="bi bi-exclamation-triangle-fill me-1"></i>
                                   Hãy suy nghĩ kỹ!
                                 </span>
@@ -1566,7 +1574,7 @@ const UserStation = () => {
                           </div>
                         </Alert>
                       ) : (
-                        <Alert variant="info" className="d-flex align-items-center">
+                        <Alert variant="info" className="d-flex align-items-center" data-translatable>
                           <i className="bi bi-info-circle-fill me-2" style={{ fontSize: '1.5rem' }}></i>
                           <div>
                             <strong>Nhập đáp án của bạn</strong> - Bạn có <strong className="badge bg-info">{submissionResult.remainingAttempts}</strong> lần thử
@@ -1580,7 +1588,7 @@ const UserStation = () => {
             </Card.Body>
           </Card>
           
-          <div className="text-center text-muted">
+          <div className="text-center text-muted" data-translatable>
             <small>
               <i className="bi bi-shield-lock me-1"></i>
               Hệ thống quản lý <TermReplacer>{t('station_term')}</TermReplacer> của Giao Liên
@@ -1598,12 +1606,12 @@ const UserStation = () => {
         keyboard={false}
       >
         <Modal.Header closeButton className="bg-success text-white">
-          <Modal.Title>
+          <Modal.Title data-translatable>
             <i className="bi bi-trophy me-2"></i>
-            Chúc mừng!
+            <span data-translatable>Chúc mừng!</span>
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body className="text-center py-4">
+        <Modal.Body className="text-center py-4" data-translatable>
           <div className="mb-3">
             <i className="bi bi-check-circle-fill text-success" style={{ fontSize: '4rem' }}></i>
           </div>
@@ -1612,7 +1620,7 @@ const UserStation = () => {
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowSuccessModal(false)}>
-            Đóng
+            <span data-translatable>Đóng</span>
           </Button>
         </Modal.Footer>
       </Modal>
@@ -1625,21 +1633,21 @@ const UserStation = () => {
         size="sm"
       >
         <Modal.Header closeButton className="bg-light">
-          <Modal.Title>
+          <Modal.Title data-translatable>
             <i className="bi bi-question-circle me-2"></i>
             Xác nhận
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="text-center py-4">
-          <p className="mb-4">Bạn có chắc chắn muốn đăng xuất?</p>
+          <p className="mb-4" data-translatable>Bạn có chắc chắn muốn đăng xuất?</p>
           <div className="d-flex justify-content-center gap-3">
             <Button variant="secondary" onClick={cancelLogout}>
               <i className="bi bi-x-lg me-1"></i>
-              Hủy
+              <span data-translatable>Hủy</span>
             </Button>
             <Button variant="danger" onClick={handleLogout}>
               <i className="bi bi-box-arrow-right me-1"></i>
-              Đăng xuất
+              <span data-translatable>Đăng xuất</span>
             </Button>
           </div>
         </Modal.Body>
@@ -1653,14 +1661,14 @@ const UserStation = () => {
         backdrop="static"
       >
         <Modal.Header closeButton className="bg-primary text-white">
-          <Modal.Title>
+          <Modal.Title data-translatable>
             <i className="bi bi-qr-code-scan me-2"></i>
             Quét mã QR
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="text-center py-4">
           {error && (
-            <Alert variant="danger" className="mb-3">
+            <Alert variant="danger" className="mb-3" data-translatable>
               <i className="bi bi-exclamation-triangle-fill me-2"></i>
               {error}
             </Alert>
@@ -1669,7 +1677,7 @@ const UserStation = () => {
           <div className="mb-3">
             {videoInputDevices.length > 1 && (
               <Form.Group className="mb-3">
-                <Form.Label>Chọn camera</Form.Label>
+                <Form.Label data-translatable>Chọn camera</Form.Label>
                 <Form.Select 
                   value={selectedDeviceId} 
                   onChange={(e) => {
@@ -1714,7 +1722,7 @@ const UserStation = () => {
             </div>
           </div>
           
-          <p className="text-muted mt-3">Đưa mã QR vào giữa khung hình để quét</p>
+          <p className="text-muted mt-3" data-translatable>Đưa mã QR vào giữa khung hình để quét</p>
           
           {/* Chỉ hiển thị nút Thử lại khi có lỗi */}
           {error && (
@@ -1724,7 +1732,7 @@ const UserStation = () => {
               onClick={handleScanQR}
             >
               <i className="bi bi-camera-fill me-1"></i>
-              Thử lại
+              <span data-translatable>Thử lại</span>
             </Button>
           )}
         </Modal.Body>

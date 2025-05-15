@@ -18,6 +18,8 @@ import { replaceStationTerm } from "../../utils/helpers";
 import TermReplacer from "../../utils/TermReplacer";
 import { useSystemSettings } from "../../context/SystemSettingsContext";
 import { useLanguage } from "../../context/LanguageContext";
+import LanguageSelector from "../../components/LanguageSelector";
+import { useTranslation } from "../../context/TranslationContext";
 import "./UserStation.css";
 
 const TeamWaitingPage = () => {
@@ -25,6 +27,7 @@ const TeamWaitingPage = () => {
   const navigate = useNavigate();
   const { getAdminSettings } = useSystemSettings();
   const { t } = useLanguage();
+  const { changeLanguage } = useTranslation();
 
   const [activeStation, setActiveStation] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -1380,7 +1383,7 @@ const TeamWaitingPage = () => {
       <Card className="shadow-sm mb-4">
         <Card.Header className="bg-primary text-white py-3">
           <div className="d-flex align-items-center justify-content-between">
-            <div>
+            <div data-translatable>
               <h4 className="mb-0">Chờ {replaceStationTerm("trạm")} bắt đầu</h4>
               <p className="mb-0 mt-1 opacity-75">
                 Đội: {loggedInTeam.teamName}
@@ -1404,16 +1407,21 @@ const TeamWaitingPage = () => {
                 )}
               </p>
             </div>
-            <Button variant="light" size="sm" onClick={handleLogoutClick}>
-              <i className="bi bi-box-arrow-right me-1"></i>
-              Đăng xuất
-            </Button>
+            <div className="d-flex align-items-center">
+              <div className="me-2">
+                <LanguageSelector onSelectLanguage={changeLanguage} />
+              </div>
+              <Button variant="light" size="sm" onClick={handleLogoutClick}>
+                <i className="bi bi-box-arrow-right me-1"></i>
+                <span data-translatable>Đăng xuất</span>
+              </Button>
+            </div>
           </div>
         </Card.Header>
         <Card.Body className="p-4 text-center">
           {/* Hiển thị thông báo buộc đăng xuất nếu có */}
           {forceLogoutMessage && (
-            <Alert variant="danger" className="mb-4 text-center">
+            <Alert variant="danger" className="mb-4 text-center" data-translatable>
               <i className="bi bi-exclamation-triangle-fill me-2"></i>
               {forceLogoutMessage}
             </Alert>
@@ -1421,7 +1429,7 @@ const TeamWaitingPage = () => {
 
           {activeStation ? (
             <div className="animate__animated animate__fadeIn">
-              <div className="mb-4">
+              <div className="mb-4" data-translatable>
                 <i
                   className="bi bi-check-circle-fill text-success"
                   style={{ fontSize: "3rem" }}
@@ -1440,9 +1448,9 @@ const TeamWaitingPage = () => {
 
               {/* Hiển thị nội dung trạm */}
               <div className="station-content-wrapper mb-4 text-start">
-                <h5 className="fw-bold mb-3">
+                <h5 className="fw-bold mb-3" data-translatable>
                   <i className="bi bi-file-text me-2 text-primary"></i>
-                  Mật thư:
+                  <span data-translatable>Mật thư:</span>
                 </h5>
 
                 {/* Hiển thị nội dung văn bản */}
@@ -1459,7 +1467,7 @@ const TeamWaitingPage = () => {
                                 <h6 className="fw-bold d-inline-block bg-primary text-white px-3 py-1 rounded-0 mb-0 ms-0 mt-1">
                                   OTT:
                                 </h6>
-                                <div className="content-text w-100 px-1">
+                                <div className="content-text w-100 px-1" data-translatable>
                                   <p
                                     className="content-line paragraph-spacing-medium"
                                     style={{
@@ -1483,7 +1491,7 @@ const TeamWaitingPage = () => {
                                 <h6 className="fw-bold d-inline-block bg-primary text-white px-3 py-1 rounded-0 mb-0 ms-0">
                                   NW:
                                 </h6>
-                                <div className="content-text w-100 px-1">
+                                <div className="content-text w-100 px-1" data-translatable>
                                   {teamSpecificContent.nwContent
                                     .split("\n")
                                     .map((line, idx) => (
@@ -1532,6 +1540,7 @@ const TeamWaitingPage = () => {
                                     lineHeight:
                                       teamSpecificContent.lineHeight || "1.5",
                                   }}
+                                  data-translatable
                                 >
                                   {line || " "}
                                 </p>
@@ -1541,222 +1550,96 @@ const TeamWaitingPage = () => {
                     </Card>
                   )}
 
-                {/* Hiển thị hình ảnh nếu cần */}
-                {teamSpecificContent &&
-                  (teamSpecificContent.showImage ||
-                    teamSpecificContent.contentType === "image" ||
-                    teamSpecificContent.contentType === "both") &&
-                  teamSpecificContent.image && (
-                    <div className="text-center mb-3">
-                      <img
-                        src={
-                          teamSpecificContent.image
-                            ? // Ưu tiên sử dụng URL API từ server
-                              teamSpecificContent.image.startsWith("/api/")
-                              ? `${process.env.REACT_APP_API_URL || "http://localhost:5000"}${teamSpecificContent.image}`
-                              : teamSpecificContent.image.startsWith("http")
-                                ? teamSpecificContent.image
-                                : teamSpecificContent.image
-                            : ""
-                        }
-                        alt="Mật thư"
-                        className="station-image img-fluid"
-                        style={{
-                          width: "100%",
-                          maxHeight: "600px",
-                          objectFit: "contain",
-                          border: "1px solid #ddd",
-                          borderRadius: "4px",
-                          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                        }}
-                        onError={(e) => {
-                          console.error("Lỗi tải hình ảnh:", e.target.src);
-                          e.target.onerror = null;
-                          e.target.src =
-                            "https://via.placeholder.com/400x300?text=Không+thể+hiển+thị+hình+ảnh";
-                        }}
-                      />
-                    </div>
-                  )}
+                {/* Phần form trả lời */}
+                {activeStation && (
+                  <div className="mt-4">
+                    <Form onSubmit={handleSubmitAnswer}>
+                      <Form.Group className="mb-4">
+                        <Form.Label data-translatable>Đáp án của bạn</Form.Label>
+                        <Form.Control
+                          as="textarea"
+                          rows={4}
+                          value={answer}
+                          onChange={handleAnswerChange}
+                          placeholder="Nhập đáp án của bạn"
+                          disabled={
+                            submitting ||
+                            (submissionResult && submissionResult.isCorrect)
+                          }
+                          className="form-control-lg"
+                          data-translatable
+                        />
+                      </Form.Group>
 
-                {/* Hiển thị ghi chú của trạm nếu có */}
-                {activeStation.gameNote && (
-                  <Alert
-                    variant="info"
-                    className="d-flex align-items-start mb-4"
-                  >
-                    <i
-                      className="bi bi-info-circle-fill me-2 mt-1"
-                      style={{ fontSize: "1.2rem" }}
-                    ></i>
-                    <div>{activeStation.gameNote}</div>
-                  </Alert>
+                      <div className="d-grid">
+                        <Button
+                          variant="primary"
+                          type="submit"
+                          size="lg"
+                          disabled={
+                            submitting ||
+                            !answer.trim() ||
+                            (submissionResult && submissionResult.isCorrect)
+                          }
+                        >
+                          <span data-translatable>
+                            {submitting ? "Đang xử lý..." : "Gửi đáp án"}
+                          </span>
+                        </Button>
+                      </div>
+                    </Form>
+
+                    {submissionResult && (
+                      <div className="mt-4">
+                        {submissionResult.isCorrect ? (
+                          <Alert
+                            variant="success"
+                            className="d-flex align-items-center"
+                            data-translatable
+                          >
+                            <i
+                              className="bi bi-check-circle-fill me-2"
+                              style={{ fontSize: "1.5rem" }}
+                            ></i>
+                            <div>
+                              <strong>Chính xác!</strong> Chúc mừng, bạn đã hoàn
+                              thành{" "}
+                              <TermReplacer>{t("station_term")}</TermReplacer>{" "}
+                              này.
+                            </div>
+                          </Alert>
+                        ) : (
+                          <Alert
+                            variant="danger"
+                            className="d-flex align-items-start"
+                            data-translatable
+                          >
+                            <i
+                              className="bi bi-x-circle-fill me-2 mt-1"
+                              style={{ fontSize: "1.5rem" }}
+                            ></i>
+                            <div>
+                              <div className="mb-1" data-translatable>
+                                <strong>Đáp án không chính xác!</strong>
+                              </div>
+                              <div>
+                                <span className="me-3" data-translatable>
+                                  <i className="bi bi-arrow-counterclockwise me-1"></i>
+                                  Bạn còn{" "}
+                                  <strong className="badge bg-info">
+                                    {submissionResult.remainingAttempts}
+                                  </strong>{" "}
+                                  lần thử
+                                </span>
+                              </div>
+                            </div>
+                          </Alert>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
-
-              {/* Form gửi đáp án */}
-              <Form onSubmit={handleSubmitAnswer} className="text-start">
-                <Form.Group className="mb-4">
-                  <Form.Label>
-                    Đáp án của bạn
-                    {activeStation && activeStation.maxAttempts > 0 && (
-                      <Badge bg="info" className="ms-2">
-                        Tối đa {activeStation.maxAttempts} lần thử
-                      </Badge>
-                    )}
-                  </Form.Label>
-                  <Form.Control
-                    as="textarea"
-                    rows={3}
-                    value={answer}
-                    onChange={handleAnswerChange}
-                    placeholder="Nhập đáp án của bạn"
-                    disabled={nextAttemptTime !== null || submitting}
-                    className="form-control-lg"
-                  />
-                  {nextAttemptTime && (
-                    <div className="text-danger mt-2">
-                      <i className="bi bi-hourglass-split me-1"></i>
-                      Vui lòng đợi {timeLeft} để thử lại
-                    </div>
-                  )}
-                </Form.Group>
-
-                <div className="d-grid">
-                  <Button
-                    variant="primary"
-                    type="submit"
-                    size="lg"
-                    disabled={
-                      nextAttemptTime !== null || submitting || !answer.trim()
-                    }
-                  >
-                    {submitting ? <>Đang xử lý...</> : "Gửi đáp án"}
-                  </Button>
-                </div>
-              </Form>
-
-              {/* Kết quả gửi đáp án */}
-              {submissionResult && (
-                <div className="mt-4 text-start">
-                  {submissionResult.isCorrect ? (
-                    <Alert
-                      variant="success"
-                      className="d-flex align-items-center"
-                    >
-                      <i
-                        className="bi bi-check-circle-fill me-2"
-                        style={{ fontSize: "1.5rem" }}
-                      ></i>
-                      <div>
-                        <strong>Chính xác!</strong> Chúc mừng, bạn đã hoàn thành{" "}
-                        <TermReplacer>{t("station_term")}</TermReplacer> này.
-                      </div>
-                    </Alert>
-                  ) : nextAttemptTime ? (
-                    <Alert
-                      variant="warning"
-                      className="d-flex align-items-start"
-                    >
-                      <i
-                        className="bi bi-hourglass-split me-2 mt-1"
-                        style={{ fontSize: "1.5rem" }}
-                      ></i>
-                      <div>
-                        <div className="mb-1">
-                          <strong>Đã hết lần thử!</strong>
-                        </div>
-                        <div>
-                          <span className="me-3 badge bg-warning text-dark px-2 py-1 mb-1">
-                            <i className="bi bi-clock-history me-1"></i>
-                            Khi hết thời gian chờ, bạn sẽ có{" "}
-                            {activeStation.maxAttempts} lần thử mới.
-                          </span>
-                        </div>
-                      </div>
-                    </Alert>
-                  ) : submissionResult.remainingAttempts <= 0 ? (
-                    <Alert
-                      variant="danger"
-                      className="d-flex align-items-start"
-                    >
-                      <i
-                        className="bi bi-x-circle-fill me-2 mt-1"
-                        style={{ fontSize: "1.5rem" }}
-                      ></i>
-                      <div>
-                        <div className="mb-1">
-                          <strong>Đáp án không chính xác!</strong>
-                        </div>
-                        <div className="d-flex align-items-center flex-wrap">
-                          <span className="text-danger mb-1">
-                            <i className="bi bi-exclamation-circle-fill me-1"></i>
-                            Đã hết lần thử! Đang chuẩn bị khóa trong{" "}
-                            {activeStation.lockTime} phút.
-                          </span>
-                        </div>
-                      </div>
-                    </Alert>
-                  ) : submissionResult.attemptCount > 0 ? (
-                    <Alert
-                      variant="danger"
-                      className="d-flex align-items-start"
-                    >
-                      <i
-                        className="bi bi-x-circle-fill me-2 mt-1"
-                        style={{ fontSize: "1.5rem" }}
-                      ></i>
-                      <div>
-                        <div className="mb-1">
-                          <strong>Đáp án không chính xác!</strong>
-                        </div>
-                        <div className="d-flex align-items-center flex-wrap">
-                          <span className="me-3 mb-1">
-                            <i className="bi bi-arrow-counterclockwise me-1"></i>
-                            Bạn còn{" "}
-                            <strong className="badge bg-info">
-                              {submissionResult.remainingAttempts}
-                            </strong>{" "}
-                            lần thử
-                          </span>
-
-                          {submissionResult.remainingAttempts <= 2 && (
-                            <span className="text-warning mb-1">
-                              <i className="bi bi-exclamation-triangle-fill me-1"></i>
-                              Hãy suy nghĩ kỹ!
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </Alert>
-                  ) : (
-                    <Alert
-                      variant="danger"
-                      className="d-flex align-items-start"
-                    >
-                      <i
-                        className="bi bi-x-circle-fill me-2 mt-1"
-                        style={{ fontSize: "1.5rem" }}
-                      ></i>
-                      <div>
-                        <div className="mb-1">
-                          <strong>Đáp án không chính xác!</strong>
-                        </div>
-                        <div>
-                          <span className="me-3">
-                            <i className="bi bi-arrow-counterclockwise me-1"></i>
-                            Bạn còn{" "}
-                            <strong className="badge bg-info">
-                              {submissionResult.remainingAttempts}
-                            </strong>{" "}
-                            lần thử
-                          </span>
-                        </div>
-                      </div>
-                    </Alert>
-                  )}
-                </div>
-              )}
             </div>
           ) : (
             <div
@@ -1779,7 +1662,7 @@ const TeamWaitingPage = () => {
                   }
                 `}
               </style>
-              <div>
+              <div data-translatable>
                 <i
                   className="bi bi-hourglass-split text-primary"
                   style={{ fontSize: "3rem" }}
@@ -1807,11 +1690,14 @@ const TeamWaitingPage = () => {
   const renderLoginForm = () => (
     <Card className="shadow-sm mb-4">
       <Card.Header className="bg-primary text-white py-3">
-        <h4 className="mb-0">Trang chờ trạm</h4>
+        <div className="d-flex justify-content-between align-items-center">
+          <h4 className="mb-0" data-translatable>Trang chờ trạm</h4>
+          <LanguageSelector onSelectLanguage={changeLanguage} />
+        </div>
       </Card.Header>
       <Card.Body className="p-4">
         <div className="text-center py-3">
-          <div className="mb-4">
+          <div className="mb-4" data-translatable>
             <div className="d-inline-block bg-light p-4 rounded-circle mb-3">
               <i
                 className="bi bi-people-fill text-primary"
@@ -1824,10 +1710,10 @@ const TeamWaitingPage = () => {
             </p>
           </div>
 
-          {error && <Alert variant="danger">{error}</Alert>}
+          {error && <Alert variant="danger" data-translatable>{error}</Alert>}
 
           {alreadyLoggedInError && (
-            <Alert variant="warning">
+            <Alert variant="warning" data-translatable>
               <Alert.Heading>{t("already_logged_in")}</Alert.Heading>
               <p>{alreadyLoggedInError.message}</p>
               <hr />
@@ -1840,7 +1726,7 @@ const TeamWaitingPage = () => {
 
           <Form onSubmit={handleTeamLogin} className="text-start">
             <Form.Group className="mb-3">
-              <Form.Label>{t("team")}</Form.Label>
+              <Form.Label data-translatable>{t("team")}</Form.Label>
               <Form.Control
                 type="text"
                 value={teamName}
@@ -1848,17 +1734,19 @@ const TeamWaitingPage = () => {
                 className="form-control-lg"
                 placeholder="Nhập tên đội"
                 required
+                data-translatable
               />
             </Form.Group>
 
             <Form.Group className="mb-4">
-              <Form.Label>{t("password_label")}</Form.Label>
+              <Form.Label data-translatable>{t("password_label")}</Form.Label>
               <Form.Control
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder={t("enter_password")}
                 required
+                data-translatable
               />
             </Form.Group>
 
@@ -1869,7 +1757,7 @@ const TeamWaitingPage = () => {
                 size="lg"
                 disabled={submitting}
               >
-                {submitting ? <>{t("processing")}</> : t("confirm")}
+                <span data-translatable>{submitting ? t("processing") : t("confirm")}</span>
               </Button>
             </div>
           </Form>
@@ -1882,7 +1770,7 @@ const TeamWaitingPage = () => {
   if (loading && !loggedInTeam) {
     return (
       <Container className="py-4">
-        <div className="text-center spinner-container">
+        <div className="text-center spinner-container" data-translatable>
           <Spinner animation="border" variant="primary" />
           <p className="mt-3">
             <TermReplacer>{t("loading_station_info")}</TermReplacer>
@@ -1904,21 +1792,21 @@ const TeamWaitingPage = () => {
       {/* Modal xác nhận đăng xuất */}
       <Modal show={showLogoutModal} onHide={cancelLogout} centered size="sm">
         <Modal.Header closeButton className="bg-light">
-          <Modal.Title>
+          <Modal.Title data-translatable>
             <i className="bi bi-question-circle me-2"></i>
             Xác nhận
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="text-center py-4">
-          <p className="mb-4">Bạn có chắc chắn muốn đăng xuất?</p>
+          <p className="mb-4" data-translatable>Bạn có chắc chắn muốn đăng xuất?</p>
           <div className="d-flex justify-content-center gap-3">
             <Button variant="secondary" onClick={cancelLogout}>
               <i className="bi bi-x-lg me-1"></i>
-              Hủy
+              <span data-translatable>Hủy</span>
             </Button>
             <Button variant="danger" onClick={handleLogout}>
               <i className="bi bi-box-arrow-right me-1"></i>
-              Đăng xuất
+              <span data-translatable>Đăng xuất</span>
             </Button>
           </div>
         </Modal.Body>

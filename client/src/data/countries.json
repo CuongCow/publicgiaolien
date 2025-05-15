@@ -1,0 +1,1178 @@
+[
+  {
+    "code": "AF",
+    "name": "Afghanistan",
+    "nativeName": "افغانستان",
+    "languageCode": "ps"
+  },
+  {
+    "code": "AL",
+    "name": "Albania",
+    "nativeName": "Shqipëria",
+    "languageCode": "sq"
+  },
+  {
+    "code": "DZ",
+    "name": "Algeria",
+    "nativeName": "الجزائر",
+    "languageCode": "ar"
+  },
+  {
+    "code": "AD",
+    "name": "Andorra",
+    "nativeName": "Andorra",
+    "languageCode": "ca"
+  },
+  {
+    "code": "AO",
+    "name": "Angola",
+    "nativeName": "Angola",
+    "languageCode": "pt"
+  },
+  {
+    "code": "AG",
+    "name": "Antigua and Barbuda",
+    "nativeName": "Antigua and Barbuda",
+    "languageCode": "en"
+  },
+  {
+    "code": "AR",
+    "name": "Argentina",
+    "nativeName": "Argentina",
+    "languageCode": "es"
+  },
+  {
+    "code": "AM",
+    "name": "Armenia",
+    "nativeName": "Հայաստան",
+    "languageCode": "hy"
+  },
+  {
+    "code": "AU",
+    "name": "Australia",
+    "nativeName": "Australia",
+    "languageCode": "en"
+  },
+  {
+    "code": "AT",
+    "name": "Austria",
+    "nativeName": "Österreich",
+    "languageCode": "de"
+  },
+  {
+    "code": "AZ",
+    "name": "Azerbaijan",
+    "nativeName": "Azərbaycan",
+    "languageCode": "az"
+  },
+  {
+    "code": "BS",
+    "name": "Bahamas",
+    "nativeName": "Bahamas",
+    "languageCode": "en"
+  },
+  {
+    "code": "BH",
+    "name": "Bahrain",
+    "nativeName": "البحرين",
+    "languageCode": "ar"
+  },
+  {
+    "code": "BD",
+    "name": "Bangladesh",
+    "nativeName": "বাংলাদেশ",
+    "languageCode": "bn"
+  },
+  {
+    "code": "BB",
+    "name": "Barbados",
+    "nativeName": "Barbados",
+    "languageCode": "en"
+  },
+  {
+    "code": "BY",
+    "name": "Belarus",
+    "nativeName": "Беларусь",
+    "languageCode": "be"
+  },
+  {
+    "code": "BE",
+    "name": "Belgium",
+    "nativeName": "België",
+    "languageCode": "nl"
+  },
+  {
+    "code": "BZ",
+    "name": "Belize",
+    "nativeName": "Belize",
+    "languageCode": "en"
+  },
+  {
+    "code": "BJ",
+    "name": "Benin",
+    "nativeName": "Bénin",
+    "languageCode": "fr"
+  },
+  {
+    "code": "BT",
+    "name": "Bhutan",
+    "nativeName": "འབྲུག་ཡུལ",
+    "languageCode": "dz"
+  },
+  {
+    "code": "BO",
+    "name": "Bolivia",
+    "nativeName": "Bolivia",
+    "languageCode": "es"
+  },
+  {
+    "code": "BA",
+    "name": "Bosnia and Herzegovina",
+    "nativeName": "Bosna i Hercegovina",
+    "languageCode": "bs"
+  },
+  {
+    "code": "BW",
+    "name": "Botswana",
+    "nativeName": "Botswana",
+    "languageCode": "en"
+  },
+  {
+    "code": "BR",
+    "name": "Brazil",
+    "nativeName": "Brasil",
+    "languageCode": "pt"
+  },
+  {
+    "code": "BN",
+    "name": "Brunei",
+    "nativeName": "Brunei",
+    "languageCode": "ms"
+  },
+  {
+    "code": "BG",
+    "name": "Bulgaria",
+    "nativeName": "България",
+    "languageCode": "bg"
+  },
+  {
+    "code": "BF",
+    "name": "Burkina Faso",
+    "nativeName": "Burkina Faso",
+    "languageCode": "fr"
+  },
+  {
+    "code": "BI",
+    "name": "Burundi",
+    "nativeName": "Burundi",
+    "languageCode": "fr"
+  },
+  {
+    "code": "CV",
+    "name": "Cabo Verde",
+    "nativeName": "Cabo Verde",
+    "languageCode": "pt"
+  },
+  {
+    "code": "KH",
+    "name": "Cambodia",
+    "nativeName": "កម្ពុជា",
+    "languageCode": "km"
+  },
+  {
+    "code": "CM",
+    "name": "Cameroon",
+    "nativeName": "Cameroun",
+    "languageCode": "fr"
+  },
+  {
+    "code": "CA",
+    "name": "Canada",
+    "nativeName": "Canada",
+    "languageCode": "en"
+  },
+  {
+    "code": "CF",
+    "name": "Central African Republic",
+    "nativeName": "République centrafricaine",
+    "languageCode": "fr"
+  },
+  {
+    "code": "TD",
+    "name": "Chad",
+    "nativeName": "Tchad",
+    "languageCode": "fr"
+  },
+  {
+    "code": "CL",
+    "name": "Chile",
+    "nativeName": "Chile",
+    "languageCode": "es"
+  },
+  {
+    "code": "CN",
+    "name": "China",
+    "nativeName": "中国",
+    "languageCode": "zh"
+  },
+  {
+    "code": "CO",
+    "name": "Colombia",
+    "nativeName": "Colombia",
+    "languageCode": "es"
+  },
+  {
+    "code": "KM",
+    "name": "Comoros",
+    "nativeName": "جزر القمر",
+    "languageCode": "ar"
+  },
+  {
+    "code": "CG",
+    "name": "Congo",
+    "nativeName": "République du Congo",
+    "languageCode": "fr"
+  },
+  {
+    "code": "CD",
+    "name": "Congo (Democratic Republic)",
+    "nativeName": "République démocratique du Congo",
+    "languageCode": "fr"
+  },
+  {
+    "code": "CR",
+    "name": "Costa Rica",
+    "nativeName": "Costa Rica",
+    "languageCode": "es"
+  },
+  {
+    "code": "CI",
+    "name": "Côte d'Ivoire",
+    "nativeName": "Côte d'Ivoire",
+    "languageCode": "fr"
+  },
+  {
+    "code": "HR",
+    "name": "Croatia",
+    "nativeName": "Hrvatska",
+    "languageCode": "hr"
+  },
+  {
+    "code": "CU",
+    "name": "Cuba",
+    "nativeName": "Cuba",
+    "languageCode": "es"
+  },
+  {
+    "code": "CY",
+    "name": "Cyprus",
+    "nativeName": "Κύπρος",
+    "languageCode": "el"
+  },
+  {
+    "code": "CZ",
+    "name": "Czech Republic",
+    "nativeName": "Česká republika",
+    "languageCode": "cs"
+  },
+  {
+    "code": "DK",
+    "name": "Denmark",
+    "nativeName": "Danmark",
+    "languageCode": "da"
+  },
+  {
+    "code": "DJ",
+    "name": "Djibouti",
+    "nativeName": "Djibouti",
+    "languageCode": "fr"
+  },
+  {
+    "code": "DM",
+    "name": "Dominica",
+    "nativeName": "Dominica",
+    "languageCode": "en"
+  },
+  {
+    "code": "DO",
+    "name": "Dominican Republic",
+    "nativeName": "República Dominicana",
+    "languageCode": "es"
+  },
+  {
+    "code": "EC",
+    "name": "Ecuador",
+    "nativeName": "Ecuador",
+    "languageCode": "es"
+  },
+  {
+    "code": "EG",
+    "name": "Egypt",
+    "nativeName": "مصر",
+    "languageCode": "ar"
+  },
+  {
+    "code": "SV",
+    "name": "El Salvador",
+    "nativeName": "El Salvador",
+    "languageCode": "es"
+  },
+  {
+    "code": "GQ",
+    "name": "Equatorial Guinea",
+    "nativeName": "Guinea Ecuatorial",
+    "languageCode": "es"
+  },
+  {
+    "code": "ER",
+    "name": "Eritrea",
+    "nativeName": "ኤርትራ",
+    "languageCode": "ti"
+  },
+  {
+    "code": "EE",
+    "name": "Estonia",
+    "nativeName": "Eesti",
+    "languageCode": "et"
+  },
+  {
+    "code": "SZ",
+    "name": "Eswatini",
+    "nativeName": "Eswatini",
+    "languageCode": "en"
+  },
+  {
+    "code": "ET",
+    "name": "Ethiopia",
+    "nativeName": "ኢትዮጵያ",
+    "languageCode": "am"
+  },
+  {
+    "code": "FJ",
+    "name": "Fiji",
+    "nativeName": "Fiji",
+    "languageCode": "en"
+  },
+  {
+    "code": "FI",
+    "name": "Finland",
+    "nativeName": "Suomi",
+    "languageCode": "fi"
+  },
+  {
+    "code": "FR",
+    "name": "France",
+    "nativeName": "France",
+    "languageCode": "fr"
+  },
+  {
+    "code": "GA",
+    "name": "Gabon",
+    "nativeName": "Gabon",
+    "languageCode": "fr"
+  },
+  {
+    "code": "GM",
+    "name": "Gambia",
+    "nativeName": "Gambia",
+    "languageCode": "en"
+  },
+  {
+    "code": "GE",
+    "name": "Georgia",
+    "nativeName": "საქართველო",
+    "languageCode": "ka"
+  },
+  {
+    "code": "DE",
+    "name": "Germany",
+    "nativeName": "Deutschland",
+    "languageCode": "de"
+  },
+  {
+    "code": "GH",
+    "name": "Ghana",
+    "nativeName": "Ghana",
+    "languageCode": "en"
+  },
+  {
+    "code": "GR",
+    "name": "Greece",
+    "nativeName": "Ελλάδα",
+    "languageCode": "el"
+  },
+  {
+    "code": "GD",
+    "name": "Grenada",
+    "nativeName": "Grenada",
+    "languageCode": "en"
+  },
+  {
+    "code": "GT",
+    "name": "Guatemala",
+    "nativeName": "Guatemala",
+    "languageCode": "es"
+  },
+  {
+    "code": "GN",
+    "name": "Guinea",
+    "nativeName": "Guinée",
+    "languageCode": "fr"
+  },
+  {
+    "code": "GW",
+    "name": "Guinea-Bissau",
+    "nativeName": "Guiné-Bissau",
+    "languageCode": "pt"
+  },
+  {
+    "code": "GY",
+    "name": "Guyana",
+    "nativeName": "Guyana",
+    "languageCode": "en"
+  },
+  {
+    "code": "HT",
+    "name": "Haiti",
+    "nativeName": "Haïti",
+    "languageCode": "fr"
+  },
+  {
+    "code": "HN",
+    "name": "Honduras",
+    "nativeName": "Honduras",
+    "languageCode": "es"
+  },
+  {
+    "code": "HU",
+    "name": "Hungary",
+    "nativeName": "Magyarország",
+    "languageCode": "hu"
+  },
+  {
+    "code": "IS",
+    "name": "Iceland",
+    "nativeName": "Ísland",
+    "languageCode": "is"
+  },
+  {
+    "code": "IN",
+    "name": "India",
+    "nativeName": "भारत",
+    "languageCode": "hi"
+  },
+  {
+    "code": "ID",
+    "name": "Indonesia",
+    "nativeName": "Indonesia",
+    "languageCode": "id"
+  },
+  {
+    "code": "IR",
+    "name": "Iran",
+    "nativeName": "ایران",
+    "languageCode": "fa"
+  },
+  {
+    "code": "IQ",
+    "name": "Iraq",
+    "nativeName": "العراق",
+    "languageCode": "ar"
+  },
+  {
+    "code": "IE",
+    "name": "Ireland",
+    "nativeName": "Éire",
+    "languageCode": "ga"
+  },
+  {
+    "code": "IL",
+    "name": "Israel",
+    "nativeName": "ישראל",
+    "languageCode": "he"
+  },
+  {
+    "code": "IT",
+    "name": "Italy",
+    "nativeName": "Italia",
+    "languageCode": "it"
+  },
+  {
+    "code": "JM",
+    "name": "Jamaica",
+    "nativeName": "Jamaica",
+    "languageCode": "en"
+  },
+  {
+    "code": "JP",
+    "name": "Japan",
+    "nativeName": "日本",
+    "languageCode": "ja"
+  },
+  {
+    "code": "JO",
+    "name": "Jordan",
+    "nativeName": "الأردن",
+    "languageCode": "ar"
+  },
+  {
+    "code": "KZ",
+    "name": "Kazakhstan",
+    "nativeName": "Қазақстан",
+    "languageCode": "kk"
+  },
+  {
+    "code": "KE",
+    "name": "Kenya",
+    "nativeName": "Kenya",
+    "languageCode": "sw"
+  },
+  {
+    "code": "KI",
+    "name": "Kiribati",
+    "nativeName": "Kiribati",
+    "languageCode": "en"
+  },
+  {
+    "code": "KP",
+    "name": "North Korea",
+    "nativeName": "조선민주주의인민공화국",
+    "languageCode": "ko"
+  },
+  {
+    "code": "KR",
+    "name": "South Korea",
+    "nativeName": "대한민국",
+    "languageCode": "ko"
+  },
+  {
+    "code": "KW",
+    "name": "Kuwait",
+    "nativeName": "الكويت",
+    "languageCode": "ar"
+  },
+  {
+    "code": "KG",
+    "name": "Kyrgyzstan",
+    "nativeName": "Кыргызстан",
+    "languageCode": "ky"
+  },
+  {
+    "code": "LA",
+    "name": "Laos",
+    "nativeName": "ລາວ",
+    "languageCode": "lo"
+  },
+  {
+    "code": "LV",
+    "name": "Latvia",
+    "nativeName": "Latvija",
+    "languageCode": "lv"
+  },
+  {
+    "code": "LB",
+    "name": "Lebanon",
+    "nativeName": "لبنان",
+    "languageCode": "ar"
+  },
+  {
+    "code": "LS",
+    "name": "Lesotho",
+    "nativeName": "Lesotho",
+    "languageCode": "en"
+  },
+  {
+    "code": "LR",
+    "name": "Liberia",
+    "nativeName": "Liberia",
+    "languageCode": "en"
+  },
+  {
+    "code": "LY",
+    "name": "Libya",
+    "nativeName": "ليبيا",
+    "languageCode": "ar"
+  },
+  {
+    "code": "LI",
+    "name": "Liechtenstein",
+    "nativeName": "Liechtenstein",
+    "languageCode": "de"
+  },
+  {
+    "code": "LT",
+    "name": "Lithuania",
+    "nativeName": "Lietuva",
+    "languageCode": "lt"
+  },
+  {
+    "code": "LU",
+    "name": "Luxembourg",
+    "nativeName": "Luxembourg",
+    "languageCode": "fr"
+  },
+  {
+    "code": "MG",
+    "name": "Madagascar",
+    "nativeName": "Madagasikara",
+    "languageCode": "mg"
+  },
+  {
+    "code": "MW",
+    "name": "Malawi",
+    "nativeName": "Malawi",
+    "languageCode": "en"
+  },
+  {
+    "code": "MY",
+    "name": "Malaysia",
+    "nativeName": "Malaysia",
+    "languageCode": "ms"
+  },
+  {
+    "code": "MV",
+    "name": "Maldives",
+    "nativeName": "ދިވެހިރާއްޖެ",
+    "languageCode": "dv"
+  },
+  {
+    "code": "ML",
+    "name": "Mali",
+    "nativeName": "Mali",
+    "languageCode": "fr"
+  },
+  {
+    "code": "MT",
+    "name": "Malta",
+    "nativeName": "Malta",
+    "languageCode": "mt"
+  },
+  {
+    "code": "MH",
+    "name": "Marshall Islands",
+    "nativeName": "M̧ajeļ",
+    "languageCode": "en"
+  },
+  {
+    "code": "MR",
+    "name": "Mauritania",
+    "nativeName": "موريتانيا",
+    "languageCode": "ar"
+  },
+  {
+    "code": "MU",
+    "name": "Mauritius",
+    "nativeName": "Maurice",
+    "languageCode": "en"
+  },
+  {
+    "code": "MX",
+    "name": "Mexico",
+    "nativeName": "México",
+    "languageCode": "es"
+  },
+  {
+    "code": "FM",
+    "name": "Micronesia",
+    "nativeName": "Micronesia",
+    "languageCode": "en"
+  },
+  {
+    "code": "MD",
+    "name": "Moldova",
+    "nativeName": "Moldova",
+    "languageCode": "ro"
+  },
+  {
+    "code": "MC",
+    "name": "Monaco",
+    "nativeName": "Monaco",
+    "languageCode": "fr"
+  },
+  {
+    "code": "MN",
+    "name": "Mongolia",
+    "nativeName": "Монгол улс",
+    "languageCode": "mn"
+  },
+  {
+    "code": "ME",
+    "name": "Montenegro",
+    "nativeName": "Црна Гора",
+    "languageCode": "srp"
+  },
+  {
+    "code": "MA",
+    "name": "Morocco",
+    "nativeName": "المغرب",
+    "languageCode": "ar"
+  },
+  {
+    "code": "MZ",
+    "name": "Mozambique",
+    "nativeName": "Moçambique",
+    "languageCode": "pt"
+  },
+  {
+    "code": "MM",
+    "name": "Myanmar",
+    "nativeName": "မြန်မာ",
+    "languageCode": "my"
+  },
+  {
+    "code": "NA",
+    "name": "Namibia",
+    "nativeName": "Namibia",
+    "languageCode": "en"
+  },
+  {
+    "code": "NR",
+    "name": "Nauru",
+    "nativeName": "Nauru",
+    "languageCode": "en"
+  },
+  {
+    "code": "NP",
+    "name": "Nepal",
+    "nativeName": "नेपाल",
+    "languageCode": "ne"
+  },
+  {
+    "code": "NL",
+    "name": "Netherlands",
+    "nativeName": "Nederland",
+    "languageCode": "nl"
+  },
+  {
+    "code": "NZ",
+    "name": "New Zealand",
+    "nativeName": "New Zealand",
+    "languageCode": "en"
+  },
+  {
+    "code": "NI",
+    "name": "Nicaragua",
+    "nativeName": "Nicaragua",
+    "languageCode": "es"
+  },
+  {
+    "code": "NE",
+    "name": "Niger",
+    "nativeName": "Niger",
+    "languageCode": "fr"
+  },
+  {
+    "code": "NG",
+    "name": "Nigeria",
+    "nativeName": "Nigeria",
+    "languageCode": "en"
+  },
+  {
+    "code": "MK",
+    "name": "North Macedonia",
+    "nativeName": "Северна Македонија",
+    "languageCode": "mk"
+  },
+  {
+    "code": "NO",
+    "name": "Norway",
+    "nativeName": "Norge",
+    "languageCode": "no"
+  },
+  {
+    "code": "OM",
+    "name": "Oman",
+    "nativeName": "عمان",
+    "languageCode": "ar"
+  },
+  {
+    "code": "PK",
+    "name": "Pakistan",
+    "nativeName": "پاکستان",
+    "languageCode": "ur"
+  },
+  {
+    "code": "PW",
+    "name": "Palau",
+    "nativeName": "Palau",
+    "languageCode": "en"
+  },
+  {
+    "code": "PA",
+    "name": "Panama",
+    "nativeName": "Panamá",
+    "languageCode": "es"
+  },
+  {
+    "code": "PG",
+    "name": "Papua New Guinea",
+    "nativeName": "Papua New Guinea",
+    "languageCode": "en"
+  },
+  {
+    "code": "PY",
+    "name": "Paraguay",
+    "nativeName": "Paraguay",
+    "languageCode": "es"
+  },
+  {
+    "code": "PE",
+    "name": "Peru",
+    "nativeName": "Perú",
+    "languageCode": "es"
+  },
+  {
+    "code": "PH",
+    "name": "Philippines",
+    "nativeName": "Pilipinas",
+    "languageCode": "tl"
+  },
+  {
+    "code": "PL",
+    "name": "Poland",
+    "nativeName": "Polska",
+    "languageCode": "pl"
+  },
+  {
+    "code": "PT",
+    "name": "Portugal",
+    "nativeName": "Portugal",
+    "languageCode": "pt"
+  },
+  {
+    "code": "QA",
+    "name": "Qatar",
+    "nativeName": "قطر",
+    "languageCode": "ar"
+  },
+  {
+    "code": "RO",
+    "name": "Romania",
+    "nativeName": "România",
+    "languageCode": "ro"
+  },
+  {
+    "code": "RU",
+    "name": "Russia",
+    "nativeName": "Россия",
+    "languageCode": "ru"
+  },
+  {
+    "code": "RW",
+    "name": "Rwanda",
+    "nativeName": "Rwanda",
+    "languageCode": "rw"
+  },
+  {
+    "code": "KN",
+    "name": "Saint Kitts and Nevis",
+    "nativeName": "Saint Kitts and Nevis",
+    "languageCode": "en"
+  },
+  {
+    "code": "LC",
+    "name": "Saint Lucia",
+    "nativeName": "Saint Lucia",
+    "languageCode": "en"
+  },
+  {
+    "code": "VC",
+    "name": "Saint Vincent and the Grenadines",
+    "nativeName": "Saint Vincent and the Grenadines",
+    "languageCode": "en"
+  },
+  {
+    "code": "WS",
+    "name": "Samoa",
+    "nativeName": "Samoa",
+    "languageCode": "sm"
+  },
+  {
+    "code": "SM",
+    "name": "San Marino",
+    "nativeName": "San Marino",
+    "languageCode": "it"
+  },
+  {
+    "code": "ST",
+    "name": "São Tomé and Príncipe",
+    "nativeName": "São Tomé e Príncipe",
+    "languageCode": "pt"
+  },
+  {
+    "code": "SA",
+    "name": "Saudi Arabia",
+    "nativeName": "المملكة العربية السعودية",
+    "languageCode": "ar"
+  },
+  {
+    "code": "SN",
+    "name": "Senegal",
+    "nativeName": "Sénégal",
+    "languageCode": "fr"
+  },
+  {
+    "code": "RS",
+    "name": "Serbia",
+    "nativeName": "Србија",
+    "languageCode": "sr"
+  },
+  {
+    "code": "SC",
+    "name": "Seychelles",
+    "nativeName": "Seychelles",
+    "languageCode": "fr"
+  },
+  {
+    "code": "SL",
+    "name": "Sierra Leone",
+    "nativeName": "Sierra Leone",
+    "languageCode": "en"
+  },
+  {
+    "code": "SG",
+    "name": "Singapore",
+    "nativeName": "新加坡",
+    "languageCode": "zh"
+  },
+  {
+    "code": "SK",
+    "name": "Slovakia",
+    "nativeName": "Slovensko",
+    "languageCode": "sk"
+  },
+  {
+    "code": "SI",
+    "name": "Slovenia",
+    "nativeName": "Slovenija",
+    "languageCode": "sl"
+  },
+  {
+    "code": "SB",
+    "name": "Solomon Islands",
+    "nativeName": "Solomon Islands",
+    "languageCode": "en"
+  },
+  {
+    "code": "SO",
+    "name": "Somalia",
+    "nativeName": "Soomaaliya",
+    "languageCode": "so"
+  },
+  {
+    "code": "ZA",
+    "name": "South Africa",
+    "nativeName": "South Africa",
+    "languageCode": "en"
+  },
+  {
+    "code": "SS",
+    "name": "South Sudan",
+    "nativeName": "South Sudan",
+    "languageCode": "en"
+  },
+  {
+    "code": "ES",
+    "name": "Spain",
+    "nativeName": "España",
+    "languageCode": "es"
+  },
+  {
+    "code": "LK",
+    "name": "Sri Lanka",
+    "nativeName": "ශ්‍රී ලංකාව",
+    "languageCode": "si"
+  },
+  {
+    "code": "SD",
+    "name": "Sudan",
+    "nativeName": "السودان",
+    "languageCode": "ar"
+  },
+  {
+    "code": "SR",
+    "name": "Suriname",
+    "nativeName": "Suriname",
+    "languageCode": "nl"
+  },
+  {
+    "code": "SE",
+    "name": "Sweden",
+    "nativeName": "Sverige",
+    "languageCode": "sv"
+  },
+  {
+    "code": "CH",
+    "name": "Switzerland",
+    "nativeName": "Schweiz",
+    "languageCode": "de"
+  },
+  {
+    "code": "SY",
+    "name": "Syria",
+    "nativeName": "سوريا",
+    "languageCode": "ar"
+  },
+  {
+    "code": "TJ",
+    "name": "Tajikistan",
+    "nativeName": "Тоҷикистон",
+    "languageCode": "tg"
+  },
+  {
+    "code": "TZ",
+    "name": "Tanzania",
+    "nativeName": "Tanzania",
+    "languageCode": "sw"
+  },
+  {
+    "code": "TH",
+    "name": "Thailand",
+    "nativeName": "ประเทศไทย",
+    "languageCode": "th"
+  },
+  {
+    "code": "TL",
+    "name": "Timor-Leste",
+    "nativeName": "Timor-Leste",
+    "languageCode": "pt"
+  },
+  {
+    "code": "TG",
+    "name": "Togo",
+    "nativeName": "Togo",
+    "languageCode": "fr"
+  },
+  {
+    "code": "TO",
+    "name": "Tonga",
+    "nativeName": "Tonga",
+    "languageCode": "to"
+  },
+  {
+    "code": "TT",
+    "name": "Trinidad and Tobago",
+    "nativeName": "Trinidad and Tobago",
+    "languageCode": "en"
+  },
+  {
+    "code": "TN",
+    "name": "Tunisia",
+    "nativeName": "تونس",
+    "languageCode": "ar"
+  },
+  {
+    "code": "TR",
+    "name": "Turkey",
+    "nativeName": "Türkiye",
+    "languageCode": "tr"
+  },
+  {
+    "code": "TM",
+    "name": "Turkmenistan",
+    "nativeName": "Türkmenistan",
+    "languageCode": "tk"
+  },
+  {
+    "code": "TV",
+    "name": "Tuvalu",
+    "nativeName": "Tuvalu",
+    "languageCode": "en"
+  },
+  {
+    "code": "UG",
+    "name": "Uganda",
+    "nativeName": "Uganda",
+    "languageCode": "en"
+  },
+  {
+    "code": "UA",
+    "name": "Ukraine",
+    "nativeName": "Україна",
+    "languageCode": "uk"
+  },
+  {
+    "code": "AE",
+    "name": "United Arab Emirates",
+    "nativeName": "دولة الإمارات العربية المتحدة",
+    "languageCode": "ar"
+  },
+  {
+    "code": "GB",
+    "name": "United Kingdom",
+    "nativeName": "United Kingdom",
+    "languageCode": "en"
+  },
+  {
+    "code": "US",
+    "name": "United States",
+    "nativeName": "United States",
+    "languageCode": "en"
+  },
+  {
+    "code": "UY",
+    "name": "Uruguay",
+    "nativeName": "Uruguay",
+    "languageCode": "es"
+  },
+  {
+    "code": "UZ",
+    "name": "Uzbekistan",
+    "nativeName": "O'zbekiston",
+    "languageCode": "uz"
+  },
+  {
+    "code": "VU",
+    "name": "Vanuatu",
+    "nativeName": "Vanuatu",
+    "languageCode": "en"
+  },
+  {
+    "code": "VA",
+    "name": "Vatican City",
+    "nativeName": "Città del Vaticano",
+    "languageCode": "it"
+  },
+  {
+    "code": "VE",
+    "name": "Venezuela",
+    "nativeName": "Venezuela",
+    "languageCode": "es"
+  },
+  {
+    "code": "VN",
+    "name": "Vietnam",
+    "nativeName": "Việt Nam",
+    "languageCode": "vi"
+  },
+  {
+    "code": "YE",
+    "name": "Yemen",
+    "nativeName": "اليمن",
+    "languageCode": "ar"
+  },
+  {
+    "code": "ZM",
+    "name": "Zambia",
+    "nativeName": "Zambia",
+    "languageCode": "en"
+  },
+  {
+    "code": "ZW",
+    "name": "Zimbabwe",
+    "nativeName": "Zimbabwe",
+    "languageCode": "en"
+  },
+  {
+    "code": "KS",
+    "name": "Kosovo",
+    "nativeName": "Kosova",
+    "languageCode": "sq"
+  },
+  {
+    "code": "TW",
+    "name": "Taiwan",
+    "nativeName": "臺灣",
+    "languageCode": "zh"
+  }
+] 

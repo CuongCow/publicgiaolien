@@ -3,9 +3,12 @@ import { Container, Row, Col, Card, Button, Form, Alert, Spinner, Tabs, Tab, Bad
 import { useParams, Link } from 'react-router-dom';
 import { secretMessageApi } from '../../services/api';
 import { toast } from 'react-toastify';
+import LanguageSelector from '../../components/LanguageSelector';
+import { useTranslation } from '../../context/TranslationContext';
 
 const SecretMessageDetail = () => {
   const { id } = useParams();
+  const { changeLanguage } = useTranslation();
   const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(true);
   const [answer, setAnswer] = useState('');
@@ -216,11 +219,11 @@ const SecretMessageDetail = () => {
     if (answerResult && answerResult.isCorrect && previousCorrectAnswer) {
       return (
         <div className="mt-4">
-          <Alert variant="success" className="d-flex align-items-center">
+          <Alert variant="success" className="d-flex align-items-center" data-translatable>
             <i className="bi bi-check-circle-fill me-2 fs-4"></i>
             <div>
               <p className="mb-1 fw-bold">{answerResult.message}</p>
-              <p className="mb-0 small">Đáp án của bạn: <strong>{previousCorrectAnswer}</strong></p>
+              <p className="mb-0 small" data-translatable>Đáp án của bạn: <strong>{previousCorrectAnswer}</strong></p>
             </div>
           </Alert>
         </div>
@@ -233,7 +236,7 @@ const SecretMessageDetail = () => {
         {(!answerResult || !answerResult.isCorrect) && (
           <Form onSubmit={handleAnswerSubmit} className="mt-4">
             <Form.Group className="mb-3">
-              <Form.Label>Nhập đáp án:</Form.Label>
+              <Form.Label data-translatable>Nhập đáp án:</Form.Label>
               <Form.Control
                 type="text"
                 as="textarea"
@@ -242,12 +245,13 @@ const SecretMessageDetail = () => {
                 onChange={(e) => setAnswer(e.target.value)}
                 placeholder="Nhập đáp án của bạn tại đây"
                 disabled={checkingAnswer || (remainingAttempts.hasLimit && remainingAttempts.remainingAttempts <= 0)}
+                data-translatable
               />
             </Form.Group>
             
             {/* Hiển thị thông tin số lần thử còn lại nếu có giới hạn */}
             {remainingAttempts.hasLimit && (
-              <div className="d-flex justify-content-between mb-3">
+              <div className="d-flex justify-content-between mb-3" data-translatable>
                 <small className="text-muted">
                   Số lần thử: {remainingAttempts.usedAttempts}/{remainingAttempts.maxAttempts}
                 </small>
@@ -262,18 +266,16 @@ const SecretMessageDetail = () => {
               variant="primary"
               disabled={checkingAnswer || (remainingAttempts.hasLimit && remainingAttempts.remainingAttempts <= 0)}
             >
-              {checkingAnswer ? (
-                <>
-                  Đang kiểm tra...
-                </>
-              ) : 'Gửi đáp án'}
+              <span data-translatable>
+                {checkingAnswer ? "Đang kiểm tra..." : 'Gửi đáp án'}
+              </span>
             </Button>
           </Form>
         )}
         
         {/* Hiển thị kết quả */}
         {answerResult && (
-          <Alert variant={answerResult.isCorrect ? 'success' : 'danger'} className="mt-3">
+          <Alert variant={answerResult.isCorrect ? 'success' : 'danger'} className="mt-3" data-translatable>
             <i className={`bi ${answerResult.isCorrect ? 'bi-check-circle' : 'bi-x-circle'} me-2`}></i>
             {answerResult.message}
           </Alert>
@@ -286,7 +288,7 @@ const SecretMessageDetail = () => {
     return (
       <Container className="py-5 text-center">
         <Spinner animation="border" variant="primary" />
-        <p className="mt-3">Đang tải mật thư...</p>
+        <p className="mt-3" data-translatable>Đang tải mật thư...</p>
       </Container>
     );
   }
@@ -297,10 +299,10 @@ const SecretMessageDetail = () => {
         <Card className="shadow-sm border-0">
           <Card.Body className="text-center py-5">
             <i className="bi bi-exclamation-triangle display-1 text-warning"></i>
-            <h3 className="mt-4">Không tìm thấy mật thư</h3>
-            <p className="text-muted">Mật thư này không tồn tại hoặc đã bị xóa</p>
+            <h3 className="mt-4" data-translatable>Không tìm thấy mật thư</h3>
+            <p className="text-muted" data-translatable>Mật thư này không tồn tại hoặc đã bị xóa</p>
             <Button as={Link} to="/" variant="primary" className="mt-3">
-              Quay về trang chủ
+              <span data-translatable>Quay về trang chủ</span>
             </Button>
           </Card.Body>
         </Card>
@@ -315,19 +317,24 @@ const SecretMessageDetail = () => {
         <Row className="justify-content-center">
           <Col md={8} lg={6}>
             <Card className="shadow-sm border-0">
+              <Card.Header className="bg-primary text-white py-3">
+                <div className="d-flex justify-content-between align-items-center">
+                  <h3 className="mb-0" data-translatable>{message.name}</h3>
+                  <LanguageSelector onSelectLanguage={changeLanguage} />
+                </div>
+              </Card.Header>
               <Card.Body className="p-md-5 p-4">
                 <div className="text-center mb-4">
-                  <h2 className="mb-3">{message.name}</h2>
-                  {message.title && <h5 className="mb-4">{message.title}</h5>}
+                  {message.title && <h5 className="mb-4" data-translatable>{message.title}</h5>}
                 </div>
                 
-                <Alert variant="info" className="mb-4">
+                <Alert variant="info" className="mb-4" data-translatable>
                   <i className="bi bi-info-circle me-2"></i>
                   Vui lòng nhập thông tin trước khi xem mật thư
                 </Alert>
                 
                 {!isUserInfoValid && (
-                  <Alert variant="danger" className="mb-4">
+                  <Alert variant="danger" className="mb-4" data-translatable>
                     <i className="bi bi-exclamation-triangle me-2"></i>
                     Vui lòng điền đầy đủ thông tin bắt buộc
                   </Alert>
@@ -336,7 +343,7 @@ const SecretMessageDetail = () => {
                 <Form onSubmit={handleUserInfoSubmit}>
                   {message.userInfoFields.map((field, index) => (
                     <Form.Group key={index} className="mb-3">
-                      <Form.Label>
+                      <Form.Label data-translatable>
                         {field.label} {field.required && <span className="text-danger">*</span>}
                       </Form.Label>
                       <Form.Control 
@@ -350,9 +357,10 @@ const SecretMessageDetail = () => {
                         }}
                         required={field.required}
                         isInvalid={!isUserInfoValid && field.required && (!userInfo[field.label] || userInfo[field.label].trim() === '')}
+                        data-translatable
                       />
                       {!isUserInfoValid && field.required && (!userInfo[field.label] || userInfo[field.label].trim() === '') && (
-                        <Form.Control.Feedback type="invalid">
+                        <Form.Control.Feedback type="invalid" data-translatable>
                           Thông tin này là bắt buộc
                         </Form.Control.Feedback>
                       )}
@@ -371,14 +379,14 @@ const SecretMessageDetail = () => {
                       }}
                     >
                       <i className="bi bi-arrow-counterclockwise me-2"></i>
-                      Nhập lại
+                      <span data-translatable>Nhập lại</span>
                     </Button>
                     <Button 
                       type="submit" 
                       variant="primary" 
                       className="mt-3"
                     >
-                      Tiếp tục
+                      <span data-translatable>Tiếp tục</span>
                     </Button>
                   </div>
                 </Form>
@@ -395,12 +403,17 @@ const SecretMessageDetail = () => {
       <Row className="justify-content-center">
         <Col lg={8}>
           <Card className="shadow-sm border-0">
+            <Card.Header className="bg-primary text-white py-3">
+              <div className="d-flex justify-content-between align-items-center">
+                <h3 className="mb-0" data-translatable>{message.name}</h3>
+                <LanguageSelector onSelectLanguage={changeLanguage} />
+              </div>
+            </Card.Header>
             <Card.Body className="p-md-5 p-4">
               <div className="text-center mb-4">
-                <h1 className="mb-2">{message.name}</h1>
-                {message.title && <h5 className="mb-3">{message.title}</h5>}
+                {message.title && <h5 className="mb-3" data-translatable>{message.title}</h5>}
                 {message.teamNote && (
-                  <Alert variant="info">
+                  <Alert variant="info" data-translatable>
                     <i className="bi bi-info-circle me-2"></i>
                     {message.teamNote}
                   </Alert>
@@ -419,7 +432,7 @@ const SecretMessageDetail = () => {
                     }}
                   >
                     <i className="bi bi-pencil me-1"></i>
-                    Sửa thông tin
+                    <span data-translatable>Sửa thông tin</span>
                   </Button>
                 </div>
               )}
@@ -440,6 +453,7 @@ const SecretMessageDetail = () => {
                         letterSpacing: message.letterSpacing,
                         whiteSpace: 'pre-wrap'
                       }}
+                      data-translatable
                     >
                       {message.ottContent}
                     </div>
@@ -462,6 +476,7 @@ const SecretMessageDetail = () => {
                         letterSpacing: message.letterSpacing,
                         whiteSpace: 'pre-wrap'
                       }}
+                      data-translatable
                     >
                       {message.nwContent}
                     </div>
@@ -477,6 +492,7 @@ const SecretMessageDetail = () => {
                       alt="Mật thư" 
                       className="img-fluid" 
                       style={{ maxHeight: '800px' }}
+                      data-translatable
                     />
                   </div>
                 )}
@@ -498,7 +514,7 @@ const SecretMessageDetail = () => {
                   }}
                 >
                   <i className="bi bi-house me-2"></i>
-                  Quay về trang chủ
+                  <span data-translatable>Quay về trang chủ</span>
                 </Button>
               </div>
             </Card.Body>

@@ -5,9 +5,11 @@ import './App.css';
 import { SystemSettingsProvider } from './context/SystemSettingsContext';
 import LoginNotification from './components/LoginNotification';
 import { LanguageProvider } from './context/LanguageContext';
+import { TranslationProvider } from './context/TranslationContext';
 import { translations } from './translations';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import translationService from './services/translationService';
 
 // Import các component
 import HomePage from './pages/HomePage';
@@ -68,6 +70,17 @@ const DebugTranslations = () => {
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Thiết lập MutationObserver để theo dõi các phần tử mới được thêm vào DOM và tự động dịch
+  useEffect(() => {
+    // Thiết lập MutationObserver khi trang đã tải xong
+    if (document.readyState === 'complete') {
+      translationService.setupMutationObserver();
+    } else {
+      window.addEventListener('load', translationService.setupMutationObserver);
+      return () => window.removeEventListener('load', translationService.setupMutationObserver);
+    }
+  }, []);
 
   useEffect(() => {
     // Kiểm tra trạng thái xác thực khi component được load
@@ -171,141 +184,143 @@ function App() {
   return (
     <LanguageProvider>
       <SystemSettingsProvider>
-        <Router>
-          <ToastContainer />
-          <LoginNotification />
-          <DebugTranslations />
-          <Routes>
-            {/* Home Page */}
-            <Route path="/" element={<HomePage />} />
-            <Route path="/about" element={<AboutPage />} />
-            
-            {/* Auth routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            
-            {/* Admin routes */}
-            <Route path="/admin" element={
-              <ProtectedRoute>
-                <AdminDashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/dashboard" element={
-              <ProtectedRoute>
-                <AdminDashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/stations" element={
-              <ProtectedRoute>
-                <StationList />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/stations/new" element={
-              <ProtectedRoute>
-                <StationForm />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/stations/edit/:id" element={
-              <ProtectedRoute>
-                <StationForm />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/teams" element={
-              <ProtectedRoute>
-                <TeamList />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/ranking" element={
-              <ProtectedRoute>
-                <TeamRanking />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/submissions" element={
-              <ProtectedRoute>
-                <SubmissionsHistory />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/profile" element={
-              <ProtectedRoute>
-                <AdminProfile />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/settings" element={
-              <ProtectedRoute>
-                <AdminSettings />
-              </ProtectedRoute>
-            } />
-            
-            {/* Secret Message routes */}
-            <Route path="/admin/secret-messages" element={
-              <ProtectedRoute>
-                <SecretMessageList />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/secret-messages/new" element={
-              <ProtectedRoute>
-                <SecretMessageForm />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/secret-messages/edit/:id" element={
-              <ProtectedRoute>
-                <SecretMessageForm />
-              </ProtectedRoute>
-            } />
-            
-            {/* Super Admin routes */}
-            <Route path="/superadmin" element={
-              <SuperAdminRoute>
-                <SuperAdminDashboard />
-              </SuperAdminRoute>
-            } />
-            <Route path="/superadmin/admins" element={
-              <SuperAdminRoute>
-                <AdminManagement />
-              </SuperAdminRoute>
-            } />
-            <Route path="/superadmin/invite-codes" element={
-              <SuperAdminRoute>
-                <InviteCodeManagement />
-              </SuperAdminRoute>
-            } />
-            <Route path="/superadmin/notifications" element={
-              <SuperAdminRoute>
-                <NotificationManagement />
-              </SuperAdminRoute>
-            } />
-            <Route path="/superadmin/teams" element={
-              <SuperAdminRoute>
-                <TeamSummary />
-              </SuperAdminRoute>
-            } />
-            <Route path="/superadmin/security" element={
-              <SuperAdminRoute>
-                <SafetySettings />
-              </SuperAdminRoute>
-            } />
-            <Route path="/superadmin/logs" element={
-              <SuperAdminRoute>
-                <SystemLogs />
-              </SuperAdminRoute>
-            } />
-            <Route path="/superadmin/database" element={
-              <SuperAdminRoute>
-                <DatabaseManagement />
-              </SuperAdminRoute>
-            } />
-            
-            {/* User routes */}
-            <Route path="/station/:stationId" element={<UserStation />} />
-            <Route path="/station/admin/:adminId" element={<AdminStationView />} />
-            <Route path="/station/team/:adminId" element={<TeamWaitingPage />} />
-            <Route path="/secret-message/:id" element={<SecretMessageDetail />} />
-            
-            {/* Default routes */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Router>
+        <TranslationProvider>
+          <Router>
+            <ToastContainer />
+            <LoginNotification />
+            <DebugTranslations />
+            <Routes>
+              {/* Home Page */}
+              <Route path="/" element={<HomePage />} />
+              <Route path="/about" element={<AboutPage />} />
+              
+              {/* Auth routes */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              
+              {/* Admin routes */}
+              <Route path="/admin" element={
+                <ProtectedRoute>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/dashboard" element={
+                <ProtectedRoute>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/stations" element={
+                <ProtectedRoute>
+                  <StationList />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/stations/new" element={
+                <ProtectedRoute>
+                  <StationForm />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/stations/edit/:id" element={
+                <ProtectedRoute>
+                  <StationForm />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/teams" element={
+                <ProtectedRoute>
+                  <TeamList />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/ranking" element={
+                <ProtectedRoute>
+                  <TeamRanking />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/submissions" element={
+                <ProtectedRoute>
+                  <SubmissionsHistory />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/profile" element={
+                <ProtectedRoute>
+                  <AdminProfile />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/settings" element={
+                <ProtectedRoute>
+                  <AdminSettings />
+                </ProtectedRoute>
+              } />
+              
+              {/* Secret Message routes */}
+              <Route path="/admin/secret-messages" element={
+                <ProtectedRoute>
+                  <SecretMessageList />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/secret-messages/new" element={
+                <ProtectedRoute>
+                  <SecretMessageForm />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/secret-messages/edit/:id" element={
+                <ProtectedRoute>
+                  <SecretMessageForm />
+                </ProtectedRoute>
+              } />
+              
+              {/* Super Admin routes */}
+              <Route path="/superadmin" element={
+                <SuperAdminRoute>
+                  <SuperAdminDashboard />
+                </SuperAdminRoute>
+              } />
+              <Route path="/superadmin/admins" element={
+                <SuperAdminRoute>
+                  <AdminManagement />
+                </SuperAdminRoute>
+              } />
+              <Route path="/superadmin/invite-codes" element={
+                <SuperAdminRoute>
+                  <InviteCodeManagement />
+                </SuperAdminRoute>
+              } />
+              <Route path="/superadmin/notifications" element={
+                <SuperAdminRoute>
+                  <NotificationManagement />
+                </SuperAdminRoute>
+              } />
+              <Route path="/superadmin/teams" element={
+                <SuperAdminRoute>
+                  <TeamSummary />
+                </SuperAdminRoute>
+              } />
+              <Route path="/superadmin/security" element={
+                <SuperAdminRoute>
+                  <SafetySettings />
+                </SuperAdminRoute>
+              } />
+              <Route path="/superadmin/logs" element={
+                <SuperAdminRoute>
+                  <SystemLogs />
+                </SuperAdminRoute>
+              } />
+              <Route path="/superadmin/database" element={
+                <SuperAdminRoute>
+                  <DatabaseManagement />
+                </SuperAdminRoute>
+              } />
+              
+              {/* User routes */}
+              <Route path="/station/:stationId" element={<UserStation />} />
+              <Route path="/station/admin/:adminId" element={<AdminStationView />} />
+              <Route path="/station/team/:adminId" element={<TeamWaitingPage />} />
+              <Route path="/secret-message/:id" element={<SecretMessageDetail />} />
+              
+              {/* Default routes */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Router>
+        </TranslationProvider>
       </SystemSettingsProvider>
     </LanguageProvider>
   );
