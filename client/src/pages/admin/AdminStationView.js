@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Card, Button, Alert, Spinner, Row, Col, Table, Badge } from 'react-bootstrap';
 import { QRCodeSVG } from 'qrcode.react';
+import html2canvas from 'html2canvas';
 import { stationApi, teamApi } from '../../services/api';
 import { replaceStationTerm } from '../../utils/helpers';
 import TermReplacer from '../../utils/TermReplacer';
@@ -22,7 +23,9 @@ const AdminStationView = () => {
   const [error, setError] = useState(null);
   const [loggedInTeams, setLoggedInTeams] = useState([]);
   const [refreshingTeams, setRefreshingTeams] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const teamsRefreshInterval = useRef(null);
+  const qrCodeRef = useRef(null);
 
   // Effect to fetch stations for this admin
   useEffect(() => {
@@ -185,6 +188,86 @@ const AdminStationView = () => {
   // Hàm làm mới danh sách đội thủ công
   const handleRefreshTeams = () => {
     fetchLoggedInTeams(true);
+  };
+  
+  // Hàm tải xuống QR code với logo ở giữa
+  const handleDownloadQR = async () => {
+    if (!qrCodeRef.current) return;
+    
+    try {
+      setIsDownloading(true);
+      
+      // Tìm SVG element từ DOM
+      const svg = qrCodeRef.current.querySelector('svg');
+      if (!svg) {
+        alert('Không thể tạo hình ảnh QR code');
+        setIsDownloading(false);
+        return;
+      }
+      
+      // Tạo canvas để chuyển đổi SVG thành hình ảnh
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      // Thiết lập kích thước canvas
+      canvas.width = 300;
+      canvas.height = 300;
+      
+      // Tạo đối tượng Image từ SVG
+      const qrImage = new Image();
+      const svgData = new XMLSerializer().serializeToString(svg);
+      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+      const svgUrl = URL.createObjectURL(svgBlob);
+      
+      // Tạo đối tượng Image để load logo
+      const logoImg = new Image();
+      
+      // Xử lý sự kiện khi QR code được tải
+      qrImage.onload = () => {
+        // Vẽ background trắng
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Vẽ QR code lên canvas
+        ctx.drawImage(qrImage, 0, 0, canvas.width, canvas.height);
+        
+        // Vẽ logo ở giữa QR code
+        const logoSize = canvas.width * 0.2; // Logo chiếm 20% kích thước QR
+        const logoX = (canvas.width - logoSize) / 2;
+        const logoY = (canvas.height - logoSize) / 2;
+        
+        ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
+        
+        // Chuyển đổi canvas thành data URL
+        const dataUrl = canvas.toDataURL('image/png');
+        
+        // Tạo link để tải xuống
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = `tram-qrcode-${adminId}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Giải phóng URL
+        URL.revokeObjectURL(svgUrl);
+        setIsDownloading(false);
+      };
+      
+      // Xử lý sự kiện tải logo
+      logoImg.onload = () => {
+        // Khi logo đã được tải, tải tiếp SVG QR code
+        qrImage.src = svgUrl;
+      };
+      
+      // Tải logo từ public folder
+      logoImg.src = `${window.location.origin}/logo192.png`;
+      
+    } catch (err) {
+      console.error('Lỗi khi tạo file tải xuống:', err);
+      alert('Không thể tải xuống QR code');
+      setIsDownloading(false);
+    }
   };
   
   // Hàm lấy badge thích hợp cho từng trạng thái
@@ -467,20 +550,46 @@ const AdminStationView = () => {
                 </div>
               </Col>
               <Col md={6} className="text-center">
-                <div className="bg-white rounded p-4 d-inline-block shadow-sm">
-                  <QRCodeSVG 
-                    value={`${window.location.origin}/station/team/${adminId}`}
-                    size={200}
-                    level="H"
-                    includeMargin={true}
-                    imageSettings={{
-                      src: "/logo192.png",
-                      height: 40,
-                      width: 40,
-                      excavate: true
-                    }}
-                  />
+                <div className="bg-white rounded p-4 d-inline-block shadow-sm" ref={qrCodeRef}>
+                  <div style={{ position: 'relative' }}>
+                    <QRCodeSVG 
+                      value={`${window.location.origin}/station/team/${adminId}`}
+                      size={200}
+                      level="H"
+                      includeMargin={true}
+                    />
+                    <img 
+                      src={`${window.location.origin}/logo192.png`}
+                      alt="Logo" 
+                      style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: '40px',
+                        height: '40px',
+                        background: 'white',
+                        padding: '4px',
+                        borderRadius: '4px'
+                      }}
+                    />
+                  </div>
                 </div>
+                <Button 
+                  variant="success" 
+                  className="mt-3"
+                  onClick={handleDownloadQR}
+                  disabled={isDownloading}
+                >
+                  {isDownloading ? (
+                    <Spinner animation="border" size="sm" />
+                  ) : (
+                    <>
+                      <i className="bi bi-download me-2"></i>
+                      Tải xuống QR Code
+                    </>
+                  )}
+                </Button>
               </Col>
             </Row>
           </Card.Body>

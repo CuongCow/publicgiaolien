@@ -221,6 +221,9 @@ const SecretMessageList = () => {
       const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
       const svgUrl = URL.createObjectURL(svgBlob);
       
+      // Tạo đối tượng Image để load logo
+      const logoImg = new Image();
+      
       image.onload = () => {
         // Vẽ background trắng
         ctx.fillStyle = 'white';
@@ -228,6 +231,13 @@ const SecretMessageList = () => {
         
         // Vẽ SVG lên canvas
         ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+        
+        // Vẽ logo ở giữa QR code
+        const logoSize = canvas.width * 0.2; // Logo chiếm 20% kích thước QR
+        const logoX = (canvas.width - logoSize) / 2;
+        const logoY = (canvas.height - logoSize) / 2;
+        
+        ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
         
         // Chuyển đổi canvas thành data URL
         const dataUrl = canvas.toDataURL('image/png');
@@ -244,7 +254,15 @@ const SecretMessageList = () => {
         URL.revokeObjectURL(svgUrl);
       };
       
-      image.src = svgUrl;
+      // Xử lý sự kiện tải logo
+      logoImg.onload = () => {
+        // Khi logo đã được tải, tải tiếp SVG QR code
+        image.src = svgUrl;
+      };
+      
+      // Tải logo từ public folder
+      logoImg.src = `${window.location.origin}/logo192.png`;
+      
     } catch (err) {
       console.error('Lỗi khi tạo file tải xuống:', err);
       toast.error('Không thể tải xuống QR code');

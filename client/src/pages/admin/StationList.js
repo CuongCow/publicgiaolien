@@ -197,34 +197,113 @@ const StationList = () => {
     
     try {
       setIsDownloading(true);
-      // Tạo canvas từ phần tử DOM chứa mã QR và thông tin
-      const canvas = await html2canvas(qrCodeRef.current);
       
-      // Chuyển canvas thành blob
-      canvas.toBlob((blob) => {
-        if (!blob) {
-          throw new Error('Không thể tạo blob từ canvas');
+      // Tìm SVG element từ DOM
+      const svg = qrCodeRef.current.querySelector('svg');
+      if (!svg) {
+        alert(t('save_image_error'));
+        setIsDownloading(false);
+        return;
+      }
+      
+      // Tạo canvas mới để xử lý QR code riêng
+      const qrCanvas = document.createElement('canvas');
+      const qrCtx = qrCanvas.getContext('2d');
+      
+      // Thiết lập kích thước canvas cho QR
+      qrCanvas.width = 300;
+      qrCanvas.height = 300;
+      
+      // Tạo đối tượng Image từ SVG
+      const qrImage = new Image();
+      const svgData = new XMLSerializer().serializeToString(svg);
+      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+      const svgUrl = URL.createObjectURL(svgBlob);
+      
+      // Tạo đối tượng Image để load logo
+      const logoImg = new Image();
+      
+      // Xử lý sự kiện khi QR code được tải
+      qrImage.onload = async () => {
+        // Vẽ background trắng
+        qrCtx.fillStyle = 'white';
+        qrCtx.fillRect(0, 0, qrCanvas.width, qrCanvas.height);
+        
+        // Vẽ QR code lên canvas
+        qrCtx.drawImage(qrImage, 0, 0, qrCanvas.width, qrCanvas.height);
+        
+        // Vẽ logo ở giữa QR code
+        const logoSize = qrCanvas.width * 0.2; // Logo chiếm 20% kích thước QR
+        const logoX = (qrCanvas.width - logoSize) / 2;
+        const logoY = (qrCanvas.height - logoSize) / 2;
+        
+        qrCtx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
+        
+        // Tạo canvas cuối cùng với đầy đủ thông tin
+        const finalCanvas = await html2canvas(qrCodeRef.current);
+        const finalCtx = finalCanvas.getContext('2d');
+        
+        // Tìm vị trí của QR code trong finalCanvas để vẽ đè QR code mới có logo
+        const qrPosition = findQRPositionInCanvas(finalCanvas, svg);
+        
+        // Vẽ QR code mới có logo lên vị trí của QR code cũ
+        if (qrPosition) {
+          finalCtx.drawImage(qrCanvas, qrPosition.x, qrPosition.y, qrPosition.width, qrPosition.height);
         }
         
-        // Tạo URL từ blob
-        const url = URL.createObjectURL(blob);
+        // Chuyển canvas thành blob
+        finalCanvas.toBlob((blob) => {
+          if (!blob) {
+            throw new Error('Không thể tạo blob từ canvas');
+          }
+          
+          // Tạo URL từ blob
+          const url = URL.createObjectURL(blob);
+          
+          // Tạo thẻ a để tải xuống
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `QR_${selectedStation?.name || t('station_label')}.png`;
+          
+          // Kích hoạt sự kiện click để tải xuống
+          document.body.appendChild(link);
+          link.click();
+          
+          // Dọn dẹp
+          setTimeout(() => {
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            URL.revokeObjectURL(svgUrl);
+            setIsDownloading(false);
+          }, 100);
+        }, 'image/png', 1.0);
+      };
+      
+      // Hàm tìm vị trí của QR code trong canvas
+      const findQRPositionInCanvas = (canvas, svgElement) => {
+        const svgRect = svgElement.getBoundingClientRect();
+        const containerRect = qrCodeRef.current.getBoundingClientRect();
         
-        // Tạo thẻ a để tải xuống
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `QR_${selectedStation?.name || t('station_label')}.png`;
+        const x = svgRect.left - containerRect.left;
+        const y = svgRect.top - containerRect.top;
         
-        // Kích hoạt sự kiện click để tải xuống
-        document.body.appendChild(link);
-        link.click();
-        
-        // Dọn dẹp
-        setTimeout(() => {
-          document.body.removeChild(link);
-          URL.revokeObjectURL(url);
-          setIsDownloading(false);
-        }, 100);
-      }, 'image/png', 1.0);
+        return {
+          x: x,
+          y: y,
+          width: svgRect.width,
+          height: svgRect.height
+        };
+      };
+      
+      // Xử lý sự kiện tải logo
+      logoImg.onload = () => {
+        // Khi logo đã được tải, tải tiếp SVG QR code
+        qrImage.src = svgUrl;
+      };
+      
+      // Tải logo từ public folder
+      logoImg.src = `${window.location.origin}/logo192.png`;
+      
     } catch (err) {
       console.error('Error saving image:', err);
       alert(t('save_image_error'));
@@ -532,21 +611,29 @@ const StationList = () => {
               </div>
               
               {selectedStation && (
-                <QRCodeSVG 
-                  value={`${window.location.origin}/station/${selectedStation._id}`}
-                  size={280}
-                  level="H"
-                  includeMargin={true}
-                  renderAs="svg"
-                  imageSettings={{
-                    src: '/logo192.png',
-                    x: undefined,
-                    y: undefined,
-                    height: 60,
-                    width: 60,
-                    excavate: true,
-                  }}
-                />
+                <div style={{ position: 'relative' }}>
+                  <QRCodeSVG 
+                    value={`${window.location.origin}/station/${selectedStation._id}`}
+                    size={280}
+                    level="H"
+                    includeMargin={true}
+                  />
+                  <img 
+                    src={`${window.location.origin}/logo192.png`}
+                    alt="Logo" 
+                    style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      width: '60px',
+                      height: '60px',
+                      background: 'white',
+                      padding: '5px',
+                      borderRadius: '5px'
+                    }}
+                  />
+                </div>
               )}
             </div>
             
