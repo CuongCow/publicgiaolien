@@ -1387,24 +1387,6 @@ const TeamWaitingPage = () => {
               <h4 className="mb-0">Chờ {replaceStationTerm("trạm")} bắt đầu</h4>
               <p className="mb-0 mt-1 opacity-75">
                 Đội: {loggedInTeam.teamName}
-                {currentStatus && (
-                  <span className="ms-2">
-                    <Badge bg={
-                      currentStatus === 'active' ? 'success' :
-                      currentStatus === 'hidden' ? 'warning' :
-                      currentStatus === 'copied' ? 'danger' :
-                      currentStatus === 'inactive' ? 'light' :
-                      currentStatus === 'exited' ? 'secondary' : 'light'
-                    } 
-                    text={currentStatus === 'inactive' || currentStatus === 'light' ? 'dark' : 'white'}>
-                      {currentStatus === 'active' ? 'Đang hoạt động' :
-                       currentStatus === 'hidden' ? 'Đã ẩn tab' :
-                       currentStatus === 'copied' ? 'Đã sao chép' :
-                       currentStatus === 'inactive' ? 'Không hoạt động' :
-                       currentStatus === 'exited' ? 'Đã thoát' : 'Không hoạt động'}
-                    </Badge>
-                  </span>
-                )}
               </p>
             </div>
             <div className="d-flex align-items-center">
