@@ -257,7 +257,7 @@ const SecretMessageList = () => {
       // Xử lý sự kiện tải logo
       logoImg.onload = () => {
         // Khi logo đã được tải, tải tiếp SVG QR code
-        image.src = svgUrl;
+      image.src = svgUrl;
       };
       
       // Tải logo từ public folder

@@ -61,6 +61,10 @@ const AdminNavbar = () => {
         <i className="bi bi-file-earmark-lock"></i>
         <span className="nav-text">Mật thư</span>
       </Nav.Link>
+      <Nav.Link as={Link} to="/admin/forms" className={`nav-icon-link ${isActive('/admin/forms')}`} title="Biểu mẫu">
+        <i className="bi bi-file-earmark-text"></i>
+        <span className="nav-text">Biểu mẫu</span>
+      </Nav.Link>
       <Nav.Link as={Link} to="/admin/ranking" className={`nav-icon-link ${isActive('/admin/ranking')}`} title={t('ranking')}>
         <i className="bi bi-trophy"></i>
         <span className="nav-text">{t('ranking')}</span>

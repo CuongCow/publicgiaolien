@@ -94,15 +94,6 @@ export const stationApi = {
       paragraphSpacing: data.paragraphSpacing || '0.8rem'
     };
     
-    // Debug log để kiểm tra dữ liệu
-    console.debug('API update - station data:', {
-      fontSize: stationData.fontSize,
-      fontWeight: stationData.fontWeight,
-      lineHeight: stationData.lineHeight,
-      paragraphSpacing: stationData.paragraphSpacing,
-      originalParagraphSpacing: data.paragraphSpacing
-    });
-    
     return axiosInstance.patch(`/api/stations/${id}`, stationData);
   },
   setStationActive: (id) => axiosInstance.patch(`/api/stations/${id}/activate`, {}),
@@ -231,7 +222,6 @@ export const secretMessageApi = {
     return axiosInstance.get(`/api/secret-messages/${id}`);
   },
   update: (id, data) => {
-    console.log('Đang cập nhật mật thư ID:', id, 'với dữ liệu:', data);
     return axiosInstance.put(`/api/secret-messages/${id}`, data)
       .catch(error => {
         console.error('Error updating secret message:', error);
@@ -239,7 +229,6 @@ export const secretMessageApi = {
       });
   },
   delete: (id) => {
-    console.log('Đang xóa mật thư ID:', id);
     return axiosInstance.delete(`/api/secret-messages/${id}`)
       .catch(error => {
         console.error('Error deleting secret message:', error);
@@ -303,6 +292,68 @@ export const secretMessageApi = {
           }
         };
       });
+  }
+};
+
+// API cho biểu mẫu
+export const formApi = {
+  // Lấy tất cả biểu mẫu
+  getAllForms: () => {
+    return axiosInstance.get('/forms');
+  },
+  
+  // Lấy biểu mẫu theo ID
+  getFormById: (formId) => {
+    // Kiểm tra formId hợp lệ trước khi gọi API
+    if (!formId || formId === 'undefined' || formId === 'null') {
+      return Promise.reject(new Error('ID biểu mẫu không hợp lệ'));
+    }
+    return axiosInstance.get(`/forms/${formId}`);
+  },
+  
+  // Tạo biểu mẫu mới
+  createForm: (formData) => {
+    return axiosInstance.post('/forms', formData);
+  },
+  
+  // Cập nhật biểu mẫu
+  updateForm: (formId, formData) => {
+    return axiosInstance.put(`/forms/${formId}`, formData);
+  },
+  
+  // Xóa biểu mẫu
+  deleteForm: (formId) => {
+    return axiosInstance.delete(`/forms/${formId}`);
+  },
+  
+  // Lấy các phản hồi của một biểu mẫu
+  getFormResponses: (formId) => {
+    return axiosInstance.get(`/forms/${formId}/responses`);
+  },
+  
+  // Lấy chi tiết một phản hồi
+  getFormResponseById: (formId, responseId) => {
+    return axiosInstance.get(`/forms/${formId}/responses/${responseId}`);
+  },
+  
+  // Xuất dữ liệu phản hồi (CSV, Excel,...)
+  exportFormResponses: (formId, format = 'csv') => {
+    return axiosInstance.get(`/forms/${formId}/export?format=${format}`, { responseType: 'blob' });
+  },
+  
+  // Cập nhật số lượng phản hồi cho biểu mẫu
+  updateFormResponseCount: (formId) => {
+    return axiosInstance.post(`/forms/${formId}/update-response-count`);
+  },
+  
+  // Lấy biểu mẫu công khai theo slug
+  getPublicFormBySlug: (slug) => {
+    return axiosInstance.get(`/forms/public/${slug}`);
+  },
+  
+  // Gửi phản hồi cho biểu mẫu
+  submitFormResponse: (slug, responseData) => {
+    return axiosInstance.post(`/forms/public/${slug}/submit`, responseData);
   }
 };
 

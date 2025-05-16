@@ -6,26 +6,12 @@ const { auth } = require('../middleware/auth');
 const qrcode = require('qrcode');
 const SecretMessage = require('../models/SecretMessage');
 
-// Middleware debug để kiểm tra auth
-const debugAuth = (req, res, next) => {
-  console.log('DEBUG - Request headers:', req.headers);
-  console.log('DEBUG - Authorization header:', req.headers.authorization);
-  auth(req, res, (err) => {
-    if (err) {
-      console.log('DEBUG - Auth error:', err);
-      return res.status(401).json({ message: 'Unauthorized', error: err.message });
-    }
-    console.log('DEBUG - Auth success, req.admin:', req.admin);
-    next();
-  });
-};
-
 // Routes cho mật thư
-router.post('/create', debugAuth, secretMessageController.create);
-router.get('/admin', debugAuth, secretMessageController.getAllByAdmin);
+router.post('/create', auth, secretMessageController.create);
+router.get('/admin', auth, secretMessageController.getAllByAdmin);
 
 // API thống kê - đặt trước các route có tham số
-router.get('/statistics', debugAuth, secretMessageResponseController.getStatistics);
+router.get('/statistics', auth, secretMessageResponseController.getStatistics);
 
 // Route test không cần xác thực (chỉ dùng cho môi trường phát triển)
 router.get('/statistics/test', (req, res) => {
@@ -67,14 +53,14 @@ router.get('/statistics/test', (req, res) => {
 // Routes cho phản hồi mật thư
 router.post('/response/submit-answer', secretMessageResponseController.submitAnswer);
 router.post('/response/submit-user-info', secretMessageResponseController.submitUserInfo);
-router.get('/response/admin', debugAuth, secretMessageResponseController.getAllByAdmin);
+router.get('/response/admin', auth, secretMessageResponseController.getAllByAdmin);
 router.get('/response/remaining-attempts/:secretMessageId', secretMessageResponseController.getRemainingAttempts);
 router.get('/response/check-correct/:secretMessageId', secretMessageResponseController.checkCorrectAnswer);
-router.delete('/response/all', debugAuth, secretMessageResponseController.deleteAllResponses);
-router.delete('/response/:responseId', debugAuth, secretMessageResponseController.deleteResponse);
+router.delete('/response/all', auth, secretMessageResponseController.deleteAllResponses);
+router.delete('/response/:responseId', auth, secretMessageResponseController.deleteResponse);
 
 // Endpoint mới: Tạo QR code cho mật thư (đặt trước /:id)
-router.get('/:id/qrcode', debugAuth, async (req, res) => {
+router.get('/:id/qrcode', auth, async (req, res) => {
   try {
     const secretMessage = await SecretMessage.findOne({
       _id: req.params.id,
@@ -107,7 +93,7 @@ router.get('/:id/qrcode', debugAuth, async (req, res) => {
 });
 
 router.get('/:id', secretMessageController.getById);
-router.put('/:id', debugAuth, secretMessageController.update);
-router.delete('/:id', debugAuth, secretMessageController.delete);
+router.put('/:id', auth, secretMessageController.update);
+router.delete('/:id', auth, secretMessageController.delete);
 
 module.exports = router; 

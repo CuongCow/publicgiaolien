@@ -36,6 +36,7 @@ app.use('/api/superadmin', require('./routes/superadmin'));
 app.use('/api/secret-messages', require('./routes/secretMessageRoutes'));
 app.use('/api/chat', chatRoutes);
 app.use('/api/auto-reply', autoReplyRoutes);
+app.use('/forms', require('./routes/formRoutes'));
 
 // Test route
 app.get('/api/test', (req, res) => {

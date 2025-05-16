@@ -46,6 +46,12 @@ import SafetySettings from './pages/superadmin/SafetySettings';
 import SystemLogs from './pages/superadmin/SystemLogs';
 import DatabaseManagement from './pages/superadmin/DatabaseManagement';
 
+// Import các trang biểu mẫu
+import FormManagement from './pages/admin/FormManagement';
+import FormEditor from './pages/admin/FormEditor';
+import FormResponseView from './pages/admin/FormResponseView';
+import PublicFormView from './pages/user/PublicFormView';
+
 // Component con để debug translations
 const DebugTranslations = () => {
   const { useLanguage } = require('./context/LanguageContext');
@@ -315,6 +321,16 @@ function App() {
               <Route path="/station/admin/:adminId" element={<AdminStationView />} />
               <Route path="/station/team/:adminId" element={<TeamWaitingPage />} />
               <Route path="/secret-message/:id" element={<SecretMessageDetail />} />
+              
+              {/* Form routes */}
+              <Route path="/admin/forms" element={<FormManagement />} />
+              <Route path="/admin/forms/new" element={<FormEditor />} />
+              <Route path="/admin/forms/:id/edit" element={<FormEditor />} />
+              <Route path="/admin/forms/:formId/responses" element={<FormResponseView />} />
+              <Route path="/admin/forms/:formId/responses/:responseId" element={<FormResponseView />} />
+              
+              {/* Public routes */}
+              <Route path="/forms/:slug" element={<PublicFormView />} />
               
               {/* Default routes */}
               <Route path="*" element={<NotFound />} />

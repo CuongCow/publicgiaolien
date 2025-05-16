@@ -64,6 +64,7 @@ const settingsRoutes = require('./routes/settings');
 const superAdminRoutes = require('./routes/superadmin');
 const secretMessageRoutes = require('./routes/secretMessageRoutes');
 const chatRoutes = require('./routes/chat');
+const formRoutes = require('./routes/formRoutes');
 
 // Use Routes
 app.use('/api/auth', authRoutes);
@@ -74,6 +75,7 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/superadmin', superAdminRoutes);
 app.use('/api/secret-messages', secretMessageRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/forms', formRoutes);
 
 // API kiểm tra trạng thái
 app.get('/api/status', (req, res) => {
@@ -91,7 +93,8 @@ app.get('/', (req, res) => {
       '/api/teams',
       '/api/submissions',
       '/api/settings',
-      '/api/status'
+      '/api/status',
+      '/forms'
     ]
   });
 });
