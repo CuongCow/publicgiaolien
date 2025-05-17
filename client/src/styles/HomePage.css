@@ -762,3 +762,27 @@ blockquote {
     padding: 15px 20px;
   }
 } 
+
+/* DMCA Badge styling */
+.dmca-badge-container {
+  margin: 25px auto 15px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.dmca-badge {
+  display: inline-block;
+  opacity: 0.85;
+  transition: opacity 0.3s ease;
+}
+
+.dmca-badge:hover {
+  opacity: 1;
+}
+
+.dmca-badge img {
+  max-width: 150px;
+  height: auto;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+} 
