@@ -30,18 +30,6 @@ const HomePage = () => {
     checkAuth();
   }, []);
 
-  // Thêm script DMCA Badge Helper
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://images.dmca.com/Badges/DMCABadgeHelper.min.js';
-    script.async = true;
-    document.body.appendChild(script);
-
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
-
   return (
     <>
       <SEOHelmet 
@@ -277,12 +265,6 @@ const HomePage = () => {
               Nội dung trên được tham khảo từ AI và các trang báo, nếu có sai sót xin các đồng chí bỏ qua.
             </p>
             <p className="copyright">© 2025 Hệ thống Giao Liên - Phát triển bởi CuongCow</p>
-            
-            <div className="dmca-badge-container mt-3">
-              <a href="//www.dmca.com/Protection/Status.aspx?ID=8aa85ee5-a9f4-41c9-84bc-2d3003d45773" title="DMCA.com Protection Status" className="dmca-badge">
-                <img src="https://images.dmca.com/Badges/dmca-badge-w150-5x1-07.png?ID=8aa85ee5-a9f4-41c9-84bc-2d3003d45773" alt="DMCA.com Protection Status" />
-              </a>
-            </div>
           </Col>
         </Row>
       </Container>

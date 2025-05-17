@@ -10,6 +10,7 @@ import { translations } from './translations';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import translationService from './services/translationService';
+import Footer from './components/Footer';
 
 // Import các component
 import HomePage from './pages/HomePage';
@@ -192,149 +193,154 @@ function App() {
       <SystemSettingsProvider>
         <TranslationProvider>
           <Router>
-            <ToastContainer />
-            <LoginNotification />
-            <DebugTranslations />
-            <Routes>
-              {/* Home Page */}
-              <Route path="/" element={<HomePage />} />
-              <Route path="/about" element={<AboutPage />} />
-              
-              {/* Auth routes */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              
-              {/* Admin routes */}
-              <Route path="/admin" element={
-                <ProtectedRoute>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/dashboard" element={
-                <ProtectedRoute>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/stations" element={
-                <ProtectedRoute>
-                  <StationList />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/stations/new" element={
-                <ProtectedRoute>
-                  <StationForm />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/stations/edit/:id" element={
-                <ProtectedRoute>
-                  <StationForm />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/teams" element={
-                <ProtectedRoute>
-                  <TeamList />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/ranking" element={
-                <ProtectedRoute>
-                  <TeamRanking />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/submissions" element={
-                <ProtectedRoute>
-                  <SubmissionsHistory />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/profile" element={
-                <ProtectedRoute>
-                  <AdminProfile />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/settings" element={
-                <ProtectedRoute>
-                  <AdminSettings />
-                </ProtectedRoute>
-              } />
-              
-              {/* Secret Message routes */}
-              <Route path="/admin/secret-messages" element={
-                <ProtectedRoute>
-                  <SecretMessageList />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/secret-messages/new" element={
-                <ProtectedRoute>
-                  <SecretMessageForm />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/secret-messages/edit/:id" element={
-                <ProtectedRoute>
-                  <SecretMessageForm />
-                </ProtectedRoute>
-              } />
-              
-              {/* Super Admin routes */}
-              <Route path="/superadmin" element={
-                <SuperAdminRoute>
-                  <SuperAdminDashboard />
-                </SuperAdminRoute>
-              } />
-              <Route path="/superadmin/admins" element={
-                <SuperAdminRoute>
-                  <AdminManagement />
-                </SuperAdminRoute>
-              } />
-              <Route path="/superadmin/invite-codes" element={
-                <SuperAdminRoute>
-                  <InviteCodeManagement />
-                </SuperAdminRoute>
-              } />
-              <Route path="/superadmin/notifications" element={
-                <SuperAdminRoute>
-                  <NotificationManagement />
-                </SuperAdminRoute>
-              } />
-              <Route path="/superadmin/teams" element={
-                <SuperAdminRoute>
-                  <TeamSummary />
-                </SuperAdminRoute>
-              } />
-              <Route path="/superadmin/security" element={
-                <SuperAdminRoute>
-                  <SafetySettings />
-                </SuperAdminRoute>
-              } />
-              <Route path="/superadmin/logs" element={
-                <SuperAdminRoute>
-                  <SystemLogs />
-                </SuperAdminRoute>
-              } />
-              <Route path="/superadmin/database" element={
-                <SuperAdminRoute>
-                  <DatabaseManagement />
-                </SuperAdminRoute>
-              } />
-              
-              {/* User routes */}
-              <Route path="/station/:stationId" element={<UserStation />} />
-              <Route path="/station/admin/:adminId" element={<AdminStationView />} />
-              <Route path="/station/team/:adminId" element={<TeamWaitingPage />} />
-              <Route path="/secret-message/:id" element={<SecretMessageDetail />} />
-              
-              {/* Form routes */}
-              <Route path="/admin/forms" element={<FormManagement />} />
-              <Route path="/admin/forms/new" element={<FormEditor />} />
-              <Route path="/admin/forms/:id/edit" element={<FormEditor />} />
-              <Route path="/admin/forms/:formId/responses" element={<FormResponseView />} />
-              <Route path="/admin/forms/:formId/responses/:responseId" element={<FormResponseView />} />
-              
-              {/* Public routes */}
-              <Route path="/forms/:slug" element={<PublicFormView />} />
-              
-              {/* Default routes */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <div className="d-flex flex-column min-vh-100">
+              <ToastContainer />
+              <LoginNotification />
+              <DebugTranslations />
+              <div className="flex-grow-1">
+                <Routes>
+                  {/* Home Page */}
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/about" element={<AboutPage />} />
+                  
+                  {/* Auth routes */}
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  
+                  {/* Admin routes */}
+                  <Route path="/admin" element={
+                    <ProtectedRoute>
+                      <AdminDashboard />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/dashboard" element={
+                    <ProtectedRoute>
+                      <AdminDashboard />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/stations" element={
+                    <ProtectedRoute>
+                      <StationList />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/stations/new" element={
+                    <ProtectedRoute>
+                      <StationForm />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/stations/edit/:id" element={
+                    <ProtectedRoute>
+                      <StationForm />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/teams" element={
+                    <ProtectedRoute>
+                      <TeamList />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/ranking" element={
+                    <ProtectedRoute>
+                      <TeamRanking />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/submissions" element={
+                    <ProtectedRoute>
+                      <SubmissionsHistory />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/profile" element={
+                    <ProtectedRoute>
+                      <AdminProfile />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/settings" element={
+                    <ProtectedRoute>
+                      <AdminSettings />
+                    </ProtectedRoute>
+                  } />
+                  
+                  {/* Secret Message routes */}
+                  <Route path="/admin/secret-messages" element={
+                    <ProtectedRoute>
+                      <SecretMessageList />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/secret-messages/new" element={
+                    <ProtectedRoute>
+                      <SecretMessageForm />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/secret-messages/edit/:id" element={
+                    <ProtectedRoute>
+                      <SecretMessageForm />
+                    </ProtectedRoute>
+                  } />
+                  
+                  {/* Super Admin routes */}
+                  <Route path="/superadmin" element={
+                    <SuperAdminRoute>
+                      <SuperAdminDashboard />
+                    </SuperAdminRoute>
+                  } />
+                  <Route path="/superadmin/admins" element={
+                    <SuperAdminRoute>
+                      <AdminManagement />
+                    </SuperAdminRoute>
+                  } />
+                  <Route path="/superadmin/invite-codes" element={
+                    <SuperAdminRoute>
+                      <InviteCodeManagement />
+                    </SuperAdminRoute>
+                  } />
+                  <Route path="/superadmin/notifications" element={
+                    <SuperAdminRoute>
+                      <NotificationManagement />
+                    </SuperAdminRoute>
+                  } />
+                  <Route path="/superadmin/teams" element={
+                    <SuperAdminRoute>
+                      <TeamSummary />
+                    </SuperAdminRoute>
+                  } />
+                  <Route path="/superadmin/security" element={
+                    <SuperAdminRoute>
+                      <SafetySettings />
+                    </SuperAdminRoute>
+                  } />
+                  <Route path="/superadmin/logs" element={
+                    <SuperAdminRoute>
+                      <SystemLogs />
+                    </SuperAdminRoute>
+                  } />
+                  <Route path="/superadmin/database" element={
+                    <SuperAdminRoute>
+                      <DatabaseManagement />
+                    </SuperAdminRoute>
+                  } />
+                  
+                  {/* User routes */}
+                  <Route path="/station/:stationId" element={<UserStation />} />
+                  <Route path="/station/admin/:adminId" element={<AdminStationView />} />
+                  <Route path="/station/team/:adminId" element={<TeamWaitingPage />} />
+                  <Route path="/secret-message/:id" element={<SecretMessageDetail />} />
+                  
+                  {/* Form routes */}
+                  <Route path="/admin/forms" element={<FormManagement />} />
+                  <Route path="/admin/forms/new" element={<FormEditor />} />
+                  <Route path="/admin/forms/:id/edit" element={<FormEditor />} />
+                  <Route path="/admin/forms/:formId/responses" element={<FormResponseView />} />
+                  <Route path="/admin/forms/:formId/responses/:responseId" element={<FormResponseView />} />
+                  
+                  {/* Public routes */}
+                  <Route path="/forms/:slug" element={<PublicFormView />} />
+                  
+                  {/* Default routes */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </div>
+              <Footer />
+            </div>
           </Router>
         </TranslationProvider>
       </SystemSettingsProvider>

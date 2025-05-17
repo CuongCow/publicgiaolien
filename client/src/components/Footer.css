@@ -1,0 +1,30 @@
+/* Footer styling */
+footer {
+  background-color: rgba(0, 0, 0, 0);
+  padding: 8px 0;
+  margin-top: 15px;
+}
+
+/* DMCA Badge styling */
+.dmca-badge-container {
+  margin: 5px auto;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.dmca-badge {
+  display: inline-block;
+  opacity: 0.85;
+  transition: opacity 0.3s ease;
+}
+
+.dmca-badge:hover {
+  opacity: 1;
+}
+
+.dmca-badge img {
+  max-width: 120px;
+  height: auto;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: 2px;
+} 
