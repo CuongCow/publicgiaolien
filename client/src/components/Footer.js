@@ -23,7 +23,7 @@ const Footer = () => {
         <Row className="text-center">
           <Col>
             <div className="dmca-badge-container mt-3">
-              <a href="//www.dmca.com/Protection/Status.aspx?ID=8aa85ee5-a9f4-41c9-84bc-2d3003d45773" title="DMCA.com Protection Status" className="dmca-badge">
+              <a href="https://www.dmca.com/Protection/Status.aspx?ID=8aa85ee5-a9f4-41c9-84bc-2d3003d45773&refurl=https://www.giaolien.com/" title="DMCA.com Protection Status" className="dmca-badge">
                 <img src="https://images.dmca.com/Badges/dmca-badge-w150-5x1-07.png?ID=8aa85ee5-a9f4-41c9-84bc-2d3003d45773" alt="DMCA.com Protection Status" />
               </a>
             </div>
