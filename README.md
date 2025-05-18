@@ -9,13 +9,6 @@ Repository này được tạo ra với mục đích **minh bạch hoá mã ngu�
 - Không có chức năng thu thập dữ liệu người dùng trái phép
 - Không có gian lận hoặc hack trong hệ thống
 
-## Lưu ý
-
-Repository này là phiên bản công khai của mã nguồn, trong đó:
-- Đã loại bỏ tất cả thông tin nhạy cảm như khóa API, token, mật khẩu
-- Đã loại bỏ các dịch vụ tracking và analytics
-- Chỉ giữ lại mã nguồn cần thiết cho việc kiểm tra tính minh bạch
-
 Để sử dụng mã nguồn này, bạn cần tự cấu hình các biến môi trường và thông tin kết nối cần thiết.
 
 ## Cấu trúc dự án
