@@ -1,67 +1,69 @@
-# Giao Lien - Ứng dụng Trò chơi Giải Mật thư
+# Giao Liên - Mã Nguồn Công Khai
 
-Ứng dụng web quản lý trò chơi giải mật thư. Hỗ trợ tạo trạm, quản lý đội, xếp hạng và theo dõi tiến trình.
+## Giới thiệu
+
+Đây là phiên bản công khai của mã nguồn hệ thống Giao Liên - nền tảng quản lý trò chơi mật thư, trạm, đội chơi và bảng xếp hạng.
+
+Repository này được tạo ra với mục đích **minh bạch hoá mã nguồn** nhằm chứng minh:
+- Không có mã độc hoặc các đoạn mã có thể gây hại
+- Không có chức năng thu thập dữ liệu người dùng trái phép
+- Không có gian lận hoặc hack trong hệ thống
+
+## Lưu ý
+
+Repository này là phiên bản công khai của mã nguồn, trong đó:
+- Đã loại bỏ tất cả thông tin nhạy cảm như khóa API, token, mật khẩu
+- Đã loại bỏ các dịch vụ tracking và analytics
+- Chỉ giữ lại mã nguồn cần thiết cho việc kiểm tra tính minh bạch
+
+Để sử dụng mã nguồn này, bạn cần tự cấu hình các biến môi trường và thông tin kết nối cần thiết.
 
 ## Cấu trúc dự án
 
-- `/client` - Frontend React
-- `/server` - Backend Node.js/Express
+Dự án được xây dựng với kiến trúc MERN Stack:
+- **MongoDB**: Cơ sở dữ liệu
+- **Express**: Back-end framework
+- **React**: Front-end library
+- **Node.js**: Runtime environment
 
-## Tính năng
+### Cấu trúc thư mục:
 
-- Đăng nhập/đăng ký quản trị viên
-- Quản lý trạm chơi
-- Quản lý đội chơi
-- Theo dõi điểm số và tiến trình
-- Xếp hạng theo thời gian và điểm số
+```
+/
+├── client/               # Mã nguồn front-end (React)
+├── server/               # Mã nguồn back-end (Express + Node.js)
+├── public/               # Tài nguyên tĩnh
+├── package.json          # Cấu hình npm của dự án
+└── README.md             # Tài liệu dự án
+```
 
-## Cài đặt và chạy
+## Cài đặt và sử dụng
 
-### Yêu cầu
-
-- Node.js >=14.x
-- MongoDB
-- npm hoặc yarn
-
-### Backend Server
-
+1. Clone repository:
 ```bash
-cd server
-npm install
-npm run dev  # Chạy phát triển
-# hoặc
-npm start    # Chạy production
+git clone https://github.com/CuongCow/publicgiaolien.git
+cd publicgiaolien
 ```
 
-### Frontend Client
-
+2. Cài đặt dependencies:
 ```bash
-cd client
 npm install
-npm start    # Chạy phát triển
-npm run build  # Build cho production
+cd client && npm install
+cd ../server && npm install
 ```
 
-## Deployment
+3. Tạo file môi trường:
+Tạo file `.env` trong thư mục gốc và trong thư mục server với các biến môi trường cần thiết.
 
-### Frontend (Vercel)
-
-Đã triển khai tại: [https://giaolien.vercel.app](https://giaolien.vercel.app)
-
-### Backend (Heroku)
-
-API đã triển khai tại: [https://giaolien-backend.herokuapp.com](https://giaolien-backend.herokuapp.com)
-
-## Môi trường
-
-Tạo file `.env` trong thư mục `/server` với nội dung:
-
-```
-PORT=5000
-MONGODB_URI=mongodb://localhost:27017/giaolien
-JWT_SECRET=tcl_secret_key_2025
+4. Chạy ứng dụng ở chế độ development:
+```bash
+npm run dev
 ```
 
-## Tác giả
+## Liên hệ
 
-CuongCow - Đại học FPT 
+Nếu có bất kỳ câu hỏi hoặc góp ý nào, vui lòng liên hệ qua website chính thức [www.giaolien.com](https://www.giaolien.com).
+
+## Giấy phép
+
+Mã nguồn này được công bố dưới giấy phép MIT. 
